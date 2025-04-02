@@ -1,5 +1,8 @@
 from django.shortcuts import render
+from .models import Document
 
-# Create your views here.
 def home(request):
-    return render(request, 'core/index.html')
+    documents = Document.objects.all()  # Fetch all documents
+    print(f"Documents in View: {documents.count()}")  # Debugging
+    return render(request, 'core/index.html', {'documents': documents})
+

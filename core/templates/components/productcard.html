@@ -1,0 +1,37 @@
+{% for document in documents %}
+    <div class="w-[245px] h-[406px] text-[#3357CF] bg-white rounded-lg relative flex flex-col">
+        <div class="p-3 flex-grow">
+            <div class="absolute right-2 top-3">
+                <h5 class="font-black">PHP {{ document.price }}</h5>
+            </div>
+            <div class="flex justify-center items-center pt-10 px-10">
+                {% if document.image %}
+                    <img class="rounded-lg border border-gray-600" src="{{ document.image.url }}" alt="{{ document.title }}" />
+                {% else %}
+                    <img class="rounded-lg border border-gray-600" src="/static/images/default-image.jpg" alt="Default Image" />
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="p-4 text-gray-700 font-bold text-sm flex-grow">
+            <h5>{{ document.title }}</h5>
+            <h6 class="text-sm text-gray-600 font-normal">{{ document.region }}</h6>
+            <h6 class="text-sm text-gray-500 font-normal">{{ document.get_category_display  }}</h6>
+            <h6 class="text-sm text-gray-400 font-light">{{ document.description }}</h6>
+        </div>
+
+        <div class="absolute bottom-3 right-3 flex">
+            <button type="button" class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800" style="margin-right: 4px !important;">
+                <i class='bx bx-show-alt me-2'></i>View
+            </button>
+            <button type="button" class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800">
+                <i class='bx bx-shopping-bag me-2'></i>Add
+            </button>
+        </div>
+        
+        
+        
+    </div>
+{% empty %}
+    <p>No documents available.</p>
+{% endfor %}
