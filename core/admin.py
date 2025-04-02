@@ -14,6 +14,7 @@ class DocumentAdmin(admin.ModelAdmin):
     list_filter = ('category',) 
     search_fields = ('title', 'description')
     list_editable = ['price']
+    actions_on_top = True
     
 
 class EmailAuthenticationForm(AuthenticationForm):
