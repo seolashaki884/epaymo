@@ -10,9 +10,11 @@ from .models import Document
 
 @admin.register(Document)
 class DocumentAdmin(admin.ModelAdmin):
-    list_display = ('title', 'category', 'description')
+    list_display = ('title', 'category', 'description', 'price')
     list_filter = ('category',) 
-    search_fields = ('title', 'description') 
+    search_fields = ('title', 'description')
+    list_editable = ['price']
+    
 
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(label=_("Email"), widget=forms.TextInput(attrs={"autofocus": True}))

@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -74,7 +75,7 @@ JAZZMIN_SETTINGS = {
         "success": "btn-success"
     },
     # title of the window (Will default to current_admin_site.site_title if absent or None)
-    "site_title": "Library Admin",
+    "site_title": "EPAYMO",
 
     # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
     "site_header": "EPAYMO",
@@ -208,6 +209,15 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": True,  # Expands the sidebar to show filters
 
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Add this if not already present
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [    
+    os.path.join(BASE_DIR, 'static'),
+]
 
 NPM_BIN_PATH = "C:/Program Files/nodejs/npm.cmd"
 
