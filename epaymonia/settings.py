@@ -130,7 +130,6 @@ JAZZMIN_SETTINGS = {
 
     # Additional links to include in the user menu on the top right ("app" url type is not allowed)
     "usermenu_links": [
-        {"name": "Support", "url": "https://github.com/farridav/django-jazzmin/issues", "new_window": True},
         {"model": "auth.user"}
     ],
 
@@ -208,7 +207,7 @@ JAZZMIN_SETTINGS = {
     "show_ui_builder": True,  # Enables the UI customization panel in the admin
     "navigation_expanded": True,  # Expands the sidebar to show filters
 
-}
+}   
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -248,6 +247,8 @@ TEMPLATES = [
         },
     },
 ]
+
+
 
 WSGI_APPLICATION = 'epaymonia.wsgi.application'
 
