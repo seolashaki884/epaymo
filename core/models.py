@@ -69,3 +69,30 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"OrderItem {self.id} - {self.document.title} ({self.quantity} x {self.price_at_purchase})"
+
+
+class Invoice(models.Model):
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="invoice")
+    invoice_number = models.CharField(max_length=50, unique=True)
+    issued_at = models.DateTimeField(auto_now_add=True)
+    due_date = models.DateField()
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(
+        max_length=20,
+        choices=[
+            ('unpaid', 'Unpaid'),
+            ('paid', 'Paid'),
+            ('overdue', 'Overdue'),
+        ],
+        default='unpaid'
+    )
+
+    def __str__(self):
+        return f"Invoice {self.invoice_number} - {self.order.user.username} ({self.status})"
+
+    def mark_as_paid(self):
+        """Mark the invoice as paid and update order status."""
+        self.status = 'paid'
+        self.order.status = 'completed'
+        self.order.save()
+        self.save()

@@ -4,7 +4,12 @@ from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
-    path('', views.home, name='')
+    path('home/', views.home, name='home'),  # Add the trailing slash
+    path('', views.login_view, name='login'),  # Login page
+    path('user_login/', views.user_login, name='user_login'),  # POST login submission
+    path("signup/", views.signup, name="signup"),   
+    path('logout/', views.user_logout, name='user_logout'),
 ]
+
 if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)    
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
