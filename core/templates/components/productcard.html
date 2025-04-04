@@ -1,3 +1,5 @@
+
+
 {% for document in documents %}
     <div class="w-[245px] h-[406px] text-[#3357CF] bg-white rounded-lg relative flex flex-col">
         <div class="p-3 flex-grow">
@@ -109,11 +111,82 @@
                 </div>
             </div>
 
-            <button type="button" class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800">
+            <button type="button" 
+                class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800"
+                onclick="addToCart({{ document.id }})">
                 <i class='bx bx-shopping-bag me-2'></i>Add
             </button>
+
         </div>
     </div>
+
+    <script>
+        async function addToCart(documentId) {
+            console.log("addToCart function triggered for document ID:", documentId);  // Verify it's triggered
+        
+            try {
+                const response = await fetch(`/add-to-cart/${documentId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'), // Django CSRF token
+                    },
+                    body: JSON.stringify({ document_id: documentId }),
+                });
+        
+                console.log("Response Status:", response.status);  // Check response status
+        
+                const data = await response.json();
+                console.log("Response Data:", data);  // Check response data
+        
+                if (data.cart_item_count !== undefined) {
+                    updateCartCount(data.cart_item_count);  // Update cart item count
+        
+                    console.log("Triggering SweetAlert2...");  // Check if we reach this point
+        
+                    Swal.fire({
+                        title: 'Item Added!',
+                        text: 'The document has been added to your cart.',
+                        icon: 'success',
+                        timer: 2000,  // Show for 2 seconds
+                        showConfirmButton: false  // Hide the confirm button
+                    }).then(() => {
+                        console.log("SweetAlert2 popup closed.");  // Log when popup closes
+                    });
+        
+                } else {
+                    console.log("Error: Invalid response data", data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+    
+        // Utility to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    
+        // Optionally, update the cart item count on the page
+        function updateCartCount(count) {
+            console.log("Updating cart count:", count);  // Log the cart count being updated
+            document.getElementById("cart-count").textContent = count;  // Assuming you have an element with id `cart-count`
+        }
+    </script>
+    
+
 {% empty %}
     <p>No documents available.</p>
 {% endfor %}

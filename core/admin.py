@@ -5,7 +5,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
-from .models import Document
+from .models import Document, Cart
 
 
 @admin.register(Document)
@@ -15,6 +15,15 @@ class DocumentAdmin(admin.ModelAdmin):
     search_fields = ('title', 'description')
     list_editable = ['price']
     actions_on_top = True
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_display = ('user', 'document', 'quantity', 'added_at', 'total_price')
+
+    def total_price(self, obj):
+        return obj.total_price()  # This is from the method you defined in the Cart model.
+    total_price.short_description = 'Total Price'
+
     
 
 class EmailAuthenticationForm(AuthenticationForm):
