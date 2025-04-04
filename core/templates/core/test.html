@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test SweetAlert2</title>
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.all.min.js"></script>
+</head>
+<body>
+
+    <button onclick="showAlert()">Test SweetAlert2</button>
+
+    <script>
+        function showAlert() {
+            Swal.fire({
+                title: 'Test!',
+                text: 'SweetAlert2 is working.',
+                icon: 'success',
+                timer: 2000,  // The popup will show for 2 seconds
+                showConfirmButton: false  // Hide the confirm button
+            });
+        }
+    </script>
+
+</body>
+</html>

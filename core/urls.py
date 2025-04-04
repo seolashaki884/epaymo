@@ -9,6 +9,8 @@ urlpatterns = [
     path('user_login/', views.user_login, name='user_login'),  # POST login submission
     path("signup/", views.signup, name="signup"),   
     path('logout/', views.user_logout, name='user_logout'),
+    path('add-to-cart/<int:document_id>/', views.add_to_cart, name='add_to_cart'),  
+    path('test/', views.test, name='test')
 ]
 
 if settings.DEBUG:

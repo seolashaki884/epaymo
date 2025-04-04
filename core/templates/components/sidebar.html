@@ -11,55 +11,66 @@
     <div class="mt-4 py-8">
       <h6 class="text-[#3357CF] text-sm font-semibold px-4">BIDDING DOCUMENTS</h6>
       <ul class="mt-2 space-y-1">
-        <li>
-            <a href="javascript:void(0)"
-              class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all">
-              <i class='bx bx-file mr-2'></i> All
-            </a>
+          <li>
+              <a href="{% url 'home' %}?category=" 
+                 class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all 
+                 {% if not selected_category %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
+                  <i class='bx bx-file mr-2'></i> All
+              </a>
           </li>
-        <li>
-          <a href="javascript:void(0)"
-            class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all">
-            <i class='bx bx-droplet mr-2'></i> Drainage fee
-          </a>
-        </li>
-        <li>
-            <a href="javascript:void(0)"
-              class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all">
-              <i class='bx bx-wrench mr-2' ></i> Equipment rental
-            </a>
+          <li>
+              <a href="{% url 'home' %}?category=drainage_fee"
+                 class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
+                 {% if selected_category == 'drainage_fee' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
+                  <i class='bx bx-droplet mr-2'></i> Drainage fee
+              </a>
           </li>
-        <li>
-          <a href="javascript:void(0)"
-            class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all">
-            <i class="bx bx-certification mr-2"></i> Filling fee/Certification
-          </a>
-        </li>
-        <li>
-          <a href="javascript:void(0)"
-            class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all">
-            <i class="bx bx-search-alt-2 mr-2"></i> Inspection fee
-          </a>
-        </li>
-        <li>
-          <a href="javascript:void(0)"
-            class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all">
-            <i class='bx bx-leaf mr-2' ></i> Irrigation service fee
-          </a>
-        </li>
-        <li>
-          <a href="javascript:void(0)"
-            class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all">
-            <i class='bx bx-recycle mr-2' ></i> Scraped of fix assets
-          </a>
-        </li>
-        <li>
-          <a href="javascript:void(0)"
-            class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all">
-            <i class='bx bx-badge-check mr-2'></i> Verification fee
-          </a>
-        </li>
+          <li>
+              <a href="{% url 'home' %}?category=equipment_rental"
+                 class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
+                 {% if selected_category == 'equipment_rental' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
+                  <i class='bx bx-wrench mr-2'></i> Equipment rental
+              </a>
+          </li>
+          <li>
+              <a href="{% url 'home' %}?category=filling_fee_certification"
+                 class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
+                 {% if selected_category == 'filling_fee_certification' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
+                  <i class="bx bx-certification mr-2"></i> Filling fee/Certification
+              </a>
+          </li>
+          <li>
+              <a href="{% url 'home' %}?category=inspection_fee"
+                 class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
+                 {% if selected_category == 'inspection_fee' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
+                  <i class="bx bx-search-alt-2 mr-2"></i> Inspection fee
+              </a>
+          </li>
+          <li>
+              <a href="{% url 'home' %}?category=irrigation_services_fee"
+                 class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
+                 {% if selected_category == 'irrigation_services_fee' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
+                  <i class='bx bx-leaf mr-2'></i> Irrigation service fee
+              </a>
+          </li>
+          <li>
+              <a href="{% url 'home' %}?category=scraped_fix_assets"
+                 class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
+                 {% if selected_category == 'scraped_fix_assets' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
+                  <i class='bx bx-recycle mr-2'></i> Scraped of fix assets
+              </a>
+          </li>
+          <li>
+              <a href="{% url 'home' %}?category=verification_authentication"
+                 class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
+                 {% if selected_category == 'verification_authentication' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
+                  <i class='bx bx-badge-check mr-2'></i> Verification fee
+              </a>
+          </li>
       </ul>
-    </div>
+  </div>
+  
+  
+  
   </nav>
   
