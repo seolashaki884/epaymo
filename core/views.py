@@ -10,25 +10,36 @@ from django.http import JsonResponse
 
 @login_required(login_url='login')
 def home(request):
-    category_filter = request.GET.get('category')  # Get category from query parameters
+    # Get category filter from query parameters
+    category_filter = request.GET.get('category') 
     
-    # If category is provided, filter the documents
+    # Get search query from GET request
+    search_query = request.GET.get('search', '') 
+    
+    # Filter documents based on the category and search query (if provided)
     if category_filter:
         documents = Document.objects.filter(category=category_filter)
     else:
         documents = Document.objects.all()
+    
+    if search_query:
+        documents = documents.filter(title__icontains=search_query)  # Filter by title
+    
+    # Order the filtered documents by ID
+    documents = documents.order_by('-id')
 
     # Get all the unique categories to display in the filter dropdown
     categories = dict(Document.CATEGORY_CHOICES)
 
     user = User.objects.all()
     print(f"Documents in View: {documents.count()}")
-    
+
     return render(request, 'core/home.html', {
         'documents': documents, 
         'user': user,
         'categories': categories,
-        'selected_category': category_filter
+        'selected_category': category_filter,
+        'search_query': search_query  # Pass the search query back to the template
     })
 
 
@@ -111,6 +122,19 @@ def add_to_cart(request, document_id):
 
     # Return only the count of items in the cart as a JsonResponse
     return JsonResponse({'cart_item_count': request.user.cart_set.count()})
+
+@login_required
+def view_cart(request):
+    # Fetch the cart items for the currently logged-in user
+    cart_items = Cart.objects.filter(user=request.user)
+    
+    # Calculate the total price of the cart
+    total_price = sum(item.total_price() for item in cart_items)
+    
+    return render(request, 'core/viewcart.html', {
+        'cart_items': cart_items,
+        'total_price': total_price,
+    })
 
 def test(request):
     return render(request, 'core/test.html')

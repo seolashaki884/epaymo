@@ -10,7 +10,8 @@ urlpatterns = [
     path("signup/", views.signup, name="signup"),   
     path('logout/', views.user_logout, name='user_logout'),
     path('add-to-cart/<int:document_id>/', views.add_to_cart, name='add_to_cart'),  
-    path('test/', views.test, name='test')
+    path('view-cart/', views.view_cart, name='view_cart'),    
+    path('test/', views.test, name='test'),
 ]
 
 if settings.DEBUG:
