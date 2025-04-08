@@ -1,11 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from .models import Document, Cart
-from django.http import JsonResponse
-
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
 
 
 @login_required(login_url='login')
@@ -112,29 +113,76 @@ def add_to_cart(request, document_id):
     # Get the document
     document = Document.objects.get(id=document_id)
     
-    # Check if the document already exists in the cart
     cart_item, created = Cart.objects.get_or_create(user=request.user, document=document)
     
     if not created:
-        # If the item already exists, increase the quantity by 1
         cart_item.quantity += 1
         cart_item.save()
 
-    # Return only the count of items in the cart as a JsonResponse
     return JsonResponse({'cart_item_count': request.user.cart_set.count()})
 
 @login_required
 def view_cart(request):
-    # Fetch the cart items for the currently logged-in user
     cart_items = Cart.objects.filter(user=request.user)
-    
-    # Calculate the total price of the cart
+  
     total_price = sum(item.total_price() for item in cart_items)
     
     return render(request, 'core/viewcart.html', {
         'cart_items': cart_items,
         'total_price': total_price,
     })
+
+@login_required
+def remove_from_cart(request, item_id):
+    if request.method == 'POST':
+        cart_item = get_object_or_404(Cart, id=item_id, user=request.user)
+        cart_item.delete()
+
+        # Render the updated cart view as HTML
+        return render(request, 'core/viewcart.html')  # Update with the correct template path for your cart view
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+@require_POST
+def update_cart_quantity(request):
+    try:
+        item_id = request.POST.get('item_id')
+        quantity = int(request.POST.get('quantity'))
+        cart_item = Cart.objects.get(id=item_id, user=request.user)
+
+        if quantity > 0:
+            cart_item.quantity = quantity
+            cart_item.save()
+
+            # Recalculate total cart value
+            cart_items = Cart.objects.filter(user=request.user)
+            cart_total = sum(item.total_price() for item in cart_items)
+
+            return JsonResponse({
+                'status': 'success',
+                'new_total': cart_item.total_price(),
+                'cart_total': cart_total
+            })
+
+        else:
+            cart_item.delete()
+
+            cart_items = Cart.objects.filter(user=request.user)
+            cart_total = sum(item.total_price() for item in cart_items)
+
+            return JsonResponse({
+                'status': 'removed',
+                'cart_total': cart_total
+            })
+
+    except (Cart.DoesNotExist, ValueError):
+        return JsonResponse({'status': 'error'}, status=400)
+    
+def get_cart_count(request):
+    # Get the cart count for the logged-in user
+    cart_count = request.user.cart_set.count()
+    return JsonResponse({'cart_count': cart_count})
+
 
 def test(request):
     return render(request, 'core/test.html')

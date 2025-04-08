@@ -49,42 +49,73 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
           </svg>
         </button>
+
       </div>
 
       <!-- Actions section -->
       <div class="hidden lg:ml-4 lg:block">
         <div class="flex items-center">
-          <button type="button"
-                  id="view-cart-btn"
-                  class="flex-shrink-0 relative rounded-full bg-gray-50 p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#3357CF] focus:ring-offset-2 focus:ring-offset-gray-50">
-            <span class="sr-only">View notifications</span>
-            
-            <!-- Shopping Bag SVG Icon -->
-            <svg class="h-6 w-6 text-[#424040]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-            </svg>
-          
-            <!-- Badge for Cart Number -->
-            <span class="absolute top-0 right-0 inline-block w-4 h-4 bg-red-400 text-white text-xs rounded-full flex items-center justify-center">
-              <span id="cart-count">{{ request.user.cart_set.count }}</span>
-            </span>
-          </button>
-
-
-          <script>
-            document.getElementById('view-cart-btn').addEventListener('click', function() {
-              fetch("{% url 'view_cart' %}")  // Django URL template tag
-                .then(response => response.text())  // Get HTML content
-                .then(html => {
-                  // Replace the content inside the <main> section
-                  document.querySelector('main').innerHTML = html;
-                })
-                .catch(error => console.error('Error loading cart view:', error));
-            });
-          </script>
-          
-  
-      
+          <a type="button"
+          id="view-cart-btn"
+          href="{% url 'view_cart' %}" 
+          class="flex-shrink-0 relative rounded-full bg-gray-50 p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#3357CF] focus:ring-offset-2 focus:ring-offset-gray-50">
+           <span class="sr-only">View notifications</span>
+           
+           <!-- Shopping Bag SVG Icon -->
+           <svg class="h-6 w-6 text-[#424040]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+           </svg>
+         
+           <!-- Badge for Cart Number -->
+           <span class="absolute top-0 right-0 inline-block w-4 h-4 bg-red-400 text-white text-xs rounded-full flex items-center justify-center">
+             <span id="cart-count">{{ request.user.cart_set.count }}</span>
+           </span>
+       </a>
+       
+       <script>
+         document.addEventListener("DOMContentLoaded", function() {
+           const notyf = new Notyf();
+           const viewCartBtn = document.getElementById("view-cart-btn");
+       
+           // Function to update the cart count dynamically
+           function updateCartCount() {
+             fetch("{% url 'get_cart_count' %}")
+               .then(response => response.json())
+               .then(data => {
+                 const cartCount = data.cart_count;
+                 document.getElementById("cart-count").textContent = cartCount;
+       
+                 // If cart is empty, show notification
+                 if (cartCount === 0) {
+                   notyf.error("No item in cart");
+                 }
+               });
+           }
+       
+           // Attach event to view cart button to show notification if empty
+           viewCartBtn.addEventListener("click", function(event) {
+             const cartCount = parseInt(document.getElementById("cart-count").textContent.trim(), 10);
+             if (cartCount === 0) {
+               event.preventDefault();  // Prevent navigation to the cart page
+               notyf.error("No item in cart");  // Show the error notification
+             }
+           });
+       
+           // Example: Add item to cart and update count dynamically
+           const addItemToCartButton = document.getElementById("add-item-btn"); // Replace with your actual button
+           if (addItemToCartButton) {
+             addItemToCartButton.addEventListener("click", function() {
+               // Logic to add item to cart (AJAX or form submission)
+               
+               // Update cart count dynamically after item is added
+               updateCartCount();
+             });
+           }
+         });
+       </script>
+       
+       
+       
 
           <!-- Profile dropdown -->
           <div x-data="Components.menu({ open: false })" x-init="init()" @keydown.escape.stop="open = false; focusButton()" @click.away="onClickAway($event)" class="relative ml-3 flex-shrink-0">

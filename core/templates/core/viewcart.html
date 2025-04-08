@@ -1,83 +1,256 @@
 
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.1/css/boxicons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"> 
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 
-<h1 class="text-2xl font-semibold text-gray-700">Cart</h1>
+        
+    {% tailwind_css %}
+    {% load humanize %}
+</head>
+<title>epaymo</title>
+<body class="min-h-screen bg-gray-100">
 
-    <div class="mt-5 sm:mt-5 md:gap-6 lg:flex lg:items-start xl:gap-8">
-    <div class="mx-auto w-full flex-none lg:max-w-2xl xl:max-w-4xl">
-        <div class="space-y-6">
+   
+    <div class="flex flex-col min-h-screen">
+     
+        <header class="bg-white z-10 sticky top-0">
+            {% include "components/header.html" %}
+        </header>        
+      
+        <div class="flex flex-1">
+          
+            <aside class="w-64 bg-white h-screen overflow-y-auto">
+                {% include "components/sidebar.html" %}
+            </aside>
 
-            {% for item in cart_items %}
-            <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6">
-                <div class="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0" >
-                    <a class="shrink-0 md:order-1 ">
-                        <img class="h-20 w-15 dark:hidden" src="{{ item.document.image.url }}" alt="{{ item.document.title }}" />
-                        <img class="hidden h-20 w-20 dark:block" src="{{ item.document.image.url.dark }}" alt="{{ item.document.title }}" />
-                    </a>
+            
+                <main class="flex-1 py-10 p-10 overflow-auto">
 
-                    <label for="counter-input" class="sr-only">Choose quantity:</label>
-                    <div class="flex items-center justify-between md:order-3 md:justify-end">
-                        <div class="flex items-center">
-                            <button type="button" class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
-                                <svg class="h-2.5 w-2.5 text-gray-900 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h16" />
-                                </svg>
-                            </button>
-                            <input type="text" id="counter-input" class="w-10 shrink-0 border-0 bg-transparent text-center text-sm font-medium text-gray-900 focus:outline-none focus:ring-0 dark:text-white" value="{{ item.quantity }}" required />
-                            <button type="button" class="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-gray-300 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
-                                <svg class="h-2.5 w-2.5 text-gray-900 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 1v16M1 9h16" />
-                                </svg>
-                            </button>
+                    
+                                                
+                        <h1 class="text-2xl font-semibold text-gray-700">Cart</h1>
+
+                        <div class="mt-5 sm:mt-5 md:gap-6 lg:flex lg:items-start xl:gap-8">
+                        <div class="mx-auto w-full flex-none lg:max-w-2xl xl:max-w-4xl">
+                            <div class="space-y-6">
+
+                                {% for item in cart_items %}
+                                <div class="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6">
+                                    <div class="space-y-4 md:flex md:items-center md:justify-between md:gap-6 md:space-y-0" >
+                                        <a class="shrink-0 md:order-1 ">
+                                            <img class="h-20 w-15 dark:hidden" src="{{ item.document.image.url }}" alt="{{ item.document.title }}" />
+                                            <img class="hidden h-20 w-20 dark:block" src="{{ item.document.image.url.dark }}" alt="{{ item.document.title }}" />
+                                        </a>
+
+                                        <label for="counter-input" class="sr-only">Choose quantity:</label>
+                                        <div class="flex items-center justify-between md:order-3 md:justify-end">
+                                            <div class="flex items-center">
+                                                <button type="button" data-item-id="{{ item.id }}" class="inline-flex h-5 w-5 shrink-0 items-center decrement-btn justify-center rounded-md border border-gray-300 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
+                                                    <svg class="h-2.5 w-2.5 text-gray-900 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 2">
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h16" />
+                                                    </svg>
+                                                </button>
+                                                <input 
+                                                type="text"
+                                                id="counter-input-{{ item.id }}"
+                                                class="w-10 shrink-0 border-0 bg-transparent text-center text-sm font-medium text-gray-900 focus:outline-none focus:ring-0 dark:text-white quantity-input"
+                                                data-item-id="{{ item.id }}"
+                                                data-unit-price="{{ item.document.price }}"
+                                                value="{{ item.quantity }}"
+                                                min="1"
+                                                required
+                                              />
+                                              
+                                                                                              <button type="button" data-item-id="{{ item.id }}" class="inline-flex h-5 w-5 shrink-0 increment-btn items-center justify-center rounded-md border border-gray-300 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600 dark:focus:ring-gray-700">
+                                                    <svg class="h-2.5 w-2.5 text-gray-900 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 18 18">
+                                                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 1v16M1 9h16" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            <div class="text-end md:order-4 md:w-32">
+                                                <p class="text-base font-bold text-gray-900 dark:text-white">PHP {{ item.document.price|intcomma }}</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="w-full min-w-0 flex-1 space-y-4 md:order-2 md:max-w-md">
+                                            <a class="text-base font-medium text-gray-900 dark:text-white">{{ item.document.title }}</a>
+
+                                            <div class="flex items-center gap-4">
+                                                <form method="POST" action="{% url 'remove_from_cart' item.id %}" class="remove-form">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="inline-flex items-center text-sm font-medium text-red-600 dark:text-red-500">
+                                                        <svg class="me-1.5 h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                                                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />
+                                                        </svg>
+                                                        Remove
+                                                    </button>
+                                                </form>                                                                               
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+
+                            </div>
                         </div>
-                        <div class="text-end md:order-4 md:w-32">
-                            <p class="text-base font-bold text-gray-900 dark:text-white">${{ item.total_price }}</p>
+                        <script>
+                            document.addEventListener('submit', function (e) {
+                                if (e.target.matches('.remove-form')) {
+                                    e.preventDefault(); // Prevent the form from submitting the traditional way
+                        
+                                    const form = e.target;
+                                    const actionUrl = form.action;
+                                    const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+                        
+                                    // Send a POST request to remove the item from the cart
+                                    fetch(actionUrl, {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': csrfToken,
+                                            'X-Requested-With': 'XMLHttpRequest',
+                                        },
+                                    })
+                                    .then(response => {
+                                        if (!response.ok) throw new Error('Remove failed');
+                                        // After removal, redirect to the view_cart page
+                                        window.location.href = "{% url 'view_cart' %}";
+                                    })
+                                    .catch(err => console.error('Error:', err));
+                                }
+                            });
+                        </script>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                                
+                                // Update item price in the DOM
+                                function updateItemDisplay(itemId, quantity) {
+                                    const input = document.querySelector(`#counter-input-${itemId}`);
+                                    const unitPrice = parseFloat(input.dataset.unitPrice); // Get the unit price from data attribute
+                                    const newTotal = unitPrice * quantity;
+                                    
+                                    const itemPriceField = document.querySelector(`#price-${itemId}`);
+                                    if (itemPriceField) {
+                                        itemPriceField.textContent = `PHP ${newTotal.toFixed(2)}`;
+                                    }
+                                }
+                                
+                                // Send updated quantity to the server and update cart
+                                function updateQuantity(itemId, quantity) {
+                                    updateItemDisplay(itemId, quantity); // Update UI first
+                                    
+                                    fetch("{% url 'update_cart_quantity' %}", {
+                                        method: 'POST',
+                                        headers: {
+                                            'X-CSRFToken': csrfToken,
+                                            'X-Requested-With': 'XMLHttpRequest',
+                                            'Content-Type': 'application/x-www-form-urlencoded'
+                                        },
+                                        body: `item_id=${itemId}&quantity=${quantity}`
+                                    })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.status === 'success' || data.status === 'removed') {
+                                            // Update cart total
+                                            const cartTotalField = document.querySelector('#cart-total');
+                                            if (cartTotalField) {
+                                                cartTotalField.textContent = `PHP ${data.cart_total.toFixed(2)}`;
+                                            }
+                                            location.reload();
+                                            
+                                            // Remove item if it's been removed from cart
+                                            if (data.status === 'removed') {
+                                                const row = document.querySelector(`#item-row-${itemId}`);
+                                                if (row) row.remove();
+                                            }
+                                            location.reload();
+                                        } else {
+                                            console.error('Failed to update cart quantity');
+                                        }
+                                    })
+                                    .catch(error => console.error('Quantity update error:', error));
+                                }
+                            
+                                // Increment and Decrement buttons
+                                document.querySelectorAll('.increment-btn').forEach(btn => {
+                                    btn.addEventListener('click', () => {
+                                        const itemId = btn.dataset.itemId;
+                                        const input = document.querySelector(`#counter-input-${itemId}`);
+                                        input.value = parseInt(input.value) + 1;
+                                        updateQuantity(itemId, input.value);
+                                    });
+                                });
+                            
+                                document.querySelectorAll('.decrement-btn').forEach(btn => {
+                                    btn.addEventListener('click', () => {
+                                        const itemId = btn.dataset.itemId;
+                                        const input = document.querySelector(`#counter-input-${itemId}`);
+                                        if (parseInt(input.value) > 1) {
+                                            input.value = parseInt(input.value) - 1;
+                                            updateQuantity(itemId, input.value);
+                                        }
+                                    });
+                                });
+                            
+                                // Handle changes to input field for quantity
+                                document.querySelectorAll('.quantity-input').forEach(input => {
+                                    input.addEventListener('change', () => {
+                                        const itemId = input.dataset.itemId;
+                                        let value = parseInt(input.value);
+                                        if (!isNaN(value) && value > 0) {
+                                            updateQuantity(itemId, value);
+                                        }
+                                    });
+                                });
+                            });
+                            
+                        </script>
+
+                        <div class="mx-auto mt-6 max-w-4xl flex-1 space-y-6 lg:mt-0 lg:w-full">
+                            <div class="space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-6">
+                            <p class="text-xl font-semibold text-gray-900 dark:text-white">Order summary</p>
+
+                            <div class="space-y-4">
+                                <div class="space-y-2">
+                                    <!--<dl class="flex items-center justify-between gap-4">
+                                        <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Original price</dt>
+                                        {%for item in cart_items%}
+                                        <dd class="text-base font-medium text-gray-900 dark:text-white">PHP {{ item.document.price }}</dd>
+                                        {% endfor%}
+                                    </dl>-->
+
+
+                                    <dl class="flex items-center justify-between gap-4">
+                                        <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Tax</dt>
+                                        <dd class="text-base font-medium text-gray-900 dark:text-white">PHP 799</dd>
+                                    </dl>
+                                </div>
+
+                                <dl id="price-{{ item.id }}" class="flex items-center justify-between gap-4 border-t border-gray-200 pt-2 dark:border-gray-700">
+                                    <dt class="text-base font-bold text-gray-900 dark:text-white">Total</dt>
+                                    <dd id="price-{{ item.id }}" class="text-base font-bold text-gray-900 dark:text-white">PHP {{ total_price|intcomma }}</dd>
+                                </dl>
+                            </div>
+
+                            <a href="#" class="flex w-full items-center justify-center rounded-lg bg-[#3357CF] px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Proceed to Checkout</a>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="w-full min-w-0 flex-1 space-y-4 md:order-2 md:max-w-md">
-                        <a class="text-base font-medium text-gray-900 dark:text-white">{{ item.document.title }}</a>
-
-                        <div class="flex items-center gap-4">
-                            <button type="button" class="inline-flex items-center text-sm font-medium text-red-600  dark:text-red-500">
-                                <svg class="me-1.5 h-5 w-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 17.94 6M18 18 6.06 6" />
-                                </svg>
-                                Remove
-                            </button>
                         </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
 
+            
+                </main>
+            
         </div>
     </div>
-
-    <div class="mx-auto mt-6 max-w-4xl flex-1 space-y-6 lg:mt-0 lg:w-full">
-        <div class="space-y-4 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-6">
-        <p class="text-xl font-semibold text-gray-900 dark:text-white">Order summary</p>
-
-        <div class="space-y-4">
-            <div class="space-y-2">
-                <dl class="flex items-center justify-between gap-4">
-                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Original price</dt>
-                    <dd class="text-base font-medium text-gray-900 dark:text-white">${{ total_price }}</dd>
-                </dl>
+</body>
 
 
-                <dl class="flex items-center justify-between gap-4">
-                    <dt class="text-base font-normal text-gray-500 dark:text-gray-400">Tax</dt>
-                    <dd class="text-base font-medium text-gray-900 dark:text-white">PHP 799</dd>
-                </dl>
-            </div>
-
-            <dl class="flex items-center justify-between gap-4 border-t border-gray-200 pt-2 dark:border-gray-700">
-                <dt class="text-base font-bold text-gray-900 dark:text-white">Total</dt>
-                <dd class="text-base font-bold text-gray-900 dark:text-white">${{ total_price }}</dd>
-            </dl>
-        </div>
-
-        <a href="#" class="flex w-full items-center justify-center rounded-lg bg-[#3357CF] px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Proceed to Checkout</a>
-        </div>
-    </div>
-    </div>
+                
+</html>

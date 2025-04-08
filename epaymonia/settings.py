@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'django.contrib.humanize',
     'jazzmin',  
     'django.contrib.admin',
     'django.contrib.auth',

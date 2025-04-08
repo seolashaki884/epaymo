@@ -1,12 +1,13 @@
 
 
 {% for document in documents %}
+{%load humanize%}
 
 
     <div class="w-[245px] h-[406px] text-[#3357CF] bg-white rounded-lg relative flex flex-col">
         <div class="p-3 flex-grow">
             <div class="absolute right-2 top-3">
-                <h5 class="font-black">PHP {{ document.price }}</h5>
+                <h5 class="font-black">PHP {{ document.price|intcomma }}</h5>
             </div>
             <div class="flex justify-center items-center pt-10 px-10">
                 {% if document.image %}
@@ -26,7 +27,6 @@
 
         <div class="absolute bottom-2 right-3 flex">
             <div x-data="{ isOpen: false }">
-                <!-- Button to open the modal -->
                 <button type="button" @click="isOpen = true" class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800" style="margin-right: 5px !important;">
                     <i class='bx bx-show-alt me-2'></i>View
                 </button>
@@ -58,7 +58,7 @@
                                 
                                         <div class="mt-6 sm:mt-8 lg:mt-0">
                                             <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">
-                                              PHP {{ document.price }}
+                                              PHP {{ document.price|intcomma }}
                                             </h1>
                                             
                                             <div class="mt-4 sm:items-center sm:gap-4 sm:flex">
@@ -75,10 +75,10 @@
                                             </div>
                                 
                                             <div class="mt-6 sm:gap-4 sm:items-center sm:flex sm:mt-8">
-                                                <a href="#" title="" class="flex items-center justify-center py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100" role="button">
+                                                <button onclick="addToCart({{ document.id }})" type="button" class="flex items-center justify-center py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100" role="button">
                                                     <i class='bx bx-shopping-bag pr-2'></i>
                                                         Add to Cart
-                                                </a>                                              
+                                                </button>                                              
                                             </div>
                                 
                                             <hr class="my-6 md:my-5 border-gray-200" />
@@ -105,7 +105,7 @@
                                 </button>   
 
                                 <button @click="isOpen = false; /* Add your confirm action here */" class="px-4 sm:mx-2 w-full py-2.5 mt-3 sm:mt-0 text-sm font-medium tracking-wide text-white bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-40">
-                                    Proceed to Order
+                                    Proceed to Checkout
                                 </button>
                             </div>
                         </div>
@@ -114,21 +114,22 @@
             </div>
 
             <button type="button" 
-            class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800"
-            onclick="addToCart({{ document.id }})">
-            <i class='bx bx-shopping-bag me-2'></i>Add
-        </button>
+                class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800"
+                onclick="addToCart({{ document.id }})">
+                <i class='bx bx-shopping-bag me-2'></i>Add
+            </button>
 
         </div>
     </div>
     
     <script>
         const notyf = new Notyf({
-            duration: 3000,
-            position: { x: 'right', y: 'top' },
+            duration: 2000,
+            position: { x: 'right', y: 'bottom' },
             types: [
                 {
-                    type: 'success'
+                    type: 'success',
+                    dismissible: true,
                 }
             ]
         });
