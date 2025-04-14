@@ -14,6 +14,10 @@ urlpatterns = [
     path('cart/remove/<int:item_id>/', views.remove_from_cart, name='remove_from_cart'),
     path('update-cart-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
     path('get_cart_count/', views.get_cart_count, name='get_cart_count'),
+    path('billing-preparation/', views.billing_prep, name='billing-prep'),
+    path('order-list/', views.order_list, name='order_list'),
+    path('submit-order/', views.submit_order, name='submit_order'),
+    path("verify-otp/", views.verify_otp, name="verify_otp"),
     path('test/', views.test, name='test'),
 ]
 

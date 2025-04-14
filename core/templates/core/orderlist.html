@@ -1,0 +1,100 @@
+
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.1/css/boxicons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"> 
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+
+        
+    {% tailwind_css %}
+    {% load humanize %}
+</head>
+<title>epaymo</title>
+<body class="min-h-screen bg-gray-100">
+
+   
+    <div class="flex flex-col min-h-screen">
+     
+        <header class="bg-white z-10 sticky top-0">
+            {% include "components/header.html" %}
+        </header>        
+      
+        <div class="flex flex-1">
+          
+            <aside class="w-64 bg-white h-screen overflow-y-auto">
+                {% include "components/sidebar.html" %}
+            </aside>
+
+            
+                <main class="flex-1 py-10 p-10 overflow-auto">
+
+                    
+                                                
+                        <h1 class="text-2xl font-semibold text-gray-700">Orders</h1>
+
+                        <div class="mt-5 sm:mt-5 md:gap-6 lg:flex lg:items-start xl:gap-8">
+                            <div class="mx-auto w-full px-4 sm:px-6 lg:px-8">
+                                <div class="space-y-6">
+                                    {% for order in orders %}
+                                        <div class="rounded-lg border border-gray-200 p-4 shadow-sm bg-white dark:bg-gray-900 dark:border-gray-700 flex flex-col justify-between min-h-[300px]">
+                                            <!-- Content Section -->
+                                            <div>
+                                                <div class="flex justify-between items-center mb-2">
+                                                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white">
+                                                        Order #{{ order.custom_order_id }} - {{ order.get_status_display }}
+                                                    </h3>
+                                                    <span class="text-sm text-gray-500">{{ order.ordered_at|date:"M d, Y H:i" }}</span>
+                                                </div>
+                                                <div class="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                                                    <strong>Total Price:</strong> ₱{{ order.total_price }}
+                                                </div>
+                                
+                                                {% if order.billing_preparation %}
+                                                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                                                        <strong>Billing:</strong> {{ order.billing_preparation.tracking_number }} ({{ order.billing_preparation.get_status_display }})
+                                                    </div>
+                                                {% endif %}
+                                
+                                                <div class="mt-3">
+                                                    <h4 class="text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">Items:</h4>
+                                                    <ul class="list-disc list-inside text-sm text-gray-600 dark:text-gray-300">
+                                                        {% for item in order.order_items.all %}
+                                                            <li>{{ item.document.title }} — {{ item.quantity }} x ₱{{ item.price_at_purchase }} = ₱{{ item.total_price }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                
+                                            <!-- Button Section -->
+                                            {% if order.status == "processing" %}
+                                                <div class="mt-4 flex justify-end">
+                                                    <a href="{% url 'billing-prep' %}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                                        Fillup Billing Preparation
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                        
+                                        </div>
+                                    {% empty %}
+                                        <div class="text-gray-500 dark:text-gray-400 text-center py-10">You have no orders yet.</div>
+                                    {% endfor %}
+                                </div>
+                                
+                            </div>                               
+                        </div>
+
+            
+                </main>
+            
+        </div>
+    </div>
+</body>
+
+
+                
+</html>

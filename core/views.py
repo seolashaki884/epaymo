@@ -3,13 +3,17 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Document, Cart
+from .models import Document, Cart, Order
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.db import transaction
+import random
+from django.core.mail import send_mail
 
 
 @login_required(login_url='login')
+
 def home(request):
     # Get category filter from query parameters
     category_filter = request.GET.get('category') 
@@ -75,6 +79,7 @@ def user_login(request):
     return render(request, "core/login.html")
     
 
+
 def signup(request):
     if request.method == "POST":
         first_name = request.POST.get("first_name", "")
@@ -90,23 +95,67 @@ def signup(request):
         if User.objects.filter(email=email).exists():
             messages.error(request, "Email is already registered.")
             return render(request, "core/signup.html", {"first_name": first_name, "last_name": last_name, "email": email})
-        
-        username = request.POST.get("username", "").strip()
-        if not username:
-            username = email.split('@')[0]  
 
+        username = email.split('@')[0]
         if User.objects.filter(username=username).exists():
             messages.error(request, "Username is already taken.")
             return render(request, "core/signup.html", {"first_name": first_name, "last_name": last_name, "email": email})
 
-        user = User.objects.create(first_name=first_name, last_name=last_name, email=email, username=username)
-        user.set_password(password) 
-        user.save()
+        # Generate OTP
+        otp = str(random.randint(100000, 999999))
 
-        messages.success(request, "Account created successfully! You can now log in.")
-        return redirect("login")
+        # Store user info + OTP in session
+        request.session['signup_data'] = {
+            "first_name": first_name,
+            "last_name": last_name,
+            "email": email,
+            "username": username,
+            "password": password,
+            "otp": otp
+        }
+
+        # Send OTP to email
+        send_mail(
+            subject="Your OTP for Account Signup",
+            message=f"Your OTP is: {otp}",
+            from_email="epaymonia@gmail.com",
+            recipient_list=[email],
+            fail_silently=False,
+        )
+
+        return redirect("verify_otp")
 
     return render(request, "core/signup.html")
+
+def verify_otp(request):
+    signup_data = request.session.get("signup_data")
+
+    if not signup_data:
+        messages.error(request, "Session expired or invalid access.")
+        return redirect("signup")
+
+    if request.method == "POST":
+        entered_otp = request.POST.get("otp")
+        if entered_otp == signup_data["otp"]:
+            user = User.objects.create(
+                first_name=signup_data["first_name"],
+                last_name=signup_data["last_name"],
+                email=signup_data["email"],
+                username=signup_data["username"]
+            )
+            user.set_password(signup_data["password"])
+            user.save()
+
+            # Clear session data
+            del request.session["signup_data"]
+
+            messages.success(request, "Account created successfully!")
+            return redirect("login")
+        else:
+            messages.error(request, "Invalid OTP. Please try again.")
+
+    return render(request, "core/verify_otp.html")
+
 
 @login_required(login_url='login')
 def add_to_cart(request, document_id):
@@ -177,12 +226,46 @@ def update_cart_quantity(request):
 
     except (Cart.DoesNotExist, ValueError):
         return JsonResponse({'status': 'error'}, status=400)
-    
+
+@login_required
+@transaction.atomic
+def submit_order(request):
+    user = request.user
+    cart_items = Cart.objects.filter(user=user)
+
+    if not cart_items.exists():
+        return redirect('cart')
+
+    # Create order
+    order = Order.objects.create(user=user, status='pending')
+
+    # Optional: Create OrderItem model to track itemized entries
+    for cart_item in cart_items:
+        order_item = order.order_items.create(
+            document=cart_item.document,
+            quantity=cart_item.quantity,
+            price_at_purchase=cart_item.document.price,
+        )
+
+
+    order.calculate_total_price()
+    cart_items.delete()
+    messages.success(request, "Order submitted successfully!")
+    return redirect('home')
+
+@login_required
+def order_list(request):
+    orders = Order.objects.filter(user=request.user).order_by('-ordered_at')
+    return render(request, 'core/orderlist.html', {'orders': orders})
+
 def get_cart_count(request):
     # Get the cart count for the logged-in user
     cart_count = request.user.cart_set.count()
     return JsonResponse({'cart_count': cart_count})
 
+@login_required
+def billing_prep(request):
+    return render(request, 'core/billingprep.html')
 
 def test(request):
     return render(request, 'core/test.html')

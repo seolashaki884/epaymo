@@ -22,7 +22,6 @@ class Document(models.Model):
     def __str__(self):
         return f"{self.title} - {self.category}"
 
-
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     document = models.ForeignKey(Document, on_delete=models.CASCADE)
@@ -36,6 +35,7 @@ class Cart(models.Model):
         return f"{self.user.username} - {self.document.title} ({self.quantity})"
 
 
+#if processing proceed to billing preparation
 class Order(models.Model):
     ORDER_STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -46,16 +46,24 @@ class Order(models.Model):
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
-    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)  
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     ordered_at = models.DateTimeField(auto_now_add=True)
+    custom_order_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
 
     def calculate_total_price(self):
         """Recalculate total order price based on OrderItems."""
         self.total_price = sum(item.total_price() for item in self.order_items.all())
         self.save()
 
+    def save(self, *args, **kwargs):
+        if not self.custom_order_id:
+            last_order = Order.objects.all().order_by('id').last()
+            next_id = last_order.id + 1 if last_order else 1
+            self.custom_order_id = f"NIA-{next_id:05d}"
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return f"Order #{self.id} - {self.user.username} ({self.status})"
+        return f"Order {self.custom_order_id or self.id} - {self.user.username} ({self.status})"
 
 
 class OrderItem(models.Model):
@@ -70,6 +78,40 @@ class OrderItem(models.Model):
     def __str__(self):
         return f"OrderItem {self.id} - {self.document.title} ({self.quantity} x {self.price_at_purchase})"
 
+class BillingPreparation(models.Model):
+    BILLING_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name='billing_preparation')
+    full_name = models.CharField(max_length=255)
+    address = models.TextField()
+    contact_number = models.CharField(max_length=20)
+    email = models.EmailField()
+    notes = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=BILLING_STATUS_CHOICES, default='pending')
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    tracking_number = models.CharField(max_length=20, unique=True, blank=True, null=True)
+
+    def save(self, *args, **kwargs):
+        if not self.tracking_number:
+            last = BillingPreparation.objects.all().order_by('id').last()
+            next_id = last.id + 1 if last else 1
+            self.tracking_number = f"PR-{next_id:06d}"
+        super().save(*args, **kwargs)
+
+    def approve(self, reviewer: User):
+        self.status = 'approved'
+        self.save()
+
+    def reject(self, reviewer: User):
+        self.status = 'rejected'
+        self.save()
+
+    def __str__(self):
+        return f"Billing {self.tracking_number} - Order #{self.order.id} - {self.full_name} ({self.status})"
 
 class Invoice(models.Model):
     order = models.OneToOneField(Order, on_delete=models.CASCADE, related_name="invoice")
