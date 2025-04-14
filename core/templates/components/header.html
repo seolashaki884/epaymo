@@ -71,6 +71,20 @@
              <span id="cart-count">{{ request.user.cart_set.count }}</span>
            </span>
        </a>
+       <a type="button"
+          id="view-order-btn"
+          href="{% url 'order_list' %}"
+          class="flex-shrink-0 relative rounded-full bg-gray-50 p-1 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#3357CF] focus:ring-offset-2 focus:ring-offset-gray-50">
+            
+
+            <!-- Receipt Icon for "View Order" -->
+            <svg class="h-6 w-6 text-[#424040]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 14h6m-6-4h6M5 7h14M5 21l1.5-1.5L8 21l1.5-1.5L11 21l1.5-1.5L14 21l1.5-1.5L17 21l1.5-1.5L20 21V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16z" />
+            </svg>
+        </a>
+        
+
        
        <script>
          document.addEventListener("DOMContentLoaded", function() {

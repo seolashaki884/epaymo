@@ -1,0 +1,51 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% tailwind_css %}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.1/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+<body class="antialiased bg-gradient-to-br from-blue-50 to-white">
+    <div class="container px-6 mx-auto">
+        <div class="flex flex-col text-center md:text-left md:flex-row h-screen justify-evenly md:items-center">
+            <div class="flex flex-col w-full">
+                <div>
+                    <img class="h-20 w-20 rounded-md" src="https://imgs.search.brave.com/Vzr7mD0WiE6ChLvbZG1QCZL2PhpeMOOgZP55Zb968gk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9tZWRp/YS5nZXR0eWltYWdl/cy5jb20vaWQvMTI4/MTYyMDY5NS9waG90/by9jb2xvci1ncmV5/LWJhY2tncm91bmQt/Zm9nLmpwZz9zPTYx/Mng2MTImdz0wJms9/MjAmYz1zV0lmb0hl/X0pBLW1Hb3E0aEVh/OXJ0OUpJN2xKMGpp/QmFDdi1Cczhxc3o0/PQ" alt="Logo">
+                </div>
+                <h1 class="text-5xl text-[#3357CF] font-bold">epaymo</h1>
+                <p class="w-5/12 mx-auto md:mx-0 text-gray-500">
+                    Secure online payment portal for bidding documents and procurement services
+                </p>
+            </div>
+            <div class="w-full md:w-full lg:w-9/12 mx-auto md:mx-0">
+                <div class="bg-white p-10 flex flex-col w-full shadow-xl rounded-xl">
+                    <h2 class="text-2xl font-bold text-gray-600 text-left mb-5">Sign up</h2>
+
+                    {% if messages %}
+                        <div class="mb-4">
+                            {% for message in messages %}
+                                {% if message.tags == "success" %}
+                                    <p class="text-green-500">{{ message }}</p>
+                                {% else %}
+                                    <p class="text-red-500">{{ message }}</p>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}     
+                    <form method="POST">
+                        {% csrf_token %}
+                        <label for="otp">Enter the OTP sent to your email:</label>
+                        <input type="text" name="otp" id="otp" required class="border p-2 rounded w-full my-3">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Verify OTP</button>
+                    </form>
+                                 
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -239,7 +239,13 @@
                                 </dl>
                             </div>
 
-                            <a href="#" class="flex w-full items-center justify-center rounded-lg bg-[#3357CF] px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">Proceed to Checkout</a>
+                            <form action="{% url 'submit_order' %}" method="post">
+                                {% csrf_token %}
+                                <button type="submit" class="flex w-full items-center justify-center rounded-lg bg-[#3357CF] px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-4 focus:ring-primary-300 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800">
+                                    Submit Order
+                                </button>
+                            </form>
+                            
                             </div>
                         </div>
                         </div>
@@ -250,7 +256,10 @@
         </div>
     </div>
 </body>
-
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>   
+<script>
+    const notyf = new Notyf();
+</script>
 
                 
 </html>
