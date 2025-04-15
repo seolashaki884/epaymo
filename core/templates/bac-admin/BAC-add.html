@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+{% load static tailwind_tags %}
+{%tailwind_css%}
+{% load humanize %}
+{%load static%}
+
+<html
+  lang="en"
+  class="light-style layout-menu-fixed"
+  dir="ltr"
+  data-theme="theme-default"
+  data-assets-path="/assets/"
+  data-template="vertical-menu-template-free"
+>
+  <head>
+    <meta charset="utf-8" />
+        <!-- Notyf CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    <!-- Notyf JS -->
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+
+    <title>BAC Admin</title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons. Uncomment required icon fonts -->
+    <link rel="stylesheet" href="{% static '/assets/vendor/fonts/boxicons.css' %}" />
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{% static '/assets/vendor/css/core.css' %}" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="{% static '/assets/vendor/css/theme-default.css' %}" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="{% static '/assets/css/demo.css' %}" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="{% static '/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+
+    <link rel="stylesheet" href="{% static '/assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="{% static '/assets/vendor/js/helpers.js' %}"></script>
+
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+    <script src="{% static '/assets/js/config.js' %}"></script>
+  </head>
+
+  <body>
+    <style>
+      .swal2-container {
+        z-index: 9999 !important;
+      }
+      
+      .swal-zindex {
+        z-index: 10000 !important;
+      }
+      
+    </style>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar" style="overflow:none">
+      <div class="layout-container">
+        <!-- Menu -->
+
+        {% include 'components/sidebaradmin.html' %}
+        <!-- / Menu -->
+
+        <!-- Layout container -->
+        <div class="layout-page">
+          <!-- Navbar -->
+
+          <nav
+            class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+            id="layout-navbar"
+          >
+            <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+              <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+                <i class="bx bx-menu bx-sm"></i>
+              </a>
+            </div>
+
+            <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+              <!-- Search -->
+              <div class="navbar-nav align-items-center">
+                <div class="nav-item d-flex align-items-center">
+                  <i class="bx bx-search fs-4 lh-0"></i>
+                  <input
+                    type="text"
+                    class="form-control border-0 shadow-none"
+                    placeholder="Search..."
+                    aria-label="Search..."
+                  />
+                </div>
+              </div>
+              <!-- /Search -->
+
+              <ul class="navbar-nav flex-row align-items-center ms-auto">
+                <!-- User -->
+                <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                  <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                    <div class="avatar avatar-online">
+                      <img src="https://www.shareicon.net/data/512x512/2017/02/05/878221_user_512x512.png" alt class="w-px-40 h-auto rounded-circle" />
+                    </div>
+                  </a>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <div class="d-flex">
+                          <div class="flex-shrink-0 me-3">
+                            <div class="avatar avatar-online">
+                              <img src="https://www.shareicon.net/data/512x512/2017/02/05/878221_user_512x512.png" alt class="w-px-40 h-auto rounded-circle" />
+                            </div>
+                          </div>
+                          <div class="flex-grow-1">
+                            <span class="fw-semibold d-block">John Doe</span>
+                            <small class="text-muted">Admin</small>
+                          </div>
+                        </div>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider"></div>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <i class="bx bx-user me-2"></i>
+                        <span class="align-middle">My Profile</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <i class="bx bx-cog me-2"></i>
+                        <span class="align-middle">Settings</span>
+                      </a>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="#">
+                        <span class="d-flex align-items-center align-middle">
+                          <i class="flex-shrink-0 bx bx-credit-card me-2"></i>
+                          <span class="flex-grow-1 align-middle">Billing</span>
+                          <span class="flex-shrink-0 badge badge-center rounded-pill bg-danger w-px-20 h-px-20">4</span>
+                        </span>
+                      </a>
+                    </li>
+                    <li>
+                      <div class="dropdown-divider"></div>
+                    </li>
+                    <li>
+                      <a class="dropdown-item" href="auth-login-basic.html">
+                        <i class="bx bx-power-off me-2"></i>
+                        <span class="align-middle">Log Out</span>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+                <!--/ User -->
+              </ul>
+            </div>
+          </nav>
+
+          <!-- / Navbar -->
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper">
+            <div class="container-xxl flex-grow-2 container-p-y">
+              <form method="POST" id="documentForm" enctype="multipart/form-data">
+                {% csrf_token %}
+              <div class="row"> 
+                <!-- Column 1 -->
+                <div class="col-md-6">
+                  <div class="card mb-4 h-100" >
+                    <h5 class="card-header">Add Documents</h5>
+                    <div class="card-body">
+                      <div class="form-floating">
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="floatingInput"
+                          name="title"
+                          placeholder="Bidding Documents"
+                          aria-describedby="floatingInputHelp"
+                        />
+                        <label for="floatingInput">Document Title</label>
+                        <div id="floatingInputHelp" class="form-text">
+                        </div>
+                      </div>
+
+
+                      <div class="form-floating">
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="floatingInput"
+                          name="description"
+                          placeholder="Contructions of.."
+                          aria-describedby="floatingInputHelp"
+                        />
+                        <label for="floatingInput">Description</label>
+                        <div id="floatingInputHelp" class="form-text">
+                        </div>
+                      </div>
+
+                      <div class="form-floating">
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="abcInput"
+                          name="abc"
+                          placeholder="Enter ABC"
+                          aria-describedby="floatingInputHelp"
+                        />
+                        <label for="abcInput">Approved Budget for the Contract</label>
+                        <div id="floatingInputHelp" class="form-text"></div>
+                      </div>
+                    
+                      <input
+                          type="text"
+                          hidden
+                          name="category"
+                          value="bidding_documents"
+                          class="form-control"
+                          id="floatingInput"
+                          placeholder="category"
+                          aria-describedby="floatingInputHelp"
+                        />
+
+                      <div class="form-floating">
+                        <input
+                          type="text"
+                          name="region"
+                          class="form-control"
+                          id="floatingInput"
+                          placeholder="Region"
+                          aria-describedby="floatingInputHelp"
+                        />
+                        <label for="floatingInput">Region</label>
+                        <div id="floatingInputHelp" class="form-text">
+                        </div>
+                      </div>
+
+
+
+
+                    </div>
+                  </div>
+                </div>
+          
+                <!-- Column 2 -->
+                <div class="col-md-6">
+                  <div class="card mb-4 h-100 d-flex flex-column">
+                    <div class="card-body d-flex flex-column justify-content-between">
+                      
+                      <!-- Upload Area -->
+                      <div class="flex items-center justify-center w-full mb-2 pt-10" >
+                        <label style="padding-bottom: 40px" 
+                               for="dropzone-file"
+                               class="flex flex-col items-center justify-center w-full h-64 border-2  border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+                          <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                            <svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor"
+                                 viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                              </path>
+                            </svg>
+                            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                              <span class="font-semibold">Click to upload document front page</span> or drag and drop
+                            </p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">PNG or JPG  (MAX. 3MB)</p>
+                          </div>
+                          <input id="dropzone-file" type="file" name="image" class="hidden" />
+                        </label>
+                      </div>
+                      <p>Bidding Document Price: <strong id="documentPrice">₱ 0.00</strong></p>
+                      <!-- Button Aligned Right -->
+                      <div class="d-flex justify-content-end" style="margin-top: -20px !important;">
+                        
+                        <button class="btn btn-primary" type="submit">Publish Document</button>
+                      </div>
+                
+                    </div>
+                  </div>
+                </div>
+
+                
+          
+              </div>
+            </form>
+              <div class="card" style="margin-top: 20px">
+                <h5 class="card-header">Uploaded Bidding Documents</h5>
+                <div class="card-body" style="height: 200px; overflow-y: auto;" >
+                  <div class="table-responsive text-nowrap">
+                    <table class="table table-bordered">
+                      <thead>
+                        <tr>
+                          <th>Title</th>
+                          <th>Description</th>
+                          <th>Price</th>
+                          <th>Region</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for doc in documents %}
+                        <tr>
+                          <td>
+                            <i class="fab fa-angular fa-lg text-danger me-3"></i> <strong>{{ doc.title }}</strong>
+                          </td>
+                          <td>{{ doc.description }}</td>
+                          <td>₱ {{ doc.price|floatformat:2|intcomma}}</td>
+                          <td><span class="badge bg-label-primary me-1">{{ doc.region }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                          <td colspan="4" class="text-center">No bidding documents found.</td>
+                        </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                    
+                  </div>
+                </div>
+              </div>
+            </div>
+          
+            <!-- / Content -->
+            <div class="content-backdrop fade"></div>
+            
+          </div>
+          
+          <!-- Content wrapper -->
+          <script>
+            document.addEventListener("DOMContentLoaded", function () {
+              const priceInput = document.querySelector('input[name="abc"]');
+          
+              if (priceInput) {
+                priceInput.addEventListener("input", function (e) {
+                  let value = priceInput.value.replace(/,/g, "");
+                  if (!isNaN(value) && value !== "") {
+                    const parts = value.split(".");
+                    parts[0] = parseInt(parts[0]).toLocaleString();
+                    priceInput.value = parts.join(".");
+                  }
+                });
+              }
+            });
+          </script>
+          <script>
+            const notyf = new Notyf({
+              duration: 3000,
+              position: { x: 'right', y: 'top' }
+            });
+          
+            {% if messages %}
+              {% for message in messages %}
+                notyf.success("{{ message|escapejs }}");
+              {% endfor %}
+            {% endif %}
+          </script>
+          <script>
+            const abcInput = document.getElementById('abcInput');
+            const priceDisplay = document.getElementById('documentPrice');
+          
+            abcInput.addEventListener('input', () => {
+              // Remove commas and parse to number
+              const rawValue = abcInput.value.replace(/,/g, '');
+              const abc = parseFloat(rawValue);
+              let price = 0;
+          
+              if (!isNaN(abc)) {
+                if (abc < 500000) {
+                  price = 500;
+                } else if (abc < 1000000) {
+                  price = 1000;
+                } else if (abc < 5000000) {
+                  price = 5000;
+                } else if (abc < 10000000) {
+                  price = 10000;
+                } else if (abc < 50000000) {
+                  price = 25000;
+                } else if (abc < 500000000) {
+                  price = 50000;
+                } else {
+                  price = 75000;
+                }
+              }
+          
+              // Format to PHP peso currency
+              priceDisplay.textContent = `₱ ${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
+            });
+          </script>
+          <!-- SweetAlert2 CDN -->
+          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+          <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              const form = document.getElementById('documentForm');
+
+              form.addEventListener('submit', function (e) {
+                e.preventDefault(); // Stop normal form submission
+
+                Swal.fire({
+                  title: 'Are you sure?',
+                  text: "Do you want to publish this document?",
+                  icon: 'question',
+                  showCancelButton: true,
+                  confirmButtonColor: '#0d6efd',
+                  cancelButtonColor: '#d33',
+                  confirmButtonText: 'Yes, publish it!',
+                  cancelButtonText: 'Cancel',
+                  customClass: {
+                    popup: 'swal-zindex'
+                  }
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    form.submit();
+                  }
+                });
+                
+              });
+            });
+          </script>
+
+          
+          
+        </div>
+        <!-- / Layout page -->
+      </div>
+
+      <!-- Overlay -->
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+    <!-- / Layout wrapper -->
+
+
+    <!-- Core JS -->
+    <!-- build:js assets/vendor/js/core.js -->
+    <script src="{% static '/assets/vendor/libs/jquery/jquery.js' %}"></script>
+    <script src="{% static '/assets/vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static '/assets/vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static '/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+
+    <script src="{% static '/assets/vendor/js/menu.js' %}"></script>
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+    <script src="{% static '/assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+
+    <!-- Main JS -->
+    <script src="{% static '/assets/js/main.js' %}"></script>
+
+    <!-- Page JS -->
+    <script src="{% static '/assets/js/dashboards-analytics.js' %}"></script>
+
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+  </body>
+</html>

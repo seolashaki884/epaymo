@@ -6,19 +6,27 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
 from django.contrib.humanize.templatetags.humanize import intcomma  # Import intcomma for formatting
-from .models import Document, Cart, Order
+from .models import Document, Cart, Order, UserProfile
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserChangeForm
-
 
 class CustomUserChangeForm(UserChangeForm):
     class Meta:
         model = User
-        exclude = ('password',)  # This hides the password from the form
+        exclude = ('password',)
+
+
+# Define an inline admin for UserProfile
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name_plural = 'Profile'
 
 
 class CustomUserAdmin(BaseUserAdmin):
     form = CustomUserChangeForm
+    inlines = (UserProfileInline,)  # Include UserProfile inline
+
     fieldsets = (
         (None, {'fields': ('username', 'email', 'first_name', 'last_name')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),

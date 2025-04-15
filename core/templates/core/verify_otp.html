@@ -38,9 +38,9 @@
                     {% endif %}     
                     <form method="POST">
                         {% csrf_token %}
-                        <label for="otp">Enter the OTP sent to your email:</label>
-                        <input type="text" name="otp" id="otp" required class="border p-2 rounded w-full my-3">
-                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Verify OTP</button>
+                        <label for="otp" class="flex flex-col">Enter the OTP sent to your email:</label>
+                        <input type="text" name="otp" id="otp" required class="appearance-none border-2 border-gray-100 rounded-lg px-4 py-3 placeholder-gray-300 focus:outline-none focus:ring-1 focus:shadow-sm">
+                        <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded justify-end items-end pl-20">Verify OTP</button>
                     </form>
                                  
                 </div>

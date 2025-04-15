@@ -1,5 +1,20 @@
 from django.db import models
-from django.contrib.auth.models import User  # Using Django's built-in User model
+from django.contrib.auth.models import User
+
+class UserProfile(models.Model):
+    CATEGORY_CHOICES = [
+    ('drainage_fee', 'Drainage Fee'),
+    ('equipment_rental', 'Equipment Rental'),
+    ('filling_fee_certification', 'Filling Fee/Certification'),
+    ('inspection_fee', 'Inspection Fee'),
+    ('irrigation_services_fee', 'Irrigation Services Fee'),
+    ('scraped_fix_assets', 'Scraped Fix Assets'),
+    ('verification_authentication', 'Verification and Authentication'),
+    ('bidding_documents', 'Bidding Documents'),
+
+]
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
 
 class Document(models.Model):
     CATEGORY_CHOICES = [
@@ -10,11 +25,13 @@ class Document(models.Model):
         ('irrigation_services_fee', 'Irrigation Services Fee'),
         ('scraped_fix_assets', 'Scraped Fix Assets'),
         ('verification_authentication', 'Verification and Authentication'),
+        ('bidding_documents', 'Bidding Documents'),
     ]
 
     title = models.CharField(max_length=255)
     description = models.TextField()
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    abc = models.DecimalField(max_digits=20, decimal_places=2, default=0.00)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     image = models.ImageField(upload_to='documents/', null=True, blank=True)
     region = models.CharField(max_length=250)
