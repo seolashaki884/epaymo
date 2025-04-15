@@ -8,6 +8,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
+from decimal import Decimal
 import random
 from django.core.mail import send_mail
 
@@ -56,7 +57,7 @@ def user_login(request):
         email = request.POST.get("email")
         password = request.POST.get("password")
         
-        print(f"Email: {email}, Password: {password}") 
+        
         try:
             user_obj = User.objects.get(email=email)
         except User.DoesNotExist:
@@ -116,8 +117,17 @@ def signup(request):
 
         # Send OTP to email
         send_mail(
-            subject="Your OTP for Account Signup",
-            message=f"Your OTP is: {otp}",
+            subject="Your One-Time Password (OTP) for Account Verification",
+            message=(
+                f"Dear {first_name},\n\n"
+                f"Thank you for signing up at Epaymo.\n\n"
+                f"Your One-Time Password (OTP) for verifying your email address is:\n\n"
+                f"{otp}\n\n"
+                f"This OTP is valid for 10 minutes. Please do not share it with anyone.\n\n"
+                f"If you did not initiate this request, please ignore this email.\n\n"
+                f"Best regards,\n"
+                f"The Epaymo Team"
+            ),
             from_email="epaymonia@gmail.com",
             recipient_list=[email],
             fail_silently=False,
@@ -266,6 +276,54 @@ def get_cart_count(request):
 @login_required
 def billing_prep(request):
     return render(request, 'core/billingprep.html')
+
+@login_required
+def adminhome(request):
+    return render(request, 'bac-admin/dashboard.html')
+
+@login_required
+def BAC(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+        raw_price = request.POST.get('abc')
+        abc = Decimal(raw_price.replace(',', ''))
+        category = request.POST.get('category')
+        region = request.POST.get('region')
+        image = request.FILES.get('image')
+
+        # Compute price based on the abc value
+        if abc < 500000:
+            price = Decimal(500)
+        elif 500000 <= abc < 1000000:
+            price = Decimal(1000)
+        elif 1000000 <= abc < 5000000:
+            price = Decimal(5000)
+        elif 5000000 <= abc < 10000000:
+            price = Decimal(10000)
+        elif 10000000 <= abc < 50000000:
+            price = Decimal(25000)
+        elif 50000000 <= abc < 500000000:
+            price = Decimal(50000)
+        else:
+            price = Decimal(75000)
+
+        # Create the Document object
+        Document.objects.create(
+            title=title,
+            description=description,
+            abc=abc,
+            category=category,
+            region=region,
+            image=image,
+            price=price  # Set the computed price
+        )
+
+        messages.success(request, 'Document published successfully!')
+        return redirect('bac-add')
+
+    documents = Document.objects.filter(category='bidding_documents').order_by('-id')
+    return render(request, 'bac-admin/BAC-add.html', {'documents': documents})
 
 def test(request):
     return render(request, 'core/test.html')

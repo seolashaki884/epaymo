@@ -18,6 +18,8 @@ urlpatterns = [
     path('order-list/', views.order_list, name='order_list'),
     path('submit-order/', views.submit_order, name='submit_order'),
     path("verify-otp/", views.verify_otp, name="verify_otp"),
+    path('adminhome/', views.adminhome, name='admin-home'),
+    path('BAC/', views.BAC, name='bac-add'),
     path('test/', views.test, name='test'),
 ]
 
