@@ -76,7 +76,7 @@
       </li>
 
       <!-- Layouts -->
-      <li class="menu-item {% if request.path == '/BAC/' %}active open{% endif %}">
+      <li class="menu-item {% if request.path == '/BAC/' or request.path == '/BAC/edit' %}active open{% endif %}">
         <a href="javascript:void(0);" class="menu-link menu-toggle">
           <i class="menu-icon tf-icons bx bx-layout"></i>
           <div data-i18n="Layouts">Documents</div>
@@ -88,8 +88,8 @@
               <div data-i18n="Without menu">Add & View</div>
             </a>
           </li>
-          <li class="menu-item">
-            <a href="layouts-without-navbar.html" class="menu-link">
+          <li class="menu-item {% if request.path == '/BAC/edit' %}active{% endif %}">
+            <a href="{% url 'bac-edit' %}" class="menu-link">
               <div data-i18n="Without navbar">Edit</div>
             </a>
           </li>

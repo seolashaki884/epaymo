@@ -66,6 +66,9 @@
   </head>
 
   <body>
+    <!-- Include jQuery from CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
     <style>
       .swal2-container {
         z-index: 9999 !important;
@@ -176,137 +179,17 @@
               </ul>
             </div>
           </nav>
+          <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
           <!-- / Navbar -->
 
           <!-- Content wrapper -->
           <div class="content-wrapper">
             <div class="container-xxl flex-grow-2 container-p-y">
-              <form method="POST" id="documentForm" enctype="multipart/form-data">
-                {% csrf_token %}
-              <div class="row"> 
-                <!-- Column 1 -->
-                <div class="col-md-6">
-                  <div class="card mb-4 h-100" >
-                    <h5 class="card-header">Add Documents</h5>
-                    <div class="card-body">
-                      <div class="form-floating">
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="floatingInput"
-                          name="title"
-                          placeholder="Bidding Documents"
-                          aria-describedby="floatingInputHelp"
-                        />
-                        <label for="floatingInput">Document Title</label>
-                        <div id="floatingInputHelp" class="form-text">
-                        </div>
-                      </div>
-
-
-                      <div class="form-floating">
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="floatingInput"
-                          name="description"
-                          placeholder="Contructions of.."
-                          aria-describedby="floatingInputHelp"
-                        />
-                        <label for="floatingInput">Description</label>
-                        <div id="floatingInputHelp" class="form-text">
-                        </div>
-                      </div>
-
-                      <div class="form-floating">
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="abcInput"
-                          name="abc"
-                          placeholder="Enter ABC"
-                          aria-describedby="floatingInputHelp"
-                        />
-                        <label for="abcInput">Approved Budget for the Contract</label>
-                        <div id="floatingInputHelp" class="form-text"></div>
-                      </div>
-                    
-                      <input
-                          type="text"
-                          hidden
-                          name="category"
-                          value="bidding_documents"
-                          class="form-control"
-                          id="floatingInput"
-                          placeholder="category"
-                          aria-describedby="floatingInputHelp"
-                        />
-
-                      <div class="form-floating">
-                        <input
-                          type="text"
-                          name="region"
-                          class="form-control"
-                          id="floatingInput"
-                          placeholder="Region"
-                          aria-describedby="floatingInputHelp"
-                        />
-                        <label for="floatingInput">Region</label>
-                        <div id="floatingInputHelp" class="form-text">
-                        </div>
-                      </div>
-
-
-
-
-                    </div>
-                  </div>
-                </div>
-          
-                <!-- Column 2 -->
-                <div class="col-md-6">
-                  <div class="card mb-4 h-100 d-flex flex-column">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                      
-                      <!-- Upload Area -->
-                      <div class="flex items-center justify-center w-full mb-2 pt-10" >
-                        <label style="padding-bottom: 40px" 
-                               for="dropzone-file"
-                               class="flex flex-col items-center justify-center w-full h-64 border-2  border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
-                          <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                            <svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                              </path>
-                            </svg>
-                            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                              <span class="font-semibold">Click to upload document front page</span> or drag and drop
-                            </p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">PNG or JPG  (MAX. 3MB)</p>
-                          </div>
-                          <input id="dropzone-file" type="file" name="image" class="hidden" />
-                        </label>
-                      </div>
-                      <p>Bidding Document Price: <strong id="documentPrice">₱ 0.00</strong></p>
-                      <!-- Button Aligned Right -->
-                      <div class="d-flex justify-content-end" style="margin-top: -20px !important;">
-                        
-                        <button class="btn btn-primary" type="submit">Publish Document</button>
-                      </div>
-                
-                    </div>
-                  </div>
-                </div>
-
-                
-          
-              </div>
-            </form>
-              <div class="card" style="margin-top: 20px">
+         
+              <div class="card">
                 <h5 class="card-header">Uploaded Bidding Documents</h5>
-                <div class="card-body" style="height: 200px; overflow-y: auto;" >
+                <div class="card-body" >
                   <div class="table-responsive text-nowrap">
                     <table class="table table-bordered">
                       <thead>
@@ -315,10 +198,11 @@
                           <th>Description</th>
                           <th>Price</th>
                           <th>Region</th>
+                          <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {% for doc in documents|slice:"3" %}
+                        {% for doc in documents %}
                         <tr>
                           <td>
                             <i class="fab fa-angular fa-lg text-danger me-3"></i> <strong>{{ doc.title }}</strong>
@@ -326,6 +210,28 @@
                           <td>{{ doc.description }}</td>
                           <td>₱ {{ doc.price|floatformat:2|intcomma}}</td>
                           <td><span class="badge bg-label-primary me-1">{{ doc.region }}</span></td>
+                          <td>
+                            <div class="dropdown">
+                              <button
+                                type="button"
+                                class="btn p-0 dropdown-toggle hide-arrow"
+                                data-bs-toggle="dropdown"
+                              >
+                                <i class="bx bx-dots-vertical-rounded"></i>
+                              </button>
+                              <div class="dropdown-menu">
+                                <a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#modalEdit"
+                                href="javascript:void(0);"
+                                data-id="{{ doc.id }}">
+                                <i class="bx bx-edit-alt me-1"></i> Edit
+                                </a>                                                     
+                                <a class="dropdown-item" href="javascript:void(0);"
+                                  ><i class="bx bx-trash me-1"></i> Delete</a
+                                >
+                              </div>
+                            </div>
+                          </td>
+
                         </tr>
                         {% empty %}
                         <tr>
@@ -344,6 +250,151 @@
             <div class="content-backdrop fade"></div>
             
           </div>
+
+          <div class="col-lg-4 col-md-6">
+            <div class="mt-3">
+              <div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title" id="modalEditTitle">Edit Document</h5>
+                      <button
+                        type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"
+                      ></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="row">
+                        <div class="col mb-3">
+                          <label for="editTitle" class="form-label">Title</label>
+                          <input
+                            type="text"
+                            id="editTitle"  
+                            class="form-control"
+                            placeholder="Enter Name"
+                          />
+                        </div>
+                      </div>
+                      <div class="row">
+                        <div class="col mb-3">
+                          <label for="editDescription" class="form-label">Description</label>
+                          <textarea
+                            style="height: 50px"
+                            id="editDescription"  
+                            class="form-control"
+                            placeholder="Enter Description"
+                          ></textarea>
+                        </div>
+                      </div>
+                      <div class="row g-2">
+                        <div class="col mb-0">
+                          <label for="editABC" class="form-label">ABC</label>
+                          <input
+                            type="text"
+                            id="editABC"  
+                            class="form-control"
+                            placeholder="Enter ABC"
+                          />
+                        </div>
+                        <div class="col mb-0">
+                          <label for="editRegion" class="form-label">Region</label>
+                          <input
+                            type="text"
+                            id="editRegion"  
+                            class="form-control"
+                            placeholder="Enter Region"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+                        Close
+                      </button>
+                      <button type="button" class="btn btn-primary" id="saveChangesBtn">Save changes</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+
+          <script>
+            // Add event listener for the "Edit" button click
+            document.addEventListener('DOMContentLoaded', function () {
+              // Attach event listener for all "Edit" buttons
+              document.querySelectorAll('.edit-btn').forEach(button => {
+                button.addEventListener('click', function (event) {
+                  // Get the data attributes from the clicked button
+                  const docId = event.target.getAttribute('data-id');
+                  const title = event.target.getAttribute('data-title');
+                  const description = event.target.getAttribute('data-description');
+                  const abc = event.target.getAttribute('data-abc');
+                  const region = event.target.getAttribute('data-region');
+            
+                  // Populate the modal fields with the document data
+                  document.getElementById('editTitle').value = title;
+                  document.getElementById('editDescription').value = description;
+                  document.getElementById('editABC').value = abc;
+                  document.getElementById('editRegion').value = region;
+            
+                  // Store the document ID in a global variable for later use when saving
+                  document.getElementById('saveChangesBtn').setAttribute('data-doc-id', docId);
+                });
+              });
+            
+              // Handle the save button
+              document.getElementById('saveChangesBtn').addEventListener('click', function () {
+                const docId = this.getAttribute('data-doc-id');
+                const updatedTitle = document.getElementById('editTitle').value;
+                const updatedDescription = document.getElementById('editDescription').value;
+                const updatedABC = document.getElementById('editABC').value;
+                const updatedRegion = document.getElementById('editRegion').value;
+            
+                // Send the updated data to the server
+                fetch('/update/document/', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),  // Ensure CSRF token is included (use your method)
+                  },
+                  body: JSON.stringify({
+                    id: docId,
+                    title: updatedTitle,
+                    description: updatedDescription,
+                    abc: updatedABC,
+                    region: updatedRegion
+                  })
+                })
+                .then(response => response.json())
+                .then(data => {
+                  if (data.success) {
+                    alert('Document updated successfully!');
+                    // Close the modal
+                    const modal = new bootstrap.Modal(document.getElementById('modalEdit'));
+                    modal.hide();
+                  } else {
+                    alert('Error updating document.');
+                  }
+                })
+                .catch(error => {
+                  console.error('Error:', error);
+                  alert('An error occurred while updating the document.');
+                });
+              });
+            });
+            
+            // Function to get CSRF token (assuming you are using Django)
+            function getCSRFToken() {
+              const cookieValue = document.cookie.match(/csrftoken=([\w-]+)/);
+              return cookieValue ? cookieValue[1] : '';
+            }
+            </script>
+            
+                
           
           <!-- Content wrapper -->
           <script>
@@ -409,34 +460,6 @@
           <!-- SweetAlert2 CDN -->
           <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-          <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              const form = document.getElementById('documentForm');
-
-              form.addEventListener('submit', function (e) {
-                e.preventDefault(); // Stop normal form submission
-
-                Swal.fire({
-                  title: 'Are you sure?',
-                  text: "Do you want to publish this document?",
-                  icon: 'question',
-                  showCancelButton: true,
-                  confirmButtonColor: '#0d6efd',
-                  cancelButtonColor: '#d33',
-                  confirmButtonText: 'Yes, publish it!',
-                  cancelButtonText: 'Cancel',
-                  customClass: {
-                    popup: 'swal-zindex'
-                  }
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    form.submit();
-                  }
-                });
-                
-              });
-            });
-          </script>
 
           
           
