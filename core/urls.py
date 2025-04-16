@@ -20,6 +20,8 @@ urlpatterns = [
     path("verify-otp/", views.verify_otp, name="verify_otp"),
     path('adminhome/', views.adminhome, name='admin-home'),
     path('BAC/', views.BAC, name='bac-add'),
+    path('BAC/edit', views.bac_edit, name='bac-edit'),
+    path('update/document/', views.update_document, name='update_document'),
     path('test/', views.test, name='test'),
 ]
 

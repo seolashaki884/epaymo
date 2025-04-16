@@ -11,6 +11,8 @@ from django.db import transaction
 from decimal import Decimal
 import random
 from django.core.mail import send_mail
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 
 @login_required(login_url='login')
@@ -324,6 +326,35 @@ def BAC(request):
 
     documents = Document.objects.filter(category='bidding_documents').order_by('-id')
     return render(request, 'bac-admin/BAC-add.html', {'documents': documents})
+
+def bac_edit(request):
+    documents = Document.objects.all().order_by('-id')
+    return render(request, 'bac-admin/BAC-edit.html', {'documents': documents})
+
+@csrf_exempt  # Make sure you include CSRF protection in your requests
+def update_document(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        doc_id = data.get('id')
+        title = data.get('title')
+        description = data.get('description')
+        abc = data.get('abc')
+        region = data.get('region')
+
+        try:
+            document = Document.objects.get(id=doc_id)
+            document.title = title
+            document.description = description
+            document.abc = abc
+            document.region = region
+            document.save()
+
+            return JsonResponse({'success': True})
+
+        except Document.DoesNotExist:
+            return JsonResponse({'error': 'Document not found'}, status=404)
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def test(request):
     return render(request, 'core/test.html')
