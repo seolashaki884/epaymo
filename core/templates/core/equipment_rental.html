@@ -1,0 +1,253 @@
+
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.1/css/boxicons.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet"> 
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+
+        
+    {% tailwind_css %}
+</head>
+<title>epaymo</title>
+<body class="min-h-screen bg-gray-100">
+
+   
+    <div class="flex flex-col min-h-screen">
+     
+        <header class="bg-white z-10 sticky top-0">
+            {% include "components/header.html" %}
+        </header>        
+      
+        <div class="flex flex-1">
+          
+            <aside class="w-64 bg-white h-screen overflow-y-auto">
+                {% include "brental_end_user_components/sidebar.html" %}
+            </aside>
+
+            
+                <main class="flex-1 py-10 p-10 overflow-auto">
+                    <h1 class="text-2xl font-semibold text-gray-700">All</h1>
+                    <div class="py-4 flex flex-wrap justify-start gap-6">
+                       
+
+
+                        
+
+{% for equipment in equipment_list %}
+{%load humanize%}
+
+
+    <div class="w-[245px] h-[406px] text-[#3357CF] bg-white rounded-lg relative flex flex-col">
+        <div class="p-3 flex-grow">
+            <div class="absolute right-2 top-3">
+                <h5 class="font-black">PHP 34434334</h5>
+            </div>
+            <div class="flex justify-center items-center pt-10 px-10">
+                {% if equipment.image %}
+                    <img class="rounded-lg border border-gray-600" src="{{ equipment.image.url }}" alt="{{ equipment.name }}" />
+                {% else %}
+                    <img class="rounded-lg border border-gray-600" src="/static/images/default-image.jpg" alt="Default Image" />
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="p-4 text-gray-700 font-bold text-sm flex-grow">
+            <h5>{{ equipment.name }}</h5>
+            <!--<h6 class="text-sm text-gray-600 font-normal">{{ document.region }}</h6>-->
+            <h6 class="text-sm text-gray-500 font-normal">{{ equipment.category }}</h6>
+            <h6 class="text-sm text-gray-400 font-light">{{ equipment.description|truncatechars:35|slice:":-3" }}...</h6>
+        </div>
+
+        <div class="absolute bottom-2 right-3 flex">
+            <div x-data="{ isOpen: false }">
+                <button type="button" @click="isOpen = true" class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800" style="margin-right: 5px !important;">
+                    <i class='bx bx-show-alt me-2'></i>View
+                </button>
+
+                <!-- Modal -->
+                <div x-show="isOpen"
+                    x-transition:enter="transition duration-300 ease-out"
+                    x-transition:enter-start="translate-y-4 opacity-0 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="translate-y-0 opacity-100 sm:scale-100"
+                    x-transition:leave="transition duration-150 ease-in"
+                    x-transition:leave-start="translate-y-0 opacity-100 sm:scale-100"
+                    x-transition:leave-end="translate-y-4 opacity-0 sm:translate-y-0 sm:scale-10"
+                    class="fixed inset-0 z-10 overflow-y-auto bg-black bg-opacity-40 backdrop-blur-sm" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+                        <div class="relative inline-block p-6 overflow-hidden text-left align-middle transition-all transform bg-white shadow-xl sm:max-w-5xl rounded-xl sm:w-full">
+                            <section class="py-8 bg-white md:py-16 antialiased">
+                                <div class="max-w-screen-xl px-4 mx-auto 2xl:px-0">
+                                    <div class="lg:grid lg:grid-cols-2 lg:gap-8 xl:gap-16">
+                                        <div class="shrink-0 max-w-md lg:max-w-lg mx-auto">
+                                            {% if equipment.image %}
+                                                <img class="w-[341px] h-[483px] border-gray-5   00 border-2 rounded-lg object-cover" src="{{ equipment.image.url }}" alt="{{ equipment.name }}" />
+                                            {% else %}
+                                                <img class="w-[341px] h-[483px] rounded-lg object-cover" src="/static/images/default-image.jpg" alt="Default Image" />
+                                            {% endif %}
+
+                                        </div>
+                                
+                                        <div class="mt-6 sm:mt-8 lg:mt-0">
+                                            <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">
+                                              PHP 34343434
+                                            </h1>
+                                            
+                                            <div class="mt-4 sm:items-center sm:gap-4 sm:flex">
+                                                <p class="text-2xl font-extrabold text-[#3357CF] sm:text-3xl">
+                                                     {{ equipment.name }}
+                                                </p>
+                                               
+                                                <div class="flex items-center gap-2 mt-2 sm:mt-0">
+                                                    <!-- You can add rating system here if your documents have ratings
+                                                    <p class="text-sm font-medium leading-none text-gray-500">
+                                                        {{ document.region }}
+                                                    </p> -->
+                                                </div>
+                                            </div>
+                                
+                                            <div class="mt-6 sm:gap-4 sm:items-center sm:flex sm:mt-8">
+                                                <button onclick="addToCart({{ equipment.id }})" type="button" class="flex items-center justify-center py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100" role="button">
+                                                    <i class='bx bx-shopping-bag pr-2'></i>
+                                                        Add to Cart
+                                                </button>                                              
+                                            </div>
+                                
+                                            <hr class="my-6 md:my-5 border-gray-200" />
+                                                
+                                            <div class="text-gray-500 py-5 ">
+                                                <h3 class="text-lg font-semibold text-gray-700">Category</h3>
+                                                <p>{{ equipment.category }}</p>
+                                            </div>    
+                                            <p class="text-gray-500">
+                                                {{ equipment.description }}
+                                            </p>
+
+                                
+                                            
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                            
+                            <!-- Inside your modal, replace the button section with this: -->
+                            <div class="mt-4 sm:flex sm:items-center sm:justify-between sm:mt-6 sm:-mx-2">
+                                <button @click="isOpen = false" class="px-4 sm:mx-2 w-full py-2.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-100 focus:outline-none focus:ring focus:ring-gray-300 focus:ring-opacity-40">
+                                    Cancel
+                                </button>   
+
+                                <button @click="isOpen = false; /* Add your confirm action here */" class="px-4 sm:mx-2 w-full py-2.5 mt-3 sm:mt-0 text-sm font-medium tracking-wide text-white bg-blue-600 rounded-md hover:bg-blue-500 focus:outline-none focus:ring focus:ring-blue-300 focus:ring-opacity-40">
+                                    Proceed to Checkout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button type="button" 
+                class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800"
+                onclick="addToCart({{ document.id }})">
+                <i class='bx bx-shopping-bag me-2'></i>Add
+            </button>
+
+        </div>
+    </div>
+    
+    <script>
+        const notyf = new Notyf({
+            duration: 2000,
+            position: { x: 'right', y: 'bottom' },
+            types: [
+                {
+                    type: 'success',
+                    dismissible: true,
+                }
+            ]
+        });
+
+        async function addToCart(documentId) {
+            console.log("addToCart function triggered for document ID:", documentId);
+
+            try {
+                const response = await fetch(`/add-to-cart/${documentId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                    body: JSON.stringify({ document_id: documentId }),
+                });
+
+                console.log("Response Status:", response.status);
+
+                const data = await response.json();
+                console.log("Response Data:", data);
+
+                if (data.cart_item_count !== undefined) {
+                    updateCartCount(data.cart_item_count);
+
+                    notyf.success('Document added to cart!');
+                } else {
+                    console.log("Error: Invalid response data", data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function updateCartCount(count) {
+            console.log("Updating cart count:", count);
+            const cartCountEl = document.getElementById("cart-count");
+            if (cartCountEl) cartCountEl.textContent = count;
+        }
+    </script>
+    
+
+{% empty %}
+    <p>No documents available.</p>
+{% endfor %}
+
+
+
+
+                        {% if messages %}
+                        <script>
+                          {% for message in messages %}
+                            notyf.success("{{ message|escapejs }}");
+                          {% endfor %}
+                        </script>
+                        {% endif %}
+                        
+                        
+                    </div>
+                </main>
+            
+        </div>
+    </div>
+</body>
+
+
+                
+</html>

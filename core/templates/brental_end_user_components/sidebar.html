@@ -12,11 +12,11 @@
       <h6 class="text-[#3357CF] text-sm font-semibold px-4">DOCUMENTS</h6>
       <ul class="mt-2 space-y-1">
           <li>
-            <a href="{% url 'home' %}?category=bidding_documents" 
-                    class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all 
-                    {% if selected_category == 'bidding_documents' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
-                    <i class='bx bx-file mr-2'></i> Bidding Documents
-                </a>
+              <a href="{% url 'home' %}?category=bidding_documents" 
+                 class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all 
+                 {% if selected_category == 'bidding_documents' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
+                  <i class='bx bx-file mr-2'></i> Bidding Documents
+              </a>
           </li>
           <li>
               <a href="{% url 'home' %}?category=drainage_fee"
@@ -28,7 +28,7 @@
           <li>
               <a href="{% url 'equipment' %}"
                  class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
-                 {% if selected_category == 'equipment_rental' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
+                 bg-blue-50 border-l-4 border-l-blue-600">
                   <i class='bx bx-wrench mr-2'></i> Equipment rental
               </a>
           </li>

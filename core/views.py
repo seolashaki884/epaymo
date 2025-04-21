@@ -16,7 +16,6 @@ import json
 
 
 @login_required(login_url='login')
-
 def home(request):
     # Get category filter from query parameters
     category_filter = request.GET.get('category') 
@@ -283,7 +282,7 @@ def billing_prep(request):
 def adminhome(request):
     return render(request, 'bac-admin/dashboard.html')
 
-@login_required
+
 def BAC(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -331,31 +330,47 @@ def bac_edit(request):
     documents = Document.objects.all().order_by('-id')
     return render(request, 'bac-admin/BAC-edit.html', {'documents': documents})
 
-@csrf_exempt  # Make sure you include CSRF protection in your requests
-def update_document(request):
+@csrf_exempt  # Note: Consider using CSRF token in production for better security
+def update_document(request, doc_id):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        doc_id = data.get('id')
-        title = data.get('title')
-        description = data.get('description')
-        abc = data.get('abc')
-        region = data.get('region')
-
         try:
+            data = json.loads(request.body)
             document = Document.objects.get(id=doc_id)
-            document.title = title
-            document.description = description
+
+            abc_raw = data['abc']
+            abc = Decimal(abc_raw.replace(',', '')) if isinstance(abc_raw, str) else Decimal(abc_raw)
+
+            # Compute price based on the updated abc value
+            if abc < 500000:
+                price = Decimal(500)
+            elif 500000 <= abc < 1000000:
+                price = Decimal(1000)
+            elif 1000000 <= abc < 5000000:
+                price = Decimal(5000)
+            elif 5000000 <= abc < 10000000:
+                price = Decimal(10000)
+            elif 10000000 <= abc < 50000000:
+                price = Decimal(25000)
+            elif 50000000 <= abc < 500000000:
+                price = Decimal(50000)
+            else:
+                price = Decimal(75000)
+
+            # Update document fields
+            document.title = data['title']
+            document.description = data['description']
             document.abc = abc
-            document.region = region
+            document.region = data['region']
+            document.price = price  # ✅ Auto-updated price
             document.save()
 
-            return JsonResponse({'success': True})
-
+            return JsonResponse({'status': 'success'})
         except Document.DoesNotExist:
-            return JsonResponse({'error': 'Document not found'}, status=404)
+            return JsonResponse({'status': 'error', 'message': 'Document not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-    return JsonResponse({'error': 'Invalid request'}, status=400)
-
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 def test(request):
     return render(request, 'core/test.html')
  

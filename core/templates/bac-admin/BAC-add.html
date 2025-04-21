@@ -17,6 +17,7 @@
         <!-- Notyf CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
 
 
     <!-- Notyf JS -->
@@ -323,7 +324,7 @@
                           <td>
                             <i class="fab fa-angular fa-lg text-danger me-3"></i> <strong>{{ doc.title }}</strong>
                           </td>
-                          <td>{{ doc.description }}</td>
+                          <td>{{ doc.description|truncatewords:5 }}</td>
                           <td>₱ {{ doc.price|floatformat:2|intcomma}}</td>
                           <td><span class="badge bg-label-primary me-1">{{ doc.region }}</span></td>
                         </tr>
@@ -412,10 +413,33 @@
           <script>
             document.addEventListener('DOMContentLoaded', function () {
               const form = document.getElementById('documentForm');
-
+          
               form.addEventListener('submit', function (e) {
                 e.preventDefault(); // Stop normal form submission
-
+          
+                // Get values from form fields
+                const title = form.querySelector('input[name="title"]').value.trim();
+                const description = form.querySelector('input[name="description"]').value.trim();
+                const abc = form.querySelector('input[name="abc"]').value.trim();
+                const region = form.querySelector('input[name="region"]').value.trim();
+                const image = form.querySelector('input[name="image"]').files.length;
+          
+                // Basic validation
+                if (!title || !description || !abc || !region || !image) {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Information',
+                    text: 'Please fill out all required fields and upload an image.',
+                    confirmButtonColor: '#d33',
+                    customClass: {
+                      confirmButton: 'btn btn-danger',
+                    },
+                    buttonsStyling: false
+                  });
+                  return;
+                }
+          
+                // Show confirmation
                 Swal.fire({
                   title: 'Are you sure?',
                   text: "Do you want to publish this document?",
@@ -426,17 +450,30 @@
                   confirmButtonText: 'Yes, publish it!',
                   cancelButtonText: 'Cancel',
                   customClass: {
+                    confirmButton: 'btn btn-primary',
+                    cancelButton: 'btn btn-danger',
                     popup: 'swal-zindex'
-                  }
+                  },
+                  buttonsStyling: false
                 }).then((result) => {
                   if (result.isConfirmed) {
                     form.submit();
                   }
                 });
-                
               });
             });
           </script>
+          <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              const abcInput = document.getElementById('abcInput');
+          
+              abcInput.addEventListener('input', function () {
+                this.value = this.value.replace(/[^\d,]/g, ''); // Allow only numbers and commas
+              });
+            });
+          </script>
+          
+          
 
           
           
