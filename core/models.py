@@ -66,6 +66,7 @@ class Order(models.Model):
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     ordered_at = models.DateTimeField(auto_now_add=True)
     custom_order_id = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    category = models.CharField(max_length=255)
 
     def calculate_total_price(self):
         """Recalculate total order price based on OrderItems."""
@@ -87,8 +88,7 @@ class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name="order_items", on_delete=models.CASCADE)
     document = models.ForeignKey(Document, on_delete=models.SET_NULL, null=True)
     quantity = models.PositiveIntegerField(default=1)
-    price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)  # Stores document price at purchase time
-
+    price_at_purchase = models.DecimalField(max_digits=10, decimal_places=2)
     def total_price(self):
         return self.quantity * self.price_at_purchase  # Compute total price of this item
 

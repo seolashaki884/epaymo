@@ -13,6 +13,8 @@ import random
 from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.contrib.admin.models import LogEntry, CHANGE, ADDITION, DELETION
+from django.contrib.contenttypes.models import ContentType
 
 
 @login_required(login_url='login')
@@ -70,8 +72,10 @@ def user_login(request):
         if user is not None:
             login(request, user)
             
+            if user.is_superuser:
+                return redirect('/admin/') 
             if user.is_staff:
-                return redirect('/admin/')  
+                return redirect('/adminhome/') 
 
             return redirect("home") 
         else:
@@ -242,25 +246,37 @@ def update_cart_quantity(request):
 @transaction.atomic
 def submit_order(request):
     user = request.user
+
+    # ✅ Always define cart_items first
     cart_items = Cart.objects.filter(user=user)
 
     if not cart_items.exists():
+        messages.warning(request, "Your cart is empty.")
         return redirect('cart')
 
-    # Create order
-    order = Order.objects.create(user=user, status='pending')
+    # ✅ Use readable category names (optional)
+    categories = list({item.document.category for item in cart_items})
 
-    # Optional: Create OrderItem model to track itemized entries
+
+    # Create the order with category (joined readable names)
+    order = Order.objects.create(
+        user=user,
+        status='pending',
+        category=", ".join(categories)
+    )
+
+    # Create OrderItems
     for cart_item in cart_items:
-        order_item = order.order_items.create(
+        order.order_items.create(
             document=cart_item.document,
             quantity=cart_item.quantity,
             price_at_purchase=cart_item.document.price,
         )
 
-
+    # Finalize
     order.calculate_total_price()
     cart_items.delete()
+
     messages.success(request, "Order submitted successfully!")
     return redirect('home')
 
@@ -278,9 +294,16 @@ def get_cart_count(request):
 def billing_prep(request):
     return render(request, 'core/billingprep.html')
 
-@login_required
+
 def adminhome(request):
-    return render(request, 'bac-admin/dashboard.html')
+    # Ensure that the logged-in user is a staff member
+    if not request.user.is_staff:
+        return render(request, 'access_denied.html')
+
+    # Filter logs for the logged-in user
+    logs = LogEntry.objects.filter(user=request.user).order_by('-action_time')
+
+    return render(request, 'bac-admin/dashboard.html', {'logs': logs})
 
 
 def BAC(request):
@@ -310,7 +333,7 @@ def BAC(request):
             price = Decimal(75000)
 
         # Create the Document object
-        Document.objects.create(
+        document = Document.objects.create(
             title=title,
             description=description,
             abc=abc,
@@ -318,6 +341,17 @@ def BAC(request):
             region=region,
             image=image,
             price=price  # Set the computed price
+        )
+
+        # Log the creation of the document in the admin logs
+        content_type = ContentType.objects.get_for_model(Document)  # Get content type for Document model
+        LogEntry.objects.log_action(
+            user_id=request.user.id,  # The user who created the document
+            content_type_id=content_type.id,
+            object_id=document.id,
+            object_repr=str(document),  # String representation of the document
+            action_flag=ADDITION,  # Action type: ADDITION (new object created)
+            change_message=f"Document '{document.title}' created with price {document.price}"
         )
 
         messages.success(request, 'Document published successfully!')
@@ -329,8 +363,7 @@ def BAC(request):
 def bac_edit(request):
     documents = Document.objects.all().order_by('-id')
     return render(request, 'bac-admin/BAC-edit.html', {'documents': documents})
-
-@csrf_exempt  # Note: Consider using CSRF token in production for better security
+@csrf_exempt
 def update_document(request, doc_id):
     if request.method == 'POST':
         try:
@@ -340,7 +373,6 @@ def update_document(request, doc_id):
             abc_raw = data['abc']
             abc = Decimal(abc_raw.replace(',', '')) if isinstance(abc_raw, str) else Decimal(abc_raw)
 
-            # Compute price based on the updated abc value
             if abc < 500000:
                 price = Decimal(500)
             elif 500000 <= abc < 1000000:
@@ -357,6 +389,12 @@ def update_document(request, doc_id):
                 price = Decimal(75000)
 
             # Update document fields
+            old_title = document.title  # Store old title for logging
+            old_description = document.description  # Store old description for logging
+            old_abc = document.abc  # Store old abc for logging
+            old_region = document.region  # Store old region for logging
+            old_price = document.price  # Store old price for logging
+
             document.title = data['title']
             document.description = data['description']
             document.abc = abc
@@ -364,13 +402,73 @@ def update_document(request, doc_id):
             document.price = price  # ✅ Auto-updated price
             document.save()
 
+            # Log the document update in admin logs
+            content_type = ContentType.objects.get_for_model(Document)
+            LogEntry.objects.log_action(
+                user_id=request.user.id,
+                content_type_id=content_type.id,
+                object_id=document.id,
+                object_repr=str(document),
+                action_flag=CHANGE,  # Action type: CHANGE (existing object updated)
+                change_message=f"Updated document from title '{old_title}' to '{document.title}', description '{old_description}' to '{document.description}', ABC from {old_abc} to {document.abc}, price from {old_price} to {document.price}, and region from '{old_region}' to '{document.region}'."
+            )
+
             return JsonResponse({'status': 'success'})
+
         except Document.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Document not found'}, status=404)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+@csrf_exempt
+def delete_document(request, doc_id):
+    if request.method == 'POST':
+        try:
+            # Safely parse JSON body
+            try:
+                data = json.loads(request.body)
+            except json.JSONDecodeError:
+                return JsonResponse({'status': 'error', 'message': 'Invalid JSON body'}, status=400)
+
+            # Check if method override is DELETE
+            if data.get('_method') != 'DELETE':
+                return JsonResponse({'status': 'error', 'message': 'Invalid method override'}, status=400)
+
+            # Get the document
+            document = Document.objects.get(id=doc_id)
+            document_repr = str(document)  # Save for logging before deletion
+            document_id = document.id
+
+            # Delete document
+            document.delete()
+
+            # Log deletion
+            content_type = ContentType.objects.get_for_model(Document)
+            LogEntry.objects.log_action(
+                user_id=request.user.id,
+                content_type_id=content_type.id,
+                object_id=document_id,
+                object_repr=document_repr,
+                action_flag=DELETION,
+                change_message=f"Deleted document '{document_repr}'"
+            )
+
+            return JsonResponse({'status': 'success'})
+
+        except Document.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Document not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+
+def biddings(request):
+    orders = Order.objects.select_related('user').order_by('-ordered_at')
+    return render(request, 'bac-admin/BAC-biddings.html', {'orders': orders})
+
 def test(request):
     return render(request, 'core/test.html')
  

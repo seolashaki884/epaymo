@@ -188,64 +188,61 @@
             <div class="container-xxl flex-grow-2 container-p-y">
          
               <div class="card">
-                <h5 class="card-header">Uploaded Bidding Documents</h5>
+                <h5 class="card-header">Bidding Document Requests</h5>
                 <div class="card-body" >
                   <div class="table-responsive text-nowrap">
                     <table class="table table-bordered">
                       <thead>
                         <tr>
+                          <th>Full Name</th>
+                          <th>Order ID</th>
                           <th>Title</th>
-                          <th>Description</th>
                           <th>Price</th>
                           <th>Region</th>
+                          <th>Status</th>
                           <th>Action</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {% for doc in documents %}
-                        <tr>
-                          <td>
-                            <i class="fab fa-angular fa-lg text-danger me-3"></i> <strong>{{ doc.title }}</strong>
-                          </td>
-                          <td>{{ doc.description|truncatewords:5 }}</td>
-                          <td>₱ {{ doc.price|floatformat:2|intcomma}}</td>
-                          <td><span class="badge bg-label-primary me-1">{{ doc.region }}</span></td>
-                          <td>
-                            <div class="dropdown">
-                              <button
-                                type="button"
-                                class="btn p-0 dropdown-toggle hide-arrow"
-                                data-bs-toggle="dropdown"
-                              >
-                                <i class="bx bx-dots-vertical-rounded"></i>
-                              </button>
-                              <div class="dropdown-menu">
-                                <a class="dropdown-item"
-                                  data-bs-toggle="modal"
-                                  data-bs-target="#modalEdit"
-                                  href="javascript:void(0);"
-                                  data-id="{{ doc.id }}"
-                                  data-title="{{ doc.title }}"
-                                  data-description="{{ doc.description }}"
-                                  data-abc="{{ doc.abc }}"
-                                  data-region="{{ doc.region }}">
-                                  <i class="bx bx-edit-alt me-1"></i> Edit
-                                </a>
-                                                                               
-                                <a class="dropdown-item delete-btn text-danger" data-id="{{ doc.id }}" href="javascript:void(0);">
-                                  <i class="bx bx-trash me-1"></i> Delete
-                                </a>                                
-
+                        {% for order in orders %}
+                        {% for item in order.order_items.all %}
+                          <tr>
+                            <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
+                            <td>{{ order.custom_order_id }}</td>
+                            <td>{{ item.document.title }}</td>
+                            <td>₱ {{ item.price_at_purchase|floatformat:2|intcomma }}</td>
+                            <td>{{ item.document.region }}</td>
+                            <td>
+                              <span class="badge bg-label-info">{{ order.status|capfirst }}</span>
+                            </td>
+                            <td>
+                              <div class="dropdown">
+                                <button
+                                  type="button"
+                                  class="btn p-0 dropdown-toggle hide-arrow"
+                                  data-bs-toggle="dropdown"
+                                >
+                                  <i class="bx bx-dots-vertical-rounded"></i>
+                                </button>
+                                <div class="dropdown-menu">
+                                  <a class="dropdown-item" href="#">
+                                    <i class="bx bx-show-alt me-1"></i> View
+                                  </a>
+                                  {% if order.status == 'pending' %}
+                                    <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="cancelOrder('{{ order.id }}')">
+                                      <i class="bx bx-trash me-1"></i> Cancel
+                                    </a>
+                                  {% endif %}
+                                </div>
                               </div>
-                            </div>
-                          </td>
-
-                        </tr>
-                        {% empty %}
-                        <tr>
-                          <td colspan="4" class="text-center">No bidding documents found.</td>
-                        </tr>
+                            </td>
+                          </tr>
                         {% endfor %}
+                      {% empty %}
+                      <tr>
+                        <td colspan="7" class="text-center">No orders found.</td>
+                      </tr>
+                      {% endfor %}                      
                       </tbody>
                     </table>
                     

@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 
 # Create your views here.
-@login_required
+@login_required(login_url='login')
 def equipment(request):
     equipment_list = Equipment.objects.filter(status='available').order_by('-created_at')
     return render(request, 'core/equipment_rental.html', {

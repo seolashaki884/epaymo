@@ -4,9 +4,9 @@ from django.conf.urls.static import static
 from . import views
 
 urlpatterns = [
-    path('home/', views.home, name='home'),  # Add the trailing slash
-    path('', views.login_view, name='login'),  # Login page
-    path('user_login/', views.user_login, name='user_login'),  # POST login submission
+    path('home/', views.home, name='home'), 
+    path('', views.login_view, name='login'), 
+    path('user_login/', views.user_login, name='user_login'),
     path("signup/", views.signup, name="signup"),   
     path('logout/', views.user_logout, name='user_logout'),
     path('add-to-cart/<int:document_id>/', views.add_to_cart, name='add_to_cart'),  
@@ -22,6 +22,8 @@ urlpatterns = [
     path('BAC/', views.BAC, name='bac-add'),
     path('BAC/edit', views.bac_edit, name='bac-edit'),
     path('bac-edit/<int:doc_id>/update/', views.update_document, name='update_document'),
+    path('delete-document/<int:doc_id>/', views.delete_document, name='delete_document'),
+    path('biddings/', views.biddings, name='biddings'),
     path('test/', views.test, name='test'),
 ]
 

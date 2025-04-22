@@ -1,3 +1,8 @@
+<style>
+  .swal2-timer-progress-bar {
+      background-color: #93C572 !important;
+    }      
+</style>
 <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
     <div class="app-brand demo">
       <a href="{% url 'admin-home' %}" class="app-brand-link">
@@ -95,8 +100,8 @@
           </li>
         </ul>
       </li>
-      <li class="menu-item">
-        <a href="cards-basic.html" class="menu-link">
+      <li class="menu-item {% if request.path == '/biddings/' or request.path == '/biddings/' %}active open{% endif %}">
+        <a href="{% url 'biddings' %}" class="menu-link">
           <i class="menu-icon tf-icons bx bx-collection"></i>
           <div data-i18n="Basic">Biddings</div>
         </a>
