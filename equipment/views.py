@@ -16,7 +16,10 @@ import json
 @login_required(login_url='login')
 def equipment(request):
     equipment_list = Equipment.objects.filter(status='available').order_by('-created_at')
-    return render(request, 'core/equipment_rental.html', {
+    return render(request, 'equipment-admin/equipment-add.html', {
         'equipment_list': equipment_list
     })
 
+@login_required(login_url='login')
+def dashboard(request):
+    return render(request, 'equipment-admin/dashboard.html')
