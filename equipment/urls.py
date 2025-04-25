@@ -5,7 +5,8 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
-    path('equipment/', views.equipment, name='equipment'),  # Add the trailing slash
+    path('equipment/add/', views.equipment, name='equipment'),  # Add the trailing slash
+    path('dashboard/', views.dashboard, name='equipmentdashboard'),
 
 
 ]
