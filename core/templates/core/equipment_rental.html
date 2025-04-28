@@ -41,11 +41,10 @@
 {% for equipment in equipment_list %}
 {%load humanize%}
 
-
     <div class="w-[245px] h-[406px] text-[#3357CF] bg-white rounded-lg relative flex flex-col">
         <div class="p-3 flex-grow">
             <div class="absolute right-2 top-3">
-                <h5 class="font-black">PHP 34434334</h5>
+                <h5 class="font-black">PHP {{ equipment.rental_rate }}</h5>
             </div>
             <div class="flex justify-center items-center pt-10 px-10">
                 {% if equipment.image %}
@@ -58,7 +57,6 @@
 
         <div class="p-4 text-gray-700 font-bold text-sm flex-grow">
             <h5>{{ equipment.name }}</h5>
-            <!--<h6 class="text-sm text-gray-600 font-normal">{{ document.region }}</h6>-->
             <h6 class="text-sm text-gray-500 font-normal">{{ equipment.category }}</h6>
             <h6 class="text-sm text-gray-400 font-light">{{ equipment.description|truncatechars:35|slice:":-3" }}...</h6>
         </div>
@@ -96,7 +94,7 @@
                                 
                                         <div class="mt-6 sm:mt-8 lg:mt-0">
                                             <h1 class="text-xl font-semibold text-gray-900 sm:text-2xl">
-                                              PHP 34343434
+                                              PHP {{equipment.rental_rate}}
                                             </h1>
                                             
                                             <div class="mt-4 sm:items-center sm:gap-4 sm:flex">
@@ -113,7 +111,7 @@
                                             </div>
                                 
                                             <div class="mt-6 sm:gap-4 sm:items-center sm:flex sm:mt-8">
-                                                <button onclick="addToCart({{ equipment.id }})" type="button" class="flex items-center justify-center py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100" role="button">
+                                                <button onclick="Rent({{ equipment.id }})" type="button" class="flex items-center justify-center py-2.5 px-5 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-100" role="button">
                                                     <i class='bx bx-shopping-bag pr-2'></i>
                                                         Add to Cart
                                                 </button>                                              
@@ -127,10 +125,7 @@
                                             </div>    
                                             <p class="text-gray-500">
                                                 {{ equipment.description }}
-                                            </p>
-
-                                
-                                            
+                                            </p>            
                                         </div>
                                     </div>
                                 </div>
@@ -153,13 +148,18 @@
 
             <button type="button" 
                 class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800"
-                onclick="addToCart({{ document.id }})">
-                <i class='bx bx-shopping-bag me-2'></i>Add
+                onclick="Rent({{ equipment.id }})">
+                <i class='bx bx-shopping-bag me-2'></i>Rent
             </button>
 
         </div>
     </div>
     
+{% empty %}
+    <p>No documents available.</p>
+{% endfor %}
+
+
     <script>
         const notyf = new Notyf({
             duration: 2000,
@@ -171,66 +171,7 @@
                 }
             ]
         });
-
-        async function addToCart(documentId) {
-            console.log("addToCart function triggered for document ID:", documentId);
-
-            try {
-                const response = await fetch(`/add-to-cart/${documentId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCookie('csrftoken'),
-                    },
-                    body: JSON.stringify({ document_id: documentId }),
-                });
-
-                console.log("Response Status:", response.status);
-
-                const data = await response.json();
-                console.log("Response Data:", data);
-
-                if (data.cart_item_count !== undefined) {
-                    updateCartCount(data.cart_item_count);
-
-                    notyf.success('Document added to cart!');
-                } else {
-                    console.log("Error: Invalid response data", data);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        function updateCartCount(count) {
-            console.log("Updating cart count:", count);
-            const cartCountEl = document.getElementById("cart-count");
-            if (cartCountEl) cartCountEl.textContent = count;
-        }
     </script>
-    
-
-{% empty %}
-    <p>No documents available.</p>
-{% endfor %}
-
-
-
 
                         {% if messages %}
                         <script>

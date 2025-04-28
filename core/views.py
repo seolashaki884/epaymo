@@ -10,6 +10,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from decimal import Decimal
 from .models import UserProfile
+from equipment.models import Equipment
 import random
 from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
@@ -475,6 +476,10 @@ def delete_document(request, doc_id):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
+
+def rentals(request):
+    equipment_list = Equipment.objects.filter(status='Available')  # fetch all equipments
+    return render(request, 'core/equipment_rental.html', {'equipment_list': equipment_list})
 
 def biddings(request):
     orders = Order.objects.select_related('user').order_by('-ordered_at')
