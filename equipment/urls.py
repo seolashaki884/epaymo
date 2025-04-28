@@ -5,12 +5,12 @@ from django.conf.urls.static import static
 
 
 urlpatterns = [
-    path('equipment/add/', views.equipment, name='equipment'),  # Add the trailing slash
+    path('equipment/add/', views.equipment, name='equipment'),
     path('dashboard/', views.dashboard, name='equipmentdashboard'),
-
-
+    path('equipment/edit/', views.equipment_list, name='equipment_edit'),
+    path('equipment/edit/<int:equipment_id>/', views.update_equipment, name='update_equipment'),
+    path('equipment/delete/<int:equipment_id>/', views.delete_equipment, name='delete_equipment'),
 ]
-
 
 
 

@@ -3,11 +3,11 @@ from django.contrib.auth.models import User
 
 class Equipment(models.Model):
     name = models.CharField(max_length=255)
-    asset_tag = models.CharField(max_length=50, unique=True) # Unique asset code/tag
+    asset_tag = models.CharField(max_length=50, null=True)
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='equipments/', null=True, blank=True)
     rental_rate = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    rental_price = models.IntegerField()
+    rental_price = models.IntegerField(null=True)
     status = models.CharField(max_length=50, choices=[
         ('available', 'Available'),
         ('maintenance', 'Maintenance'),

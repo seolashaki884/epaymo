@@ -183,130 +183,84 @@
           <!-- Content wrapper -->
           <div class="content-wrapper">
             <div class="container-xxl flex-grow-2 container-p-y">
-              <form method="POST" id="documentForm" enctype="multipart/form-data">
-
-              <div class="row"> 
-                <!-- Column 1 -->
-                <div class="col-md-6">
-                  <div class="card mb-4 h-100" >
-                    <h5 class="card-header">Add Equipment</h5>
-                    <div class="card-body">
-                      <div class="form-floating">
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="floatingInput"
-                          name="equipment"
-                          placeholder="Equipment "
-                          aria-describedby="floatingInputHelp"
-                        />
-                        <label for="floatingInput">Equipment Name</label>
-                        <div id="floatingInputHelp" class="form-text">
+              <form method="POST" id="documentForm" enctype="multipart/form-data" action="{% url 'equipment' %}">
+                {% csrf_token %}
+                
+                <div class="row">
+                  <!-- Column 1 -->
+                  <div class="col-md-6">
+                    <div class="card mb-4 h-100">
+                      <h5 class="card-header">Add Equipment</h5>
+                      <div class="card-body">
+              
+                        <!-- Equipment Name -->
+                        <div class="form-floating mb-3">
+                          <input type="text" class="form-control" id="equipmentName" name="name" placeholder="Equipment Name" required>
+                          <label for="equipmentName">Equipment Name</label>
                         </div>
-                      </div>
-
-
-                      <div class="form-floating">
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="floatingInput"
-                          name="description"
-                          placeholder="Enter Description"
-                          aria-describedby="floatingInputHelp"
-                        />
-                        <label for="floatingInput">Description</label>
-                        <div id="floatingInputHelp" class="form-text">
+              
+                        <!-- Description -->
+                        <div class="form-floating mb-3">
+                          <input type="text" class="form-control" id="description" name="description" placeholder="Description">
+                          <label for="description">Description</label>
                         </div>
-                      </div>
-
-                      <div class="form-floating">
-                        <input
-                          type="text"
-                          class="form-control"
-                          id="abcInput"
-                          name="abc"
-                          placeholder="..."
-                          aria-describedby="floatingInputHelp"
-                        />
-                        <label for="abcInput">....</label>
-                        <div id="floatingInputHelp" class="form-text"></div>
-                      </div>
-                    
-                      <input
-                          type="text"
-                          hidden
-                          name="category"
-                          value="bidding_documents"
-                          class="form-control"
-                          id="floatingInput"
-                          placeholder="category"
-                          aria-describedby="floatingInputHelp"
-                        />
-
-                      <div class="form-floating">
-                        <input
-                          type="text"
-                          name="region"
-                          class="form-control"
-                          id="floatingInput"
-                          placeholder="Enter Rental Rate"
-                          aria-describedby="floatingInputHelp"
-                        />
-                        <label for="floatingInput">Rental Rate Per Hour</label>
-                        <div id="floatingInputHelp" class="form-text">
+              
+                        <!-- Status -->
+                        <div class="form-floating mb-3">
+                          <select class="form-select" id="status" name="status" required>
+                            <option value="" selected disabled>Select Staus</option>
+                            <option value="available">Available</option>
+                            <option value="maintenance">Maintenance</option>
+                            <option value="retired">Retired</option>
+                          </select>
+                          <label for="status">Status</label>
                         </div>
+              
+                        <!-- Rental Rate -->
+                        <div class="form-floating mb-3">
+                          <input type="number" class="form-control" id="rentalRate" name="rental_rate" placeholder="Rental Rate Per Hour" step="0.01" min="0">
+                          <label for="rentalRate">Rental Rate Per Hour (₱)</label>
+                        </div>
+              
                       </div>
-
-
-
-
                     </div>
                   </div>
-                </div>
-          
-                <!-- Column 2 -->
-                <div class="col-md-6">
-                  <div class="card mb-4 h-100 d-flex flex-column">
-                    <div class="card-body d-flex flex-column justify-content-between">
-                      
-                      <!-- Upload Area -->
-                      <div class="flex items-center justify-center w-full mb-2 pt-10" >
-                        <label style="padding-bottom: 40px" 
-                               for="dropzone-file"
-                               class="flex flex-col items-center justify-center w-full h-64 border-2  border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-bray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
-                          <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                            <svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor"
-                                 viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
-                              </path>
-                            </svg>
-                            <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                              <span class="font-semibold">Click to upload document front page</span> or drag and drop
-                            </p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">PNG or JPG  (MAX. 3MB)</p>
-                          </div>
-                          <input id="dropzone-file" type="file" name="image" class="hidden" />
-                        </label>
-                      </div>
-                      <p>Total Rental Cost: <strong id="documentPrice">₱ 0.00</strong></p>
-                      <!-- Button Aligned Right -->
-                      <div class="d-flex justify-content-end" style="margin-top: -20px !important;">
+              
+                  <!-- Column 2 -->
+                  <div class="col-md-6">
+                    <div class="card mb-4 h-100 d-flex flex-column">
+                      <div class="card-body d-flex flex-column justify-content-between">
                         
-                        <button class="btn btn-primary" type="submit">Publish Document</button>
+                        <!-- Upload Image -->
+                        <div class="flex items-center justify-center w-full mb-2 pt-10">
+                          <label style="padding-bottom: 40px" for="dropzone-file" 
+                                 class="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50">
+                            <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                              <svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                              </svg>
+                              <p class="mb-2 text-sm text-gray-500"><span class="font-semibold">Click to upload</span> or drag and drop</p>
+                              <p class="text-xs text-gray-500">PNG or JPG (MAX. 3MB)</p>
+                            </div>
+                            <input id="dropzone-file" type="file" name="image" class="hidden" accept="image/png, image/jpeg" />
+                          </label>
+                        </div>
+              
+                        <!-- Submit -->
+                        <div class="d-flex justify-content-end mt-3">
+                          <button class="btn btn-primary" type="submit">Publish Equipment</button>
+                        </div>
+              
                       </div>
-                
                     </div>
                   </div>
+              
                 </div>
-
-                
-          
-              </div>
-            </form>
+              </form>
+              
               <div class="card" style="margin-top: 20px">
-                <h5 class="card-header">Uploaded Bidding Documents</h5>
+                <h5 class="card-header">Uploaded Equipments</h5>
                 <div class="card-body" style="height: 200px; overflow-y: auto;" >
                   <div class="table-responsive text-nowrap">
                     <table class="table table-bordered">
@@ -314,26 +268,27 @@
                         <tr>
                           <th>Title</th>
                           <th>Description</th>
-                          <th>Price</th>
-                          <th>Region</th>
+                          <th>Rental Rate</th>
+                          <th>Status</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {% for doc in documents|slice:"3" %}
-                        <tr>
-                          <td>
-                            <i class="fab fa-angular fa-lg text-danger me-3"></i> <strong>{{ doc.title }}</strong>
-                          </td>
-                          <td>{{ doc.description|truncatewords:5 }}</td>
-                          <td>₱ {{ doc.price|floatformat:2|intcomma}}</td>
-                          <td><span class="badge bg-label-primary me-1">{{ doc.region }}</span></td>
-                        </tr>
+                        {% for equipment in equipment_list %}
+                          <tr>
+                            <td>
+                              <i class="fab fa-angular fa-lg text-danger me-3"></i> 
+                              <strong>{{ equipment.name }}</strong>
+                            </td>
+                            <td>{{ equipment.description|truncatewords:5 }}</td>
+                            <td>₱ {{ equipment.rental_rate|floatformat:2|intcomma }}</td>
+                            <td><span class="badge bg-label-primary me-1">{{ equipment.status }}</span></td>
+                          </tr>
                         {% empty %}
-                        <tr>
-                          <td colspan="4" class="text-center">No bidding documents found.</td>
-                        </tr>
+                          <tr>
+                            <td colspan="4" class="text-center">No Equipment found.</td>
+                          </tr>
                         {% endfor %}
-                      </tbody>
+                      </tbody>                      
                     </table>
                     
                   </div>
@@ -344,6 +299,94 @@
             <div class="content-backdrop fade"></div>
             
           </div>
+          <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              const form = document.getElementById('documentForm');
+              const equipmentName = document.getElementById('equipmentName');
+              const description = document.getElementById('description');
+              const status = document.getElementById('status');
+              const rentalRate = document.getElementById('rentalRate');
+              const fileInput = document.getElementById('dropzone-file');
+              
+              form.addEventListener('submit', function (event) {
+                event.preventDefault();  // Prevent form submission to handle validation first
+                
+                // Validate fields
+                if (!equipmentName.value.trim()) {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Equipment Name is required!'
+                  });
+                  return;
+                }
+          
+                if (!status.value) {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Status is required!'
+                  });
+                  return;
+                }
+          
+                if (rentalRate.value && parseFloat(rentalRate.value) <= 0) {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Rental Rate must be a positive number!'
+                  });
+                  return;
+                }
+          
+                // Check if an image is required, only validate if it's empty when the file input is required
+                if (!fileInput.files.length && !document.getElementById('dropzone-file').hasAttribute('data-optional')) {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Image is required!',
+                    customClass: {
+                      confirmButton: 'btn btn-danger me-2', // Custom button for confirm action
+                    }
+                  });
+                  return;
+                }
+          
+                // Validate file type if an image is uploaded
+                const file = fileInput.files[0];
+                if (file) {
+                  const validFileTypes = ['image/png', 'image/jpeg'];
+                  if (!validFileTypes.includes(file.type)) {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Error',
+                      text: 'Please upload a valid PNG or JPG image!'
+                    });
+                    return;
+                  }
+                }
+          
+                // If all validations pass, ask for confirmation
+                Swal.fire({
+                  title: 'Are you sure?',
+                  text: 'Do you want to submit the form with these details?',
+                  icon: 'question',
+                  showCancelButton: true,
+                  confirmButtonText: 'Yes, submit!',
+                  cancelButtonText: 'No, cancel',
+                  customClass: {
+                    confirmButton: 'btn btn-primary me-2', // Custom button for confirm action
+                    cancelButton: 'btn btn-secondary'    // Custom button for cancel action
+                  }
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    // If confirmed, submit the form
+                    form.submit();
+                  }
+                });
+              });
+            });
+          </script>
           
           <script>
             const notyf = new Notyf({
