@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from decimal import Decimal
+from .models import UserProfile
 import random
 from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
@@ -59,8 +60,7 @@ def user_login(request):
     if request.method == "POST":
         email = request.POST.get("email")
         password = request.POST.get("password")
-        
-        
+
         try:
             user_obj = User.objects.get(email=email)
         except User.DoesNotExist:
@@ -71,19 +71,30 @@ def user_login(request):
 
         if user is not None:
             login(request, user)
-            
+
             if user.is_superuser:
                 return redirect('/admin/') 
-            if user.is_staff:
-                return redirect('/adminhome/') 
 
-            return redirect("home") 
+            try:
+                user_profile = UserProfile.objects.get(user=user)
+                if user_profile.category == 'bidding_documents':
+                    return redirect('admin-home')  # path('adminhome/', ...)
+                elif user_profile.category == 'equipment_rental':
+                    return redirect('equipmentdashboard')
+                else:
+                    return redirect('home')
+            except UserProfile.DoesNotExist:
+                # No UserProfile found, fallback
+                if user.is_staff:
+                    return redirect('/home/')
+                return redirect('home')
+
         else:
             messages.error(request, "Invalid password. Please try again.")
             return render(request, "core/login.html", {'email': email})
 
     return render(request, "core/login.html")
-    
+
 
 
 def signup(request):
@@ -298,7 +309,7 @@ def billing_prep(request):
 def adminhome(request):
     # Ensure that the logged-in user is a staff member
     if not request.user.is_staff:
-        return render(request, 'access_denied.html')
+        return render(request, 'core/login.html')
 
     # Filter logs for the logged-in user
     logs = LogEntry.objects.filter(user=request.user).order_by('-action_time')

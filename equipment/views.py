@@ -1,25 +1,132 @@
 from django.shortcuts import render
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import authenticate, login, logout
+from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
 from .models import Equipment
-from django.db import transaction
-from decimal import Decimal
-import random
-from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
 import json
+from django.contrib.admin.models import LogEntry, CHANGE, DELETION, ADDITION
+from django.contrib.contenttypes.models import ContentType
+from django.utils.timezone import now
 
-# Create your views here.
-@login_required(login_url='login')
+@login_required
 def equipment(request):
-    equipment_list = Equipment.objects.filter(status='available').order_by('-created_at')
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+        rental_rate = request.POST.get('rental_rate')
+        status = request.POST.get('status')
+        image = request.FILES.get('image')
+
+        # Create the equipment
+        new_equipment = Equipment.objects.create(
+            name=name,
+            description=description,
+            rental_rate=rental_rate,
+            status=status,
+            image=image
+        )
+
+        # Log the addition of the new equipment
+        content_type = ContentType.objects.get_for_model(Equipment)
+        LogEntry.objects.log_action(
+            user_id=request.user.id,
+            content_type_id=content_type.id,
+            object_id=new_equipment.id,
+            object_repr=str(new_equipment),
+            action_flag=ADDITION,  # Action type: ADDITION (new object added)
+            change_message=f"Added new equipment: {new_equipment.name}, {new_equipment.description}, Rental rate: {new_equipment.rental_rate}, Status: {new_equipment.status}"
+        )
+
+        messages.success(request, "Equipment successfully added!")
+        return redirect('equipment')  # Redirect to the same page after adding
+
+    equipment_list = Equipment.objects.order_by('-created_at')
     return render(request, 'equipment-admin/equipment-add.html', {
         'equipment_list': equipment_list
     })
 
+@csrf_exempt
+def update_equipment(request, equipment_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)  # Parse the JSON request body
+
+            # Get the existing equipment
+            equipment = get_object_or_404(Equipment, id=equipment_id)
+
+            # Old values to log the changes
+            old_name = equipment.name
+            old_description = equipment.description
+            old_rental_rate = equipment.rental_rate
+            old_status = equipment.status
+
+            # Update equipment fields
+            equipment.name = data['name']
+            equipment.description = data['description']
+            equipment.rental_rate = data['rental_rate']
+            equipment.status = data['status']
+            equipment.save()
+
+            # Log the update action
+            content_type = ContentType.objects.get_for_model(Equipment)
+            LogEntry.objects.log_action(
+                user_id=request.user.id,
+                content_type_id=content_type.id,
+                object_id=equipment.id,
+                object_repr=str(equipment),
+                action_flag=CHANGE,  # Action type: Change (existing object updated)
+                change_message=f"Updated equipment: Name from '{old_name}' to '{equipment.name}', Description from '{old_description}' to '{equipment.description}', Rental rate from {old_rental_rate} to {equipment.rental_rate}, Status from '{old_status}' to '{equipment.status}'"
+            )
+
+            return JsonResponse({'status': 'success'})
+
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
+        except Equipment.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Equipment not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
+
+
+def delete_equipment(request, equipment_id):
+    if request.method == 'POST':
+        try:
+            # Get the equipment instance to log before deletion
+            equipment = Equipment.objects.get(id=equipment_id)
+
+            # Log the deletion action
+            content_type = ContentType.objects.get_for_model(Equipment)
+            LogEntry.objects.log_action(
+                user_id=request.user.id,
+                content_type_id=content_type.id,
+                object_id=equipment.id,
+                object_repr=str(equipment),
+                action_flag=DELETION,  # Action type: Delete (object deleted)
+                change_message=f"Deleted equipment: {equipment.name}, {equipment.description}, Rental rate: {equipment.rental_rate}, Status: {equipment.status}"
+            )
+
+            # Delete the equipment
+            equipment.delete()
+
+            return JsonResponse({'status': 'success', 'message': 'Equipment deleted successfully'})
+
+        except Equipment.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Equipment not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+        
 @login_required(login_url='login')
 def dashboard(request):
-    return render(request, 'equipment-admin/dashboard.html')
+    logs = LogEntry.objects.filter(user=request.user).order_by('-action_time')
+    return render(request, 'equipment-admin/dashboard.html', {'logs': logs})
+
+
+@login_required(login_url='login')
+def equipment_list(request):
+    equipment_list = Equipment.objects.order_by('-created_at')
+    return render(request, 'equipment-admin/equipment-edit.html', { 'equipment_list': equipment_list })
+

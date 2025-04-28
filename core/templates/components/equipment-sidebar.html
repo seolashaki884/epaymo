@@ -82,25 +82,26 @@
   
         <!-- Layouts -->
         <li class="menu-item {% if '/equipment/' in request.path %}active open{% endif %}">
-            <a href="javascript:void(0);" class="menu-link menu-toggle">
-              <i class="menu-icon tf-icons bx bx-layout"></i>
-              <div data-i18n="Layouts">Equipment</div>
-            </a>
-          
-            <ul class="menu-sub">
-                <li class="menu-item {% if request.path == '/equipment/' or request.path == '/equipment/add/' %}active{% endif %}">
-                    <a href="{% url 'equipment' %}" class="menu-link">
-                      <div data-i18n="Without menu">Add & View</div>
-                    </a>
-                  </li>
-                  
-              <li class="menu-item {% if request.path == '/equipment/edit/' %}active{% endif %}">
-                <a href="#" class="menu-link">
-                  <div data-i18n="Without navbar">Edit</div>
-                </a>
-              </li>
-            </ul>
-          </li>
+          <a href="javascript:void(0);" class="menu-link menu-toggle">
+            <i class="menu-icon tf-icons bx bx-layout"></i>
+            <div data-i18n="Layouts">Equipment</div>
+          </a>
+        
+          <ul class="menu-sub">
+            <li class="menu-item {% if '/equipment/' in request.path and '/equipment/add/' in request.path %}active{% endif %}">
+              <a href="{% url 'equipment' %}" class="menu-link">
+                <div data-i18n="Without menu">Add & View</div>
+              </a>
+            </li>
+            
+            <li class="menu-item {% if '/equipment/edit/' in request.path %}active{% endif %}">
+              <a href="{% url 'equipment_edit' %}" class="menu-link">
+                <div data-i18n="Without navbar">Edit</div>
+              </a>
+            </li>
+          </ul>
+        </li>
+        
                  
         <li class="menu-item {% if request.path == '/biddings/' or request.path == '/biddings/' %}active open{% endif %}">
           <a href="{% url 'biddings' %}" class="menu-link">
