@@ -25,6 +25,7 @@ urlpatterns = [
     path('delete-document/<int:doc_id>/', views.delete_document, name='delete_document'),
     path('biddings/', views.biddings, name='biddings'),
     path('test/', views.test, name='test'),
+    path('rentals/', views.rentals, name='rentals')
 ]
 
 if settings.DEBUG:
