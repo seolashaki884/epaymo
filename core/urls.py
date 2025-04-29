@@ -25,7 +25,15 @@ urlpatterns = [
     path('delete-document/<int:doc_id>/', views.delete_document, name='delete_document'),
     path('biddings/', views.biddings, name='biddings'),
     path('test/', views.test, name='test'),
-    path('rentals/', views.rentals, name='rentals')
+    path('rentals/', views.rentals, name='rentals'),
+    path('rental-form/', views.rentalform, name='rental-form' ),
+
+
+
+    path('homeboot/', views.homebootstrap, name='homeboot' ),
+    path('documents/<int:pk>/json/', views.document_json, name='document_json'),
+    path('equipments/<int:pk>/json/', views.equipment_json, name='equipment_json'),
+
 ]
 
 if settings.DEBUG:

@@ -9,6 +9,7 @@ import json
 from django.contrib.admin.models import LogEntry, CHANGE, DELETION, ADDITION
 from django.contrib.contenttypes.models import ContentType
 from django.utils.timezone import now
+from django.http import JsonResponse, Http404
 
 @login_required
 def equipment(request):

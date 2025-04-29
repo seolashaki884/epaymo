@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
+from django.http import JsonResponse, Http404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -478,12 +479,15 @@ def delete_document(request, doc_id):
 
 
 def rentals(request):
-    equipment_list = Equipment.objects.filter(status='Available')  # fetch all equipments
-    return render(request, 'core/equipment_rental.html', {'equipment_list': equipment_list})
+    equipment_list = Equipment.objects.filter(status='Available')
+    return render(request, 'core/bootequipment_rental.html', {'equipment_list': equipment_list})
 
 def biddings(request):
     orders = Order.objects.select_related('user').order_by('-ordered_at')
     return render(request, 'bac-admin/BAC-biddings.html', {'orders': orders})
+
+def rentalform(request):
+    return render(request, 'core/rentalform.html')
 
 def test(request):
     return render(request, 'core/test.html')
@@ -491,3 +495,65 @@ def test(request):
 def user_logout(request):
     logout(request) 
     return redirect('login')  
+
+def document_json(request, pk):
+    try:
+        doc = Document.objects.get(pk=pk)
+        return JsonResponse({
+            "title": doc.title,
+            "description": doc.description,
+            "category": doc.get_category_display(),
+            "price": str(doc.price),
+            "region": doc.region,
+            "image": doc.image.url if doc.image else None,
+        })
+    except Document.DoesNotExist:
+        raise Http404("Document not found")
+    
+def equipment_json(request, pk):
+    try:
+        eq = Equipment.objects.get(pk=pk)
+        return JsonResponse({
+            'name': eq.name,
+            'asset_tag': eq.asset_tag,
+            'description': eq.description,
+            'status': eq.status,
+            'rental_rate': str(eq.rental_rate),
+            'image': eq.image.url if eq.image else None,
+        })
+    except Equipment.DoesNotExist:
+        raise Http404("Equipment not found")
+
+
+def homebootstrap(request):
+      # Get category filter from query parameters
+    category_filter = request.GET.get('category') 
+    
+    # Get search query from GET request
+    search_query = request.GET.get('search', '') 
+    
+    # Filter documents based on the category and search query (if provided)
+    if category_filter:
+        documents = Document.objects.filter(category=category_filter)
+    else:
+        documents = Document.objects.all()
+    
+    if search_query:
+        documents = documents.filter(title__icontains=search_query)  # Filter by title
+    
+    # Order the filtered documents by ID
+    documents = documents.order_by('-id')
+
+    # Get all the unique categories to display in the filter dropdown
+    categories = dict(Document.CATEGORY_CHOICES)
+
+    user = User.objects.all()
+    print(f"Documents in View: {documents.count()}")
+    return render(request, 'core/bootbidding_documents.html', {
+        'documents': documents, 
+        'user': user,
+        'categories': categories,
+        'selected_category': category_filter,
+        'search_query': search_query  # Pass the search query back to the template
+    })
+

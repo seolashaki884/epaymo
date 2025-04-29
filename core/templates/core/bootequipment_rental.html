@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+{% load static tailwind_tags %}
+{%load static%}
+{%tailwind_css%}
+
+
+<!-- =========================================================
+* Sneat - Bootstrap 5 HTML Admin Template - Pro | v1.0.0
+==============================================================
+
+* Product Page: https://themeselection.com/products/sneat-bootstrap-html-admin-template/
+* Created by: ThemeSelection
+* License: You must have a valid license purchased in order to legally use the theme for your project.
+* Copyright ThemeSelection (https://themeselection.com)
+
+=========================================================
+ -->
+<!-- beautify ignore:start -->
+<html
+  lang="en"
+  class="light-style layout-menu-fixed"
+  dir="ltr"
+  data-theme="theme-default"
+  data-assets-path="/assets/"
+  data-template="vertical-menu-template-free"
+>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+
+    <title>Home | Epaymo</title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons. Uncomment required icon fonts -->
+    <link rel="stylesheet" href="{% static '/assets/vendor/fonts/boxicons.css' %}" />
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{% static '/assets/vendor/css/core.css' %}" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="{% static '/assets/vendor/css/theme-default.css' %}" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="{% static '/assets/css/demo.css' %}" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="{% static '/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+
+    <link rel="stylesheet" href="{% static '/assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="{% static '/assets/vendor/js/helpers.js' %}"></script>
+
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+    <script src="{% static '/assets/js/config.js' %}"></script>
+  </head>
+
+  <body>
+    <!-- Layout wrapper -->
+    <div class="layout-wrapper layout-content-navbar">
+      <div class="layout-container">
+        <!-- Menu -->
+
+        {% include 'components/sidebarbootstrap.html' %}
+        <!-- / Menu -->
+
+        <!-- Layout container -->
+        <div class="layout-page">
+
+            {% include 'components/nav-bar.html' %}
+
+          <!-- Content wrapper -->
+          <div class="content-wrapper"> 
+            <div class="container-xxl flex-grow-1 container-p-y">
+              <div class="row">
+
+                {% for equipment in equipment_list %}
+                {%load humanize%}
+                <div class="col-md-6 col-lg-4 mb-3">
+                    <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ equipment.name }}</h5>
+                        <h6 class="card-subtitle text-muted">Rental Rate | <strong>PHP {{ equipment.rental_rate }}</strong></h6>
+                        {% if equipment.image %}
+                            <div class="d-flex justify-content-center my-4" style="height: 200px; overflow: hidden;">
+                                <img src="{{ equipment.image.url }}"
+                                    class="img-fluid"
+                                    style="height: 100%; width: auto; object-fit: cover;"
+                                    alt="{{ equipment.name }}">
+                            </div>
+                            {% else %}
+                            <div class="d-flex justify-content-center my-4" style="height: 200px; overflow: hidden;">
+                                <img src="/static/images/default-image.jpg"
+                                    class="img-fluid"
+                                    style="height: 100%; width: auto; object-fit: cover;"
+                                    alt="Default Image">
+                            </div>
+                            {% endif %}
+
+                        <p class="card-text">{{ equipment.description|truncatechars:60|slice:":-3" }}...</p>
+                            <button type="button" class="btn rounded-pill btn-primary"
+                                data-bs-toggle="modal"
+                                data-bs-target="#equipmentModal"
+                                data-id="{{ equipment.id }}">
+                                <span class="tf-icons bx bx-expand-alt"></span>&nbsp; View
+                            </button>
+                    
+
+                            <button type="button" class="btn rounded-pill btn-primary">
+                                <span class=" bx bx-money"></span>&nbsp; Bid
+                            </button>
+                    </div>
+                    </div>
+                </div>
+                {% empty %}
+                    <p>No equipment available.</p>
+                {% endfor %}
+
+
+              </div>
+            </div>
+            <!-- / Content -->
+
+            <div class="modal fade" id="equipmentModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">Equipment Details</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="row">
+                        <div class="col-md-5 text-center mb-3">
+                          <img id="modalEquipmentImage" src="" class="img-fluid rounded border" style="max-height: 250px;" alt="Equipment Image">
+                        </div>
+                        <div class="col-md-7">
+                          <h4 id="modalEquipmentName" class="mb-2"></h4>
+                          <p id="modalEquipmentDescription" class="text-muted"></p>
+                          <p><strong>Asset Tag:</strong> <span id="modalEquipmentTag"></span></p>
+                          <p><strong>Status:</strong> <span id="modalEquipmentStatus"></span></p>
+                          <p><strong>Rental Rate:</strong> PHP <span id="modalEquipmentRate"></span></p>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+
+
+            <div class="content-backdrop fade"></div>
+          </div>
+          <!-- Content wrapper -->
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+              const equipmentModal = document.getElementById('equipmentModal');
+            
+              equipmentModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;
+                const equipmentId = button.getAttribute('data-id');
+            
+                fetch(`/equipments/${equipmentId}/json/`)
+                  .then(res => res.json())
+                  .then(data => {
+                    document.getElementById('modalEquipmentName').textContent = data.name;
+                    document.getElementById('modalEquipmentDescription').textContent = data.description;
+                    document.getElementById('modalEquipmentTag').textContent = data.asset_tag;
+                    document.getElementById('modalEquipmentStatus').textContent = data.status;
+                    document.getElementById('modalEquipmentRate').textContent = parseFloat(data.rental_rate).toLocaleString();
+                    document.getElementById('modalEquipmentImage').src = data.image || '/static/images/default-image.jpg';
+                  })
+                  .catch(error => console.error('Failed to fetch equipment data:', error));
+              });
+            });
+        </script>
+        <!-- / Layout page -->
+      </div>
+
+
+        
+
+      <!-- Overlay -->
+      <div class="layout-overlay layout-menu-toggle"></div>
+    </div>
+    <!-- / Layout wrapper -->
+
+
+    <!-- Core JS -->
+    <!-- build:js assets/vendor/js/core.js -->
+    <script src="{% static '/assets/vendor/libs/jquery/jquery.js' %}"></script>
+    <script src="{% static '/assets/vendor/libs/popper/popper.js' %}"></script>
+    <script src="{% static '/assets/vendor/js/bootstrap.js' %}"></script>
+    <script src="{% static '/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
+
+    <script src="{% static '/assets/vendor/js/menu.js' %}"></script>
+    <!-- endbuild -->
+
+    <!-- Vendors JS -->
+    <script src="{% static '/assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+
+    <!-- Main JS -->
+    <script src="{% static '/assets/js/main.js' %}"></script>
+
+    <!-- Page JS -->
+    <script src="{% static '/assets/js/dashboards-analytics.js' %}"></script>
+
+    <!-- Place this tag in your head or just before your close body tag. -->
+    <script async defer src="https://buttons.github.io/buttons.js"></script>
+  </body>
+</html>

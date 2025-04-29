@@ -143,11 +143,85 @@
                 </div>
             </div>
 
-            <button type="button" 
-                class="px-2 py-1 text-xs font-medium inline-flex items-center text-white bg-blue-700 rounded-md hover:bg-blue-800"
-                onclick="Rent({{ equipment.id }})">
-                <i class='bx bx-shopping-bag me-2'></i>Rent
-            </button>
+<!-- Rent Button -->
+                <button type="button" id="openModal" class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                    <i class="bx bx-shopping-bag me-1"></i> Rent
+                </button>
+                <!-- Modal -->
+<div id="rentModal" class="fixed inset-0 hidden items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm z-50">
+    <div class="modal-content bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+      <div class="modal-header flex justify-between items-center">
+        <h5 class="text-lg font-semibold">Rent Equipment</h5>
+        <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+          <i class="bx bx-x text-xl"></i>
+        </button>
+      </div>
+  
+      <!-- Modal Body -->
+      <div class="modal-body mt-4">
+        <form method="POST">
+          {% csrf_token %}
+          <!-- Equipment & Total Cost -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="equipment" class="block text-sm font-medium">Equipment</label>
+              <select class="w-full border border-gray-300 rounded-md p-2" required>
+                <option selected disabled>Select Equipment</option>
+                <option>Printer</option>
+                <option>Laptop</option>
+                <option>Scanner</option>
+                <option>Monitor</option>
+              </select>
+            </div>
+  
+            <div>
+              <label for="total_rent_cost" class="block text-sm font-medium">Total Rent Cost (₱)</label>
+              <input type="number" class="w-full border border-gray-300 rounded-md p-2" id="total_rent_cost" readonly>
+            </div>
+          </div>
+  
+          <!-- Dates -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label for="rental_start_date" class="block text-sm font-medium">Rental Start Date</label>
+              <input type="date" class="w-full border border-gray-300 rounded-md p-2" id="rental_start_date" required>
+            </div>
+  
+            <div>
+              <label for="rental_end_date" class="block text-sm font-medium">Rental End Date</label>
+              <input type="date" class="w-full border border-gray-300 rounded-md p-2" id="rental_end_date" required>
+            </div>
+          </div>
+  
+          <!-- No of Days & Rental Rate -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label for="no_of_days_hours" class="block text-sm font-medium">No. of Days/Hours</label>
+              <input type="text" class="w-full border border-gray-300 rounded-md p-2" id="no_of_days_hours">
+            </div>
+  
+            <div>
+              <label for="rental_rate" class="block text-sm font-medium">Rental Rate Per Day (₱)</label>
+              <input type="number" class="w-full border border-gray-300 rounded-md p-2" id="rental_rate" step="0.01" min="0">
+            </div>
+          </div>
+  
+          <!-- Purpose -->
+          <div class="mt-4">
+            <label for="purpose" class="block text-sm font-medium">Purpose</label>
+            <textarea class="w-full border border-gray-300 rounded-md p-2" id="purpose" rows="3" required></textarea>
+          </div>
+  
+          <!-- Modal Footer -->
+          <div class="modal-footer mt-4 flex justify-between">
+            <button type="button" id="closeModalFooter" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
 
         </div>
     </div>
@@ -155,6 +229,8 @@
 {% empty %}
     <p>No documents available.</p>
 {% endfor %}
+
+
 
 
     <script>
@@ -178,7 +254,32 @@
                         </script>
                         {% endif %}
                         
-                        
+                        <script>
+                            // Get Modal and Buttons
+                            const openModalButton = document.getElementById('openModal');
+                            const closeModalButtons = document.querySelectorAll('#closeModal, #closeModalFooter');
+                            const modal = document.getElementById('rentModal');
+                          
+                            // Open Modal
+                            openModalButton.addEventListener('click', () => {
+                              modal.classList.remove('hidden'); // Show the modal
+                            });
+                          
+                            // Close Modal
+                            closeModalButtons.forEach(button => {
+                              button.addEventListener('click', () => {
+                                modal.classList.add('hidden'); // Hide the modal
+                              });
+                            });
+                          
+                            // Close modal when clicking outside of it
+                            window.addEventListener('click', (event) => {
+                              if (event.target === modal) {
+                                modal.classList.add('hidden');
+                              }
+                            });
+                          </script>
+                           
                     </div>
                 </main>
             
