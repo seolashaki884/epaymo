@@ -6,7 +6,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
 from django.contrib.humanize.templatetags.humanize import intcomma  # Import intcomma for formatting
-from .models import Document, Cart, Order, UserProfile
+from .models import Document, Cart, UserProfile
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserChangeForm
 
@@ -55,28 +55,6 @@ class DocumentAdmin(admin.ModelAdmin):
         return f"₱ {intcomma(f'{obj.price:.2f}')}"
     formatted_price.short_description = 'Price'
 
-@admin.register(Order)
-class OrderAdmin(admin.ModelAdmin):
-    list_display = ('user_full_name', 'get_formatted_total_price', 'ordered_at', 'status',)
-    list_display_links = ('user_full_name',)
-    list_filter = ('status',)
-    readonly_fields = ['user_full_name_display', 'total_price', 'ordered_at']
-    search_fields = ('user__username', 'user__first_name', 'user__last_name')
-    actions_on_top = True
-    exclude = ['user'] 
-
-    def user_full_name(self, obj):
-        return obj.user.get_full_name() or obj.user.username
-    user_full_name.short_description = 'User'
-
-    def get_formatted_total_price(self, obj):
-        return f"₱ {intcomma(f'{obj.total_price:.2f}')}"
-    get_formatted_total_price.short_description = 'Total Price'
-
-    def user_full_name_display(self, obj):
-        full_name = obj.user.get_full_name() or obj.user.username
-        return f"{full_name} ({obj.user.email})"
-    user_full_name_display.short_description = 'User'   
 
 @admin.register(Cart)
 class CartAdmin(admin.ModelAdmin):

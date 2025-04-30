@@ -114,18 +114,14 @@
                         </div>
                         {% endif %}
                         
-                        <p class="card-text">{{ document.description|truncatechars:60|slice:":-3" }}...</p>
+                      
                           <button type="button" class="btn rounded-pill btn-primary"
                               data-bs-toggle="modal"
                               data-bs-target="#modalView"
                               data-id="{{ document.id }}">
-                              <span class="tf-icons bx bx-expand-alt"></span>&nbsp; View
+                              <span class="tf-icons bx bx-expand-alt"></span>&nbsp; View/Bid
                           </button>
                     
-
-                            <button type="button" class="btn rounded-pill btn-primary">
-                                <span class=" bx bx-money"></span>&nbsp; Bid
-                            </button>
                     </div>
                     </div>
                 </div>

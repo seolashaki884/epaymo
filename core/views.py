@@ -4,10 +4,9 @@ from django.http import JsonResponse, Http404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Document, Cart, Order
+from .models import Document, Cart
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from decimal import Decimal
 from .models import UserProfile
@@ -53,7 +52,6 @@ def home(request):
         'selected_category': category_filter,
         'search_query': search_query  # Pass the search query back to the template
     })
-
 
 def login_view(request):
     return render(request, 'core/login.html')
@@ -255,49 +253,6 @@ def update_cart_quantity(request):
     except (Cart.DoesNotExist, ValueError):
         return JsonResponse({'status': 'error'}, status=400)
 
-@login_required
-@transaction.atomic
-def submit_order(request):
-    user = request.user
-
-    # ✅ Always define cart_items first
-    cart_items = Cart.objects.filter(user=user)
-
-    if not cart_items.exists():
-        messages.warning(request, "Your cart is empty.")
-        return redirect('cart')
-
-    # ✅ Use readable category names (optional)
-    categories = list({item.document.category for item in cart_items})
-
-
-    # Create the order with category (joined readable names)
-    order = Order.objects.create(
-        user=user,
-        status='pending',
-        category=", ".join(categories)
-    )
-
-    # Create OrderItems
-    for cart_item in cart_items:
-        order.order_items.create(
-            document=cart_item.document,
-            quantity=cart_item.quantity,
-            price_at_purchase=cart_item.document.price,
-        )
-
-    # Finalize
-    order.calculate_total_price()
-    cart_items.delete()
-
-    messages.success(request, "Order submitted successfully!")
-    return redirect('home')
-
-@login_required
-def order_list(request):
-    orders = Order.objects.filter(user=request.user).order_by('-ordered_at')
-    return render(request, 'core/orderlist.html', {'orders': orders})
-
 def get_cart_count(request):
     # Get the cart count for the logged-in user
     cart_count = request.user.cart_set.count()
@@ -376,6 +331,7 @@ def BAC(request):
 def bac_edit(request):
     documents = Document.objects.all().order_by('-id')
     return render(request, 'bac-admin/BAC-edit.html', {'documents': documents})
+
 @csrf_exempt
 def update_document(request, doc_id):
     if request.method == 'POST':
@@ -515,11 +471,10 @@ def equipment_json(request, pk):
         eq = Equipment.objects.get(pk=pk)
         return JsonResponse({
             'name': eq.name,
-            'asset_tag': eq.asset_tag,
             'description': eq.description,
             'status': eq.status,
             'rental_rate': str(eq.rental_rate),
-            'image': eq.image.url if eq.image else None,
+            'image': request.build_absolute_uri(eq.image.url) if eq.image else None,
         })
     except Equipment.DoesNotExist:
         raise Http404("Equipment not found")

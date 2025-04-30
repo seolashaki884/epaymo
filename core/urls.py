@@ -15,8 +15,6 @@ urlpatterns = [
     path('update-cart-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
     path('get_cart_count/', views.get_cart_count, name='get_cart_count'),
     path('billing-preparation/', views.billing_prep, name='billing-prep'),
-    path('order-list/', views.order_list, name='order_list'),
-    path('submit-order/', views.submit_order, name='submit_order'),
     path("verify-otp/", views.verify_otp, name="verify_otp"),
     path('adminhome/', views.adminhome, name='admin-home'),
     path('BAC/', views.BAC, name='bac-add'),
@@ -35,6 +33,5 @@ urlpatterns = [
     path('equipments/<int:pk>/json/', views.equipment_json, name='equipment_json'),
 
 ]
-
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
