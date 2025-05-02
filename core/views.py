@@ -4,10 +4,9 @@ from django.http import JsonResponse, Http404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Document, Cart, Order
+from .models import Document, Cart, Bid
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
 from django.db import transaction
 from decimal import Decimal
 from .models import UserProfile
@@ -18,6 +17,10 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from django.contrib.admin.models import LogEntry, CHANGE, ADDITION, DELETION
 from django.contrib.contenttypes.models import ContentType
+from datetime import datetime
+from django.utils import timezone
+from django.utils.timezone import now as timezone_now
+import pytz
 
 
 @login_required(login_url='login')
@@ -53,7 +56,6 @@ def home(request):
         'selected_category': category_filter,
         'search_query': search_query  # Pass the search query back to the template
     })
-
 
 def login_view(request):
     return render(request, 'core/login.html')
@@ -255,49 +257,6 @@ def update_cart_quantity(request):
     except (Cart.DoesNotExist, ValueError):
         return JsonResponse({'status': 'error'}, status=400)
 
-@login_required
-@transaction.atomic
-def submit_order(request):
-    user = request.user
-
-    # ✅ Always define cart_items first
-    cart_items = Cart.objects.filter(user=user)
-
-    if not cart_items.exists():
-        messages.warning(request, "Your cart is empty.")
-        return redirect('cart')
-
-    # ✅ Use readable category names (optional)
-    categories = list({item.document.category for item in cart_items})
-
-
-    # Create the order with category (joined readable names)
-    order = Order.objects.create(
-        user=user,
-        status='pending',
-        category=", ".join(categories)
-    )
-
-    # Create OrderItems
-    for cart_item in cart_items:
-        order.order_items.create(
-            document=cart_item.document,
-            quantity=cart_item.quantity,
-            price_at_purchase=cart_item.document.price,
-        )
-
-    # Finalize
-    order.calculate_total_price()
-    cart_items.delete()
-
-    messages.success(request, "Order submitted successfully!")
-    return redirect('home')
-
-@login_required
-def order_list(request):
-    orders = Order.objects.filter(user=request.user).order_by('-ordered_at')
-    return render(request, 'core/orderlist.html', {'orders': orders})
-
 def get_cart_count(request):
     # Get the cart count for the logged-in user
     cart_count = request.user.cart_set.count()
@@ -329,6 +288,12 @@ def BAC(request):
         region = request.POST.get('region')
         image = request.FILES.get('image')
 
+        bidding_start_date = request.POST.get('bidding_start_date')
+        bidding_end_date = request.POST.get('bidding_end_date')
+
+        bidding_start = datetime.strptime(bidding_start_date, "%Y-%m-%dT%H:%M")
+        bidding_end = datetime.strptime(bidding_end_date, "%Y-%m-%dT%H:%M")
+
         # Compute price based on the abc value
         if abc < 500000:
             price = Decimal(500)
@@ -353,7 +318,9 @@ def BAC(request):
             category=category,
             region=region,
             image=image,
-            price=price  # Set the computed price
+            price=price,
+            bidding_start_date=bidding_start,
+            bidding_end_date=bidding_end
         )
 
         # Log the creation of the document in the admin logs
@@ -376,6 +343,7 @@ def BAC(request):
 def bac_edit(request):
     documents = Document.objects.all().order_by('-id')
     return render(request, 'bac-admin/BAC-edit.html', {'documents': documents})
+
 @csrf_exempt
 def update_document(request, doc_id):
     if request.method == 'POST':
@@ -401,6 +369,9 @@ def update_document(request, doc_id):
             else:
                 price = Decimal(75000)
 
+            start_date = datetime.strptime(data['bidding_start_date'], "%Y-%m-%dT%H:%M")
+            end_date = datetime.strptime(data['bidding_end_date'], "%Y-%m-%dT%H:%M")
+
             # Update document fields
             old_title = document.title  # Store old title for logging
             old_description = document.description  # Store old description for logging
@@ -413,6 +384,8 @@ def update_document(request, doc_id):
             document.abc = abc
             document.region = data['region']
             document.price = price  # ✅ Auto-updated price
+            document.bidding_start_date = start_date
+            document.bidding_end_date = end_date
             document.save()
 
             # Log the document update in admin logs
@@ -483,8 +456,35 @@ def rentals(request):
     return render(request, 'core/bootequipment_rental.html', {'equipment_list': equipment_list})
 
 def biddings(request):
-    orders = Order.objects.select_related('user').order_by('-ordered_at')
-    return render(request, 'bac-admin/BAC-biddings.html', {'orders': orders})
+    bids = Bid.objects.order_by('-bid_time')
+    return render(request, 'bac-admin/BAC-biddings.html', {'bids': bids})
+
+def get_bid_json(request, bid_id):
+    try:
+        bid = Bid.objects.select_related('user', 'document').get(id=bid_id)
+        return JsonResponse({
+            'id': bid.id,
+            'document_title': bid.document.title,
+            'user_full_name': bid.user.get_full_name() or bid.user.username,
+            'proposed_price': str(bid.proposed_price),
+            'status': bid.status,
+        })
+    except Bid.DoesNotExist:
+        return JsonResponse({'error': 'Bid not found'}, status=404)
+
+@csrf_exempt  # only use this in development — better to use @require_POST with CSRF
+def update_bid_status(request, bid_id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            status = data.get('status')
+            bid = Bid.objects.get(id=bid_id)
+            bid.status = status
+            bid.save()
+            return JsonResponse({'success': True})
+        except Bid.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Bid not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 def rentalform(request):
     return render(request, 'core/rentalform.html')
@@ -499,6 +499,11 @@ def user_logout(request):
 def document_json(request, pk):
     try:
         doc = Document.objects.get(pk=pk)
+        
+        # Format the start and end dates
+        start_date = doc.bidding_start_date.strftime('%b %d, %Y %I:%M %p')  # e.g., May 07, 2025 09:34 PM
+        end_date = doc.bidding_end_date.strftime('%b %d, %Y %I:%M %p')    # e.g., May 12, 2025 08:33 AM
+        
         return JsonResponse({
             "title": doc.title,
             "description": doc.description,
@@ -506,20 +511,47 @@ def document_json(request, pk):
             "price": str(doc.price),
             "region": doc.region,
             "image": doc.image.url if doc.image else None,
+            "bidding_start_date": start_date,
+            "bidding_end_date": end_date,
         })
     except Document.DoesNotExist:
         raise Http404("Document not found")
+    
+@login_required
+def place_bid(request):
+    if request.method == 'POST':
+        document_id = request.POST.get('document_id')
+
+        try:
+            document = Document.objects.get(id=document_id)
+            user = request.user
+
+            # Optional: Prevent duplicate bids
+            if Bid.objects.filter(user=user, document=document).exists():
+                return JsonResponse({'error': 'You have already placed a bid on this document.'}, status=400)
+
+            bid = Bid.objects.create(
+                user=user,
+                document=document,
+                proposed_price=document.price
+            )
+
+            return JsonResponse({'message': 'Bid placed successfully.'})
+
+        except Document.DoesNotExist:
+            return JsonResponse({'error': 'Document not found.'}, status=404)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=405)
     
 def equipment_json(request, pk):
     try:
         eq = Equipment.objects.get(pk=pk)
         return JsonResponse({
             'name': eq.name,
-            'asset_tag': eq.asset_tag,
             'description': eq.description,
             'status': eq.status,
             'rental_rate': str(eq.rental_rate),
-            'image': eq.image.url if eq.image else None,
+            'image': request.build_absolute_uri(eq.image.url) if eq.image else None,
         })
     except Equipment.DoesNotExist:
         raise Http404("Equipment not found")
@@ -547,6 +579,15 @@ def homebootstrap(request):
     # Get all the unique categories to display in the filter dropdown
     categories = dict(Document.CATEGORY_CHOICES)
 
+    manila_tz = pytz.timezone('Asia/Manila')
+    now = timezone.now().astimezone(manila_tz)
+
+    # Convert document's bidding_end_date to Asia/Manila timezone
+    for document in documents:
+        if document.bidding_end_date:
+            document.bidding_end_date = document.bidding_end_date.astimezone(manila_tz)
+
+
     user = User.objects.all()
     print(f"Documents in View: {documents.count()}")
     return render(request, 'core/bootbidding_documents.html', {
@@ -554,6 +595,16 @@ def homebootstrap(request):
         'user': user,
         'categories': categories,
         'selected_category': category_filter,
-        'search_query': search_query  # Pass the search query back to the template
+        'search_query': search_query,  # Pass the search query back to the template
+        'now': now,
+
     })
 
+@login_required
+def my_bids_list(request):
+    bids = Bid.objects.filter(user=request.user).select_related('document').order_by('-bid_time')
+    
+    context = {
+        'bids': bids,
+    }
+    return render(request, 'core/bootbid_list.html', context)

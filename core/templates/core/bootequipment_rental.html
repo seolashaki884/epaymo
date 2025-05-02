@@ -111,7 +111,7 @@
                             </div>
                             {% endif %}
 
-                        <p class="card-text">{{ equipment.description|truncatechars:60|slice:":-3" }}...</p>
+                         <p class="card-text">{{ equipment.description|truncatechars:60|slice:":-3" }}...</p>
                             <button type="button" class="btn rounded-pill btn-primary"
                                 data-bs-toggle="modal"
                                 data-bs-target="#equipmentModal"
@@ -121,75 +121,84 @@
                     
 
                             <button type="button" class="btn rounded-pill btn-primary">
-                                <span class=" bx bx-money"></span>&nbsp; Bid
+                                <span class=" bx bx-money"></span>&nbsp; Rent
                             </button>
-                    </div>
+
+                      </div>
                     </div>
                 </div>
                 {% empty %}
                     <p>No equipment available.</p>
                 {% endfor %}
+                <div class="modal fade" id="equipmentModal" tabindex="-1" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title">Equipment Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="row">
+                          <div class="col-md-5 text-center mb-3">
+                            <img id="modalEquipmentImage" src="" class="img-fluid rounded border" alt="Equipment Image" style="max-height: 350px; object-fit: cover; width: 100%;" />
+                          </div>
+                          <div class="col-md-7">
+                            <h4 id="modalEquipmentName" class="mb-2"></h4>
+                            <p id="modalEquipmentDescription" class="text-muted"></p>
+                            
+                            <p><strong>Status:</strong> <span id="modalEquipmentStatus"></span></p>
+                            <p><strong>Rental Rate:</strong> PHP <span id="modalEquipmentRate"></span></p>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+  
+  
+              <div class="content-backdrop fade"></div>
+            </div>
 
 
               </div>
             </div>
+
+
+
+
+
+            
             <!-- / Content -->
 
-            <div class="modal fade" id="equipmentModal" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered modal-lg">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title">Equipment Details</h5>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                      <div class="row">
-                        <div class="col-md-5 text-center mb-3">
-                          <img id="modalEquipmentImage" src="" class="img-fluid rounded border" style="max-height: 250px;" alt="Equipment Image">
-                        </div>
-                        <div class="col-md-7">
-                          <h4 id="modalEquipmentName" class="mb-2"></h4>
-                          <p id="modalEquipmentDescription" class="text-muted"></p>
-                          <p><strong>Asset Tag:</strong> <span id="modalEquipmentTag"></span></p>
-                          <p><strong>Status:</strong> <span id="modalEquipmentStatus"></span></p>
-                          <p><strong>Rental Rate:</strong> PHP <span id="modalEquipmentRate"></span></p>
-                        </div>
-                      </div>
-                    </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-
-
-            <div class="content-backdrop fade"></div>
-          </div>
+            
           <!-- Content wrapper -->
         </div>
         <script>
-            document.addEventListener('DOMContentLoaded', () => {
-              const equipmentModal = document.getElementById('equipmentModal');
-            
-              equipmentModal.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
+          document.addEventListener('DOMContentLoaded', () => {
+            const equipmentModal = document.getElementById('equipmentModal');
+        
+            equipmentModal.addEventListener('show.bs.modal', function (event) {
+                const button = event.relatedTarget;  // Button that triggered the modal
                 const equipmentId = button.getAttribute('data-id');
-            
+                console.log("Equipment ID: " + equipmentId);  // Verify the ID is correct
+        
                 fetch(`/equipments/${equipmentId}/json/`)
-                  .then(res => res.json())
-                  .then(data => {
-                    document.getElementById('modalEquipmentName').textContent = data.name;
-                    document.getElementById('modalEquipmentDescription').textContent = data.description;
-                    document.getElementById('modalEquipmentTag').textContent = data.asset_tag;
-                    document.getElementById('modalEquipmentStatus').textContent = data.status;
-                    document.getElementById('modalEquipmentRate').textContent = parseFloat(data.rental_rate).toLocaleString();
-                    document.getElementById('modalEquipmentImage').src = data.image || '/static/images/default-image.jpg';
-                  })
-                  .catch(error => console.error('Failed to fetch equipment data:', error));
-              });
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log('Fetched Equipment Data:', data);  // Check if data is fetched correctly
+                        document.getElementById('modalEquipmentName').textContent = data.name;
+                        document.getElementById('modalEquipmentDescription').textContent = data.description;
+                        document.getElementById('modalEquipmentStatus').textContent = data.status;
+                        document.getElementById('modalEquipmentRate').textContent = parseFloat(data.rental_rate).toLocaleString();
+                        document.getElementById('modalEquipmentImage').src = data.image || '/static/images/default-image.jpg';
+                    })
+                    .catch(error => console.error('Failed to fetch equipment data:', error));
             });
+        });        
         </script>
         <!-- / Layout page -->
       </div>

@@ -195,7 +195,7 @@
                       <thead>
                         <tr>
                           <th>Full Name</th>
-                          <th>Order ID</th>
+                         
                           <th>Title</th>
                           <th>Price</th>
                           <th>Region</th>
@@ -204,47 +204,48 @@
                         </tr>
                       </thead>
                       <tbody>
-                        {% for order in orders %}
-                        {% for item in order.order_items.all %}
+                        {% for bid in bids %}
                           <tr>
-                            <td><strong>{{ order.user.get_full_name|default:order.user.username }}</strong></td>
-                            <td>{{ order.custom_order_id }}</td>
-                            <td>{{ item.document.title }}</td>
-                            <td>₱ {{ item.price_at_purchase|floatformat:2|intcomma }}</td>
-                            <td>{{ item.document.region }}</td>
+                            <td><strong>{{ bid.user.get_full_name|default:bid.user.username }}</strong></td>
+                           
+                            <td>{{ bid.document.title }}</td>
+                            <td>₱ {{ bid.proposed_price|floatformat:2|intcomma }}</td>
+                            <td>{{ bid.document.region }}</td>
                             <td>
-                              <span class="badge bg-label-info">{{ order.status|capfirst }}</span>
+                              <span class="badge 
+                                {% if bid.status == 'pending' %} bg-label-warning {% elif bid.status == 'approved' %} bg-label-success {% elif bid.status == 'under_review' %} bg-label-info {% elif bid.status == 'rejected' %} bg-label-danger {% endif %}
+                              ">
+                                {{ bid.status|capfirst }}
+                              </span>
                             </td>
                             <td>
                               <div class="dropdown">
-                                <button
-                                  type="button"
-                                  class="btn p-0 dropdown-toggle hide-arrow"
-                                  data-bs-toggle="dropdown"
-                                >
+                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
                                   <i class="bx bx-dots-vertical-rounded"></i>
                                 </button>
                                 <div class="dropdown-menu">
-                                  <a class="dropdown-item" href="#">
+                                  <a class="dropdown-item" href="javascript:void(0);" onclick="openBidModal({{ bid.id }})">
                                     <i class="bx bx-show-alt me-1"></i> View
                                   </a>
-                                  {% if order.status == 'pending' %}
-                                    <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="cancelOrder('{{ order.id }}')">
-                                      <i class="bx bx-trash me-1"></i> Cancel
+                                  
+                                  
+                                  {% if bid.status == 'pending' %}
+                                    <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="cancelBid('{{ bid.id }}')">
+                                      <i class="bx bx-trash me-1"></i> Reject Bid
                                     </a>
                                   {% endif %}
                                 </div>
                               </div>
                             </td>
                           </tr>
+                        {% empty %}
+                          <tr>
+                            <td colspan="7" class="text-center">No bids found.</td>
+                          </tr>
                         {% endfor %}
-                      {% empty %}
-                      <tr>
-                        <td colspan="7" class="text-center">No orders found.</td>
-                      </tr>
-                      {% endfor %}                      
                       </tbody>
                     </table>
+                    
                     
                   </div>
                 </div>
@@ -256,268 +257,158 @@
             
           </div>
 
-          <div class="col-lg-4 col-md-6">
-            <div class="mt-3">
-              <div class="modal fade" id="modalEdit" tabindex="-1" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered" role="document">
-                  <div class="modal-content">
-                    <div class="modal-header">
-                      <h5 class="modal-title" id="modalEditTitle">Edit Document</h5>
-                      <button
-                        type="button"
-                        class="btn-close"
-                        data-bs-dismiss="modal"
-                        aria-label="Close"
-                      ></button>
+          <div class="modal fade" id="bidModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">View/Edit Bid</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <form id="bidEditForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="bidId">
+                    <div class="mb-3">
+                      <label class="form-label">Document Title</label>
+                      <input type="text" id="bidDocTitle" class="form-control" readonly>
                     </div>
-                    <div class="modal-body">
-                      <div class="row">
-                        <div class="col mb-3">
-                          <label for="editTitle" class="form-label">Title</label>
-                          <input
-                            type="text"
-                            id="editTitle"  
-                            class="form-control"
-                            placeholder="Enter Title"
-                          />
-                        </div>
-                      </div>
-                      <div class="row">
-                        <div class="col mb-3">
-                          <label for="editDescription" class="form-label">Description</label>
-                          <textarea
-                            style="height: 50px"
-                            id="editDescription"  
-                            class="form-control"
-                            placeholder="Enter Description"
-                          ></textarea>
-                        </div>
-                      </div>
-                      <div class="row g-2">
-                        <div class="col mb-0">
-                          <label for="editABC" class="form-label">ABC</label>
-                          <input
-                            type="text"
-                            id="editABC"  
-                            class="form-control"
-                            placeholder="Enter ABC"
-                          />
-                        </div>
-                        <div class="col mb-0">
-                          <label for="editRegion" class="form-label">Region</label>
-                          <input
-                            type="text"
-                            id="editRegion"  
-                            class="form-control"
-                            placeholder="Enter Region"
-                          />
-                        </div>
-                      </div>
+                    <div class="mb-3">
+                      <label class="form-label">Bidder</label>
+                      <input type="text" id="bidUser" class="form-control" readonly>
                     </div>
-                    <div class="modal-footer">
-                      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-                        Close
-                      </button>
-                      <button type="button" class="btn btn-primary" id="saveChangesBtn">Save changes</button>
+                    <div class="mb-3">
+                      <label class="form-label">Document Price</label>
+                      <input type="text" id="bidPrice" class="form-control" readonly>
                     </div>
-                  </div>
+                    <div class="mb-3">
+                      <label class="form-label">Status</label>
+                      <select id="bidStatus" class="form-select">
+                        <option value="pending">Pending</option>
+                        <option value="approved">Approved</option>
+                        <option value="under_review">Under Review</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </div>
+                  </form>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                  <button type="button" class="btn btn-primary" onclick="saveBidStatus()">Save Changes</button>
                 </div>
               </div>
             </div>
           </div>
 
-
           <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              const modalEdit = document.getElementById('modalEdit');
-              const saveBtn = document.getElementById('saveChangesBtn');
-          
-              // When the modal opens, populate it
-              modalEdit.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-          
-                // Get document details from data attributes
-                const id = button.getAttribute('data-id');
-                const title = button.getAttribute('data-title');
-                const description = button.getAttribute('data-description');
-                const abc = button.getAttribute('data-abc');
-                const region = button.getAttribute('data-region');
-          
-                // Set input values
-                document.getElementById('editTitle').value = title;
-                document.getElementById('editDescription').value = description;
-                document.getElementById('editABC').value = abc;
-                document.getElementById('editRegion').value = region;
-          
-                // Attach doc ID to save button
-                saveBtn.setAttribute('data-id', id);
-              });
-          
-              // ✅ Only one event listener
-              saveBtn.addEventListener('click', function () {
-                const docId = saveBtn.getAttribute('data-id');
-                const updatedTitle = document.getElementById('editTitle').value;
-                const updatedDescription = document.getElementById('editDescription').value;
-                const updatedABC = document.getElementById('editABC').value;
-                const updatedRegion = document.getElementById('editRegion').value;
-          
-                fetch(`/bac-edit/${docId}/update/`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                  },
-                  body: JSON.stringify({
-                    title: updatedTitle,
-                    description: updatedDescription,
-                    abc: updatedABC,
-                    region: updatedRegion
+            function saveBidStatus() {
+              const bidId = $('#bidId').val();
+              const status = $('#bidStatus').val();
+            
+              // Show confirmation dialog
+              Swal.fire({
+                title: 'Are you sure?',
+                text: "You are about to change the bid status.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, update it!',
+                cancelButtonText: 'No, cancel!',
+                customClass: {
+                  confirmButton: 'btn btn-success',
+                  cancelButton: 'btn btn-danger'
+                },
+                buttonsStyling: false
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  // Proceed with the status update
+                  fetch(`/bids/${bidId}/update/`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': '{{ csrf_token }}',
+                    },
+                    body: JSON.stringify({ status })
                   })
-                })
-                .then(response => {
-                  if (response.ok) {
-                    Swal.fire({
-                      title: 'Updated!',
-                      text: 'Document has been updated.',
-                      icon: 'success',
-                      showConfirmButton: false,
-                      timer: 2000,
-                      timerProgressBar: true, 
-                    }).then(() => {
-                      window.location.reload();
-                    });
-                  } else {
+                  .then(res => res.json())
+                  .then(data => {
+                    if (data.success) {
+                      // Show success message
+                      Swal.fire({
+                        title: 'Updated!',
+                        text: 'The bid status has been updated.',
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                          confirmButton: 'btn btn-primary'
+                        },
+                        buttonsStyling: false
+                      }).then(() => {
+                        $('#bidModal').modal('hide');
+                        location.reload(); // Optionally, refresh the table or update the status in the table
+                      });
+                    } else {
+                      Swal.fire({
+                        title: 'Error!',
+                        text: 'There was an issue updating the bid status.',
+                        icon: 'error',
+                        confirmButtonText: 'OK',
+                        customClass: {
+                          confirmButton: 'btn btn-danger'
+                        },
+                        buttonsStyling: false
+                      });
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Error updating bid:', error);
                     Swal.fire({
                       title: 'Error!',
-                      text: 'Something went wrong.',
+                      text: 'An unexpected error occurred.',
                       icon: 'error',
-                      showConfirmButton: false,
-                      timer: 2000
-                    });
-                  }
-                });
-              });
-            });
-          </script>
-
-                      <script>
-            document.querySelectorAll('.delete-btn').forEach(button => {
-              button.addEventListener('click', function () {
-                const docId = this.getAttribute('data-id');
-
-                Swal.fire({
-                  title: 'Are you sure?',
-                  text: "This will permanently delete the document.",
-                  icon: 'warning',
-                  showCancelButton: true,
-                  confirmButtonText: 'Yes, delete it!',
-                  customClass: {
-    confirmButton: 'btn btn-danger me-2',
-    cancelButton: 'btn btn-secondary',
-    popup: 'swal-zindex'
-  },
-                }).then((result) => {
-                  if (result.isConfirmed) {
-                    fetch(`/delete-document/${docId}/`, {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': '{{ csrf_token }}'
+                      confirmButtonText: 'OK',
+                      customClass: {
+                        confirmButton: 'btn btn-danger'
                       },
-                      body: JSON.stringify({ _method: 'DELETE' })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                      if (data.status === 'success') {
-                        Swal.fire({
-                          title: 'Deleted!',
-                          text: 'Your document has been deleted.',
-                          icon: 'success',
-                          showConfirmButton: false, 
-                          timer: 2000,            
-                          timerProgressBar: true, 
-                          customClass: {
-                            popup: 'swal-zindex'
-                          }
-                        }).then(() => {
-                          window.location.reload();
-                        });
-                        
-                      } else {
-                        Swal.fire('Error!', data.message || 'Failed to delete.', 'error');
-                      }
+                      buttonsStyling: false
                     });
-                  }
-                });
-              });
-            });
-                      
-          </script>
-          
-          
-             
-          
-          <!-- Content wrapper -->
-          <script>
-            document.addEventListener("DOMContentLoaded", function () {
-              const priceInput = document.querySelector('input[name="abc"]');
-          
-              if (priceInput) {
-                priceInput.addEventListener("input", function (e) {
-                  let value = priceInput.value.replace(/,/g, "");
-                  if (!isNaN(value) && value !== "") {
-                    const parts = value.split(".");
-                    parts[0] = parseInt(parts[0]).toLocaleString();
-                    priceInput.value = parts.join(".");
-                  }
-                });
-              }
-            });
-          </script>
-          <script>
-            const notyf = new Notyf({
-              duration: 3000,
-              position: { x: 'right', y: 'top' }
-            });
-          
-            {% if messages %}
-              {% for message in messages %}
-                notyf.success("{{ message|escapejs }}");
-              {% endfor %}
-            {% endif %}
-          </script>
-          <script>
-            const abcInput = document.getElementById('abcInput');
-            const priceDisplay = document.getElementById('documentPrice');
-          
-            abcInput.addEventListener('input', () => {
-              // Remove commas and parse to number
-              const rawValue = abcInput.value.replace(/,/g, '');
-              const abc = parseFloat(rawValue);
-              let price = 0;
-          
-              if (!isNaN(abc)) {
-                if (abc < 500000) {
-                  price = 500;
-                } else if (abc < 1000000) {
-                  price = 1000;
-                } else if (abc < 5000000) {
-                  price = 5000;
-                } else if (abc < 10000000) {
-                  price = 10000;
-                } else if (abc < 50000000) {
-                  price = 25000;
-                } else if (abc < 500000000) {
-                  price = 50000;
-                } else {
-                  price = 75000;
+                  });
                 }
+              });
+            }
+            </script>
+            <script>
+              function openBidModal(bidId) {
+                // Fetch bid details
+                fetch(`/bids/${bidId}/json/`)
+                  .then(response => response.json())
+                  .then(data => {
+                    $('#bidId').val(data.id);
+                    $('#bidDocTitle').val(data.document_title);
+                    $('#bidUser').val(data.user_full_name);
+                    $('#bidPrice').val(data.proposed_price);
+                    $('#bidStatus').val(data.status);
+            
+                    // Show the modal
+                    const modal = new bootstrap.Modal(document.getElementById('bidModal'));
+                    modal.show();
+                  })
+                  .catch(error => {
+                    console.error('Error fetching bid data:', error);
+                    Swal.fire({
+                      title: 'Error!',
+                      text: 'Could not load bid details.',
+                      icon: 'error',
+                      confirmButtonText: 'OK',
+                      customClass: {
+                        confirmButton: 'btn btn-danger'
+                      },
+                      buttonsStyling: false
+                    });
+                  });
               }
-          
-              // Format to PHP peso currency
-              priceDisplay.textContent = `₱ ${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
-            });
-          </script>
+            </script>
+            
+
+               
           <!-- SweetAlert2 CDN -->
           <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

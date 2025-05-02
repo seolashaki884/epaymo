@@ -15,8 +15,6 @@ urlpatterns = [
     path('update-cart-quantity/', views.update_cart_quantity, name='update_cart_quantity'),
     path('get_cart_count/', views.get_cart_count, name='get_cart_count'),
     path('billing-preparation/', views.billing_prep, name='billing-prep'),
-    path('order-list/', views.order_list, name='order_list'),
-    path('submit-order/', views.submit_order, name='submit_order'),
     path("verify-otp/", views.verify_otp, name="verify_otp"),
     path('adminhome/', views.adminhome, name='admin-home'),
     path('BAC/', views.BAC, name='bac-add'),
@@ -27,14 +25,18 @@ urlpatterns = [
     path('test/', views.test, name='test'),
     path('rentals/', views.rentals, name='rentals'),
     path('rental-form/', views.rentalform, name='rental-form' ),
+    path('place-bid/', views.place_bid, name='place_bid'),
+    path('bids/<int:bid_id>/json/', views.get_bid_json, name='bid_json'),
+    path('bids/<int:bid_id>/update/', views.update_bid_status, name='update_bid'),
 
 
 
+
+    path('my-bids/', views.my_bids_list, name='mybids'),
     path('homeboot/', views.homebootstrap, name='homeboot' ),
     path('documents/<int:pk>/json/', views.document_json, name='document_json'),
     path('equipments/<int:pk>/json/', views.equipment_json, name='equipment_json'),
 
 ]
-
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

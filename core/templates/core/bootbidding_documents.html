@@ -25,6 +25,8 @@
   data-template="vertical-menu-template-free"
 >
   <head>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <meta charset="utf-8" />
     <meta
       name="viewport"
@@ -41,6 +43,7 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
     <link
       href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
       rel="stylesheet"
@@ -68,6 +71,12 @@
     <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
     <script src="{% static '/assets/js/config.js' %}"></script>
   </head>
+  <style>
+    .swal2-container {
+      z-index: 11000 !important; /* Higher than Bootstrap modal (1055) */
+    }
+  </style>
+  
 
   <body>
     <!-- Layout wrapper -->
@@ -93,7 +102,11 @@
                     <div class="card h-100 ">
                     <div class="card-body">
                         <h5 class="card-title">{{ document.title }}</h5>
-                        <h6 class="card-subtitle text-muted">PHP {{ document.price|intcomma }}</h6>
+                        <h6 class="card-subtitle" style="{% if document.bidding_end_date and document.bidding_end_date < now %}color: red;{% endif %}">
+                          End: {{ document.bidding_end_date|date:"M d, Y h:i A" }}
+                        </h6>  
+                        <h6 class="card-subtitle text-muted py-2">PHP {{ document.price|intcomma }}</h6>
+                                                                    
                         {% if document.image %}
                         <div class="d-flex justify-content-center my-4" style="height: 200px; overflow: hidden;">
                             <img
@@ -114,21 +127,23 @@
                         </div>
                         {% endif %}
                         
-                        <p class="card-text">{{ document.description|truncatechars:60|slice:":-3" }}...</p>
-                          <button type="button" class="btn rounded-pill btn-primary"
-                              data-bs-toggle="modal"
-                              data-bs-target="#modalView"
-                              data-id="{{ document.id }}">
-                              <span class="tf-icons bx bx-expand-alt"></span>&nbsp; View
-                          </button>
-                    
-
-                            <button type="button" class="btn rounded-pill btn-primary">
-                                <span class=" bx bx-money"></span>&nbsp; Bid
-                            </button>
+                        {% if document.bidding_end_date and document.bidding_end_date <= now %}
+                        <button type="button" class="btn rounded-pill btn-secondary" disabled>
+                            <span class="tf-icons bx bx-time"></span>&nbsp; Bid Ended
+                        </button>
+                    {% else %}
+                        <button type="button" class="btn rounded-pill btn-primary open-modal"
+                            data-bs-toggle="modal"
+                            data-bs-target="#modalView"
+                            data-id="{{ document.id }}">
+                            <span class="tf-icons bx bx-expand-alt"></span>&nbsp; View/Bid
+                        </button>
+                    {% endif %}
+              
                     </div>
                     </div>
                 </div>
+                
                 {% empty %}
                     <p>No documents available.</p>
                 {% endfor %}
@@ -157,13 +172,15 @@
                             <p><strong>Category:</strong> <span id="modalDocCategory"></span></p>
                             <p><strong>Region:</strong> <span id="modalDocRegion"></span></p>
                             <p><strong>Price:</strong> PHP <span id="modalDocPrice"></span></p>
+                            <p><strong>Start:</strong> <span id="modalStart"></span></p>
+                            <p><strong>End:</strong> <span id="modalEnd"></span></p>
                           </div>
                         </div>
                       </div>
                       
                       <div class="modal-footer">
                         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Bid</button>
+                        <button type="button" class="btn btn-primary" id="placeBidBtn">Place Bid</button>
                       </div>
                     </div>
                   </div>
@@ -176,32 +193,110 @@
             <!-- / Content -->
 
             <script>
-              document.addEventListener('DOMContentLoaded', function () {
-                const modalView = document.getElementById('modalView');
+              let currentDocumentId = null;
+            
+              $(document).on('click', '.open-modal', function () {
+                const documentId = $(this).data('id');
+                currentDocumentId = documentId;
+            
+                $('#modalView').modal('show');
+            
+                fetch(`/documents/${documentId}/json/`)
+                  .then(response => response.json())
+                  .then(data => {
+                    document.getElementById('modalDocTitleText').textContent = data.title;
+                    document.getElementById('modalDocDescription').textContent = data.description;
+                    document.getElementById('modalDocCategory').textContent = data.category;
+                    document.getElementById('modalDocRegion').textContent = data.region;
+                    document.getElementById('modalDocPrice').textContent = parseFloat(data.price).toLocaleString();
+                    document.getElementById('modalDocImage').src = data.image || '/static/images/default-image.jpg';
+                    document.getElementById('modalStart').textContent = data.bidding_start_date;
+                    document.getElementById('modalEnd').textContent = data.bidding_end_date;
+                  })
+                  .catch(error => {
+                    console.error('Error fetching document data:', error);
+                  });
+              });
+            
+              $('#placeBidBtn').on('click', function () {
+                if (!currentDocumentId) {
+                  alert('No document selected.');
+                  return;
+                }
               
-                modalView.addEventListener('show.bs.modal', function (event) {
-                  const button = event.relatedTarget;
-                  const docId = button.getAttribute('data-id');
-              
-                  // Fetch document details from server
-                  fetch(`/documents/${docId}/json/`)
-                    .then(response => response.json())
-                    .then(data => {
-                      document.getElementById('modalDocTitleText').textContent = data.title;
-                      document.getElementById('modalDocDescription').textContent = data.description;
-                      document.getElementById('modalDocCategory').textContent = data.category;
-                      document.getElementById('modalDocRegion').textContent = data.region;
-                      document.getElementById('modalDocPrice').textContent = parseFloat(data.price).toLocaleString();
-                      document.getElementById('modalDocImage').src = data.image || '/static/images/default-image.jpg';
-                    })
-                    .catch(error => {
-                      console.error('Error fetching document data:', error);
+                const csrftoken = $('meta[name="csrf-token"]').attr('content');
+                
+                // Show confirmation dialog
+                Swal.fire({
+                  title: 'Are you sure?',
+                  text: 'This will place a bid at the listed price.',
+                  icon: 'warning',
+                  showCancelButton: true,
+                  confirmButtonText: 'Yes, place bid!',
+                  cancelButtonText: 'Cancel',
+                  customClass: {
+                    confirmButton: 'btn btn-primary me-2',
+                    cancelButton: 'btn btn-outline-secondary'
+                  },
+                  buttonsStyling: false
+                }).then((result) => {
+                  if (result.isConfirmed) {
+                    // Show the loader while processing
+                    Swal.fire({
+                      title: 'Placing your bid...',
+                      text: 'Please wait while we process your bid.',
+                      icon: 'info',
+                      showConfirmButton: false,
+                      allowOutsideClick: false,
+                      didOpen: () => {
+                        Swal.showLoading();
+                      }
                     });
+              
+                    // Make the AJAX request
+                    $.ajax({
+                      url: '{% url "place_bid" %}',
+                      method: 'POST',
+                      headers: { 'X-CSRFToken': csrftoken },
+                      data: {
+                        'document_id': currentDocumentId
+                      },
+                      success: function (response) {
+                        // After success, show the success message with a custom button
+                        Swal.fire({
+                          title: 'Success!',
+                          text: 'Your bid has been placed.',
+                          icon: 'success',
+                          confirmButtonText: 'OK',
+                          customClass: {
+                            confirmButton: 'btn btn-success'
+                          },
+                          buttonsStyling: false
+                        });
+                        $('#modalView').modal('hide');
+                      },
+                      error: function (xhr) {
+                        // In case of error, show an error message
+                        Swal.fire({
+                          title: 'Error!',
+                          text: xhr.responseJSON?.error || 'Something went wrong.',
+                          icon: 'error',
+                          confirmButtonText: 'OK',
+                          customClass: {
+                            confirmButton: 'btn btn-danger'
+                          },
+                          buttonsStyling: false
+                        });
+                      }
+                    });
+                  }
                 });
               });
-              </script>
               
-
+            </script>
+            
+            
+            
 
             <div class="content-backdrop fade"></div>
           </div>
