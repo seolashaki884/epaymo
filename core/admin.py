@@ -6,7 +6,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import authenticate
 from django.contrib.humanize.templatetags.humanize import intcomma  # Import intcomma for formatting
-from .models import Document, Cart, UserProfile
+from .models import Document, Cart, UserProfile, Bid
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import UserChangeForm
 
@@ -54,6 +54,10 @@ class DocumentAdmin(admin.ModelAdmin):
     def formatted_price(self, obj):
         return f"₱ {intcomma(f'{obj.price:.2f}')}"
     formatted_price.short_description = 'Price'
+
+@admin.register(Bid)
+class BidADmin(admin.ModelAdmin):
+    list_display = ('user', 'document', 'bid_time', 'status')
 
 
 @admin.register(Cart)

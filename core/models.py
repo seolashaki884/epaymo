@@ -63,10 +63,18 @@ class Document(models.Model):
 
 
 class Bid(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('under_review', 'Under Review'),
+        ('rejected', 'Rejected'),
+    ]
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='bids')
     proposed_price = models.DecimalField(max_digits=12, decimal_places=2)
     bid_time = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='pending')
 
 
     def set_price(self):
@@ -87,3 +95,6 @@ class Cart(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.document.title} ({self.quantity})"
+    
+
+

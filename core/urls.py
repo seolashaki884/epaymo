@@ -25,9 +25,14 @@ urlpatterns = [
     path('test/', views.test, name='test'),
     path('rentals/', views.rentals, name='rentals'),
     path('rental-form/', views.rentalform, name='rental-form' ),
+    path('place-bid/', views.place_bid, name='place_bid'),
+    path('bids/<int:bid_id>/json/', views.get_bid_json, name='bid_json'),
+    path('bids/<int:bid_id>/update/', views.update_bid_status, name='update_bid'),
 
 
 
+
+    path('my-bids/', views.my_bids_list, name='mybids'),
     path('homeboot/', views.homebootstrap, name='homeboot' ),
     path('documents/<int:pk>/json/', views.document_json, name='document_json'),
     path('equipments/<int:pk>/json/', views.equipment_json, name='equipment_json'),
