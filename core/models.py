@@ -68,6 +68,7 @@ class Bid(models.Model):
         ('approved', 'Approved'),
         ('under_review', 'Under Review'),
         ('rejected', 'Rejected'),
+        ('paid', 'Paid' )
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -82,6 +83,28 @@ class Bid(models.Model):
     
     def __str__(self):
         return f"Bid by {self.user.username} on {self.document.title} for {self.proposed_price}"
+
+class Billing(models.Model):
+    bid = models.OneToOneField('Bid', on_delete=models.CASCADE, related_name='billing')
+    full_name = models.CharField(max_length=255)
+    address = models.TextField()
+    email_add = models.CharField(max_length=255)
+    number = models.BigIntegerField(null=True)
+    invoice_number = models.CharField(max_length=100, unique=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    remarks = models.TextField(blank=True, null=True)
+    payment_status = models.CharField(max_length=50, choices=[
+        ('pending', 'Pending Verification'),
+        ('paid', 'Paid'),
+        ('unpaid', 'Unpaid'),
+    ], default='pending')
+    issued_date = models.DateField(default=timezone.now)
+
+    def __str__(self):
+        return f"Billing for Bid #{self.bid.id}"
+    
+
+
 
 
 class Cart(models.Model):

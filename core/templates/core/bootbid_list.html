@@ -32,6 +32,12 @@
       name="viewport"
       content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
     />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    <!-- Notyf JS -->
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 
     <title>Home | Epaymo</title>
 
@@ -124,6 +130,7 @@
                                 {% elif bid.status == 'approved' %} bg-label-success 
                                 {% elif bid.status == 'under_review' %} bg-label-info 
                                 {% elif bid.status == 'rejected' %} bg-label-danger 
+                                {% elif bid.status == 'paid' %} bg-label-success 
                                 {% endif %}">
                                 {{ bid.status|capfirst }}
                               </span>
@@ -143,10 +150,11 @@
                                     </a>
                                   {% endif %}
                                   {% if bid.status == 'approved' %}
-                                    <a class="dropdown-item text-success" href="javascript:void(0);">
+                                    <a class="dropdown-item text-success" href="javascript:void(0);" onclick="openBillingFormModal({{ bid.id }})">
                                       <i class="bx bx-credit-card me-1"></i> Billing
                                     </a>
                                   {% endif %}
+                                
                                 </div>
                               </div>
                             </td>
@@ -167,10 +175,119 @@
           
             <!-- / Content -->
             <div class="content-backdrop fade"></div>
+                        <!-- Billing Form Modal -->
+            <div class="modal fade" id="billingFormModal" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+                <div class="modal-content">
+
+                  <div class="modal-header">
+                    <h5 class="modal-title">Billing Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+
+                  <div class="modal-body">
+                    <form id="billingForm" method="POST">
+                      {% csrf_token %}
+                      <input type="hidden" name="bid_id" id="billingBidId" />
+                    
+                      <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="full_name" class="form-control" required>
+                      </div>
+                    
+                      <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="2" required></textarea>
+                      </div>
+                    
+                      <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" value="{{ request.user.email }}" name="email_add" class="form-control" required readonly>
+                      </div>
+                    
+                      <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="number" name="number" class="form-control">
+                      </div>
+                    
+                      <button type="submit" class="btn btn-primary">Proceed to Payment</button>
+                    </form>
+                    
+                  </div>
+
+                </div>
+              </div>
+            </div>
+
             
           </div>
           <!-- Content wrapper -->
         </div>
+          <script>
+            function getCSRFToken() {
+              return document.querySelector('[name=csrfmiddlewaretoken]').value;
+            }
+          
+            function openBillingFormModal(bidId) {
+              document.getElementById('billingBidId').value = bidId;
+              const modal = new bootstrap.Modal(document.getElementById('billingFormModal'));
+              modal.show();
+            }
+          
+            document.getElementById('billingForm').addEventListener('submit', function (e) {
+              e.preventDefault();
+              const form = e.target;
+              const formData = new FormData(form);
+              const bidId = formData.get('bid_id');
+          
+              // Step 1: Save billing info
+              fetch(`/bids/${bidId}/billing/form/`, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'X-CSRFToken': getCSRFToken(),
+                },
+              })
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  // Step 2: Create PayMaya payment
+                  fetch(`/bids/${bidId}/create-paymaya-payment/`, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                      'X-CSRFToken': getCSRFToken(),
+                    },
+                  })
+                  .then(res => res.json())
+                  .then(paymaya => {
+                    if (paymaya.success) {
+                      window.location.href = paymaya.redirectUrl;
+                    } else {
+                      alert('Payment setup failed.');
+                    }
+                  });
+                } else {
+                  alert('Failed to submit billing info.');
+                }
+              });
+            });
+          </script>
+          <script>
+            const notyf = new Notyf({
+              duration: 3000,
+              position: { x: 'right', y: 'top' }
+            });
+          
+            {% if messages %}
+              {% for message in messages %}
+                notyf.success("{{ message|escapejs }}");
+              {% endfor %}
+            {% endif %}
+          </script>
+        
+        
         <!-- / Layout page -->
       </div>
 

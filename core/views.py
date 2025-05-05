@@ -4,7 +4,7 @@ from django.http import JsonResponse, Http404
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from .models import Document, Cart, Bid
+from .models import Document, Cart, Bid, Billing
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.db import transaction
@@ -21,6 +21,11 @@ from datetime import datetime
 from django.utils import timezone
 from django.utils.timezone import now as timezone_now
 import pytz
+import base64
+import requests
+import uuid
+import logging
+logger = logging.getLogger(__name__)
 
 
 @login_required(login_url='login')
@@ -542,6 +547,143 @@ def place_bid(request):
             return JsonResponse({'error': 'Document not found.'}, status=404)
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
+@csrf_exempt
+def create_paymaya_payment(request, bid_id):
+    if request.method == 'POST':
+        try:
+            bid = Bid.objects.get(id=bid_id, status='approved')
+        except Bid.DoesNotExist:
+            return JsonResponse({"success": False, "error": "Bid not found or not approved."})
+
+        full_name = request.POST.get('full_name')
+        address = request.POST.get('address')
+        email = request.user.email
+        phone = request.POST.get('number')
+
+        # Create unique invoice number
+        invoice_number = f"INV-{uuid.uuid4().hex[:8].upper()}"
+
+        # Create or update billing record
+        billing, created = Billing.objects.update_or_create(
+            bid=bid,
+            defaults={
+                'full_name': full_name,
+                'address': address,
+                'email_add': email,
+                'number': phone or None,
+                'invoice_number': invoice_number,
+                'amount': bid.proposed_price,
+                'payment_status': 'pending',
+                'issued_date': timezone.now()
+            }
+        )
+
+
+        # Prepare PayMaya checkout payload
+        payload = {
+            "totalAmount": {
+                "value": float(bid.proposed_price),
+                "currency": "PHP"
+            },
+            "buyer": {
+                "firstName": full_name.split()[0],
+                "lastName": ' '.join(full_name.split()[1:]) or 'N/A',
+                "contact": {
+                    "email": email,
+                    "phone": phone or "0000000000"
+                },
+                "billingAddress": {
+                    "line1": address,
+                    "countryCode": "PH"
+                }
+            },
+            "redirectUrl": {
+                "success": f"http://127.0.0.1:8001/payment/success/{billing.id}/",
+                "failure": f"http://127.0.0.1:8001/payment/failure/{billing.id}/",
+                "cancel": f"http://127.0.0.1:8001/payment/cancel/{billing.id}/"
+            },
+            "requestReferenceNumber": invoice_number
+        }
+
+        # Encode the secret key for Authorization
+        secret_key = "pk-Z0OSzLvIcOI2UIvDhdTGVVfRSSeiGStnceqwUE7n0Ah"
+        basic_auth = base64.b64encode(f"{secret_key}:".encode()).decode()
+
+        headers = {
+            "Authorization": f"Basic {basic_auth}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.post(
+            'https://pg-sandbox.paymaya.com/checkout/v1/checkouts',
+            json=payload,
+            headers=headers
+        )
+
+        # Log the response from PayMaya API
+        logger.info(f"PayMaya response: {response.status_code} - {response.text}")
+
+        if response.status_code == 200:
+            data = response.json()
+            return JsonResponse({"success": True, "redirectUrl": data['redirectUrl']})
+        else:
+            logger.error(f"PayMaya Error: {response.text}")  # Log the error message for better troubleshooting
+            return JsonResponse({"success": False, "error": response.text})
+
+def payment_success(request, billing_id):
+    billing = get_object_or_404(Billing, id=billing_id)
+    billing.payment_status = 'paid'
+    billing.payment_date = timezone.now()
+
+    bid = billing.bid
+    bid.status = 'paid'
+    bid.save()
+    billing.save()
+    messages.success(request, "Payment successful!")
+    return redirect('/my-bids/')
+
+def payment_failure(request, billing_id):
+    messages.error(request, "Payment failed. Please try again.")
+    return redirect('/my-bids/')
+
+def payment_cancel(request, billing_id):
+    messages.warning(request, "Payment was cancelled.")
+    return redirect('/my-bids/')
+
+
+def submit_billing_info(request, bid_id):
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        try:
+            bid = Bid.objects.get(id=bid_id)
+            full_name = request.POST.get('full_name')
+            address = request.POST.get('address')
+            email = request.POST.get('email_add')
+            phone = request.POST.get('number')
+
+            invoice_number = f"INV-{uuid.uuid4().hex[:8].upper()}"
+
+            # Logging form data
+            logger.info(f"Submitting billing info for bid {bid_id}: {full_name}, {address}, {email}, {phone}")
+
+            Billing.objects.update_or_create(
+                bid=bid,
+                defaults={
+                    'full_name': full_name,
+                    'address': address,
+                    'email_add': email,
+                    'number': phone or None,
+                    'invoice_number': invoice_number,
+                    'amount': bid.proposed_price,
+                    'issued_date': timezone.now()
+                }
+            )
+
+            return JsonResponse({'success': True})
+        except Bid.DoesNotExist:
+            logger.error(f"Bid {bid_id} not found.")
+            return JsonResponse({'success': False, 'error': 'Bid not found'})
+    return JsonResponse({'success': False, 'error': 'Invalid request'})
     
 def equipment_json(request, pk):
     try:
