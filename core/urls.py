@@ -30,8 +30,11 @@ urlpatterns = [
     path('bids/<int:bid_id>/update/', views.update_bid_status, name='update_bid'),
 
 
-
-
+    path('bids/<int:bid_id>/billing/form/', views.submit_billing_info, name='submit_billing_info'),
+    path('bids/<int:bid_id>/create-paymaya-payment/', views.create_paymaya_payment, name='create_paymaya_payment'),
+    path('payment/success/<int:billing_id>/', views.payment_success, name='payment_success'),
+    path('payment/failure/<int:billing_id>/', views.payment_failure, name='payment_failure'),
+    path('payment/cancel/<int:billing_id>/', views.payment_cancel, name='payment_cancel'),
     path('my-bids/', views.my_bids_list, name='mybids'),
     path('homeboot/', views.homebootstrap, name='homeboot' ),
     path('documents/<int:pk>/json/', views.document_json, name='document_json'),
