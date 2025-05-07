@@ -141,11 +141,11 @@ def create_rental_request(request):
 
         RentalRequest.objects.create(
             equipment=equipment,
-            requested_by=request.user.get_full_name() if request.user.is_authenticated else "Guest",
             purpose=request.POST.get('purpose'),
             rental_start_date=request.POST.get('rental_start_date'),
             rental_end_date=request.POST.get('rental_end_date'),
             no_of_days_hours=request.POST.get('no_of_days_hours'),
+            requested_by=request.POST.get('rental_requested_by'),
         )
 
         messages.success(request, "Rental request submitted successfully.")
@@ -153,6 +153,10 @@ def create_rental_request(request):
 
     messages.error(request, "Invalid request method.")
     return redirect('rentals')
+
+def rental_requests_list(request):
+    rental_requests = RentalRequest.objects.all()
+    return render(request, 'equipment-admin/equipment-rentals.html', {'rental_requests': rental_requests})
 
 @login_required(login_url='login')
 def dashboard(request):

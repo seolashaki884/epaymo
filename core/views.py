@@ -91,12 +91,12 @@ def user_login(request):
                 elif user_profile.category == 'equipment_rental':
                     return redirect('equipmentdashboard')
                 else:
-                    return redirect('home')
+                    return redirect('homeboot')
             except UserProfile.DoesNotExist:
                 # No UserProfile found, fallback
                 if user.is_staff:
                     return redirect('/home/')
-                return redirect('home')
+                return redirect('homeboot')
 
         else:
             messages.error(request, "Invalid password. Please try again.")
