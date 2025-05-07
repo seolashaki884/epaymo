@@ -548,6 +548,7 @@ def place_bid(request):
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
+
 @csrf_exempt
 def create_paymaya_payment(request, bid_id):
     if request.method == 'POST':
@@ -561,10 +562,8 @@ def create_paymaya_payment(request, bid_id):
         email = request.user.email
         phone = request.POST.get('number')
 
-        # Create unique invoice number
         invoice_number = f"INV-{uuid.uuid4().hex[:8].upper()}"
 
-        # Create or update billing record
         billing, created = Billing.objects.update_or_create(
             bid=bid,
             defaults={
@@ -579,8 +578,6 @@ def create_paymaya_payment(request, bid_id):
             }
         )
 
-
-        # Prepare PayMaya checkout payload
         payload = {
             "totalAmount": {
                 "value": float(bid.proposed_price),
@@ -606,7 +603,6 @@ def create_paymaya_payment(request, bid_id):
             "requestReferenceNumber": invoice_number
         }
 
-        # Encode the secret key for Authorization
         secret_key = "pk-Z0OSzLvIcOI2UIvDhdTGVVfRSSeiGStnceqwUE7n0Ah"
         basic_auth = base64.b64encode(f"{secret_key}:".encode()).decode()
 
@@ -621,7 +617,6 @@ def create_paymaya_payment(request, bid_id):
             headers=headers
         )
 
-        # Log the response from PayMaya API
         logger.info(f"PayMaya response: {response.status_code} - {response.text}")
 
         if response.status_code == 200:
