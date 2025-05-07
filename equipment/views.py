@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Equipment
+from .models import Equipment, RentalRequest
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.contrib.admin.models import LogEntry, CHANGE, DELETION, ADDITION
@@ -120,6 +120,40 @@ def delete_equipment(request, equipment_id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
         
+
+def create_rental_request(request):
+    if request.method == 'POST':
+        equipment_id = request.POST.get('equipment_id')
+        if not equipment_id:
+            messages.error(request, "Equipment ID is missing.")
+            return redirect('rentals')
+
+        try:
+            equipment = Equipment.objects.get(id=equipment_id)
+        except Equipment.DoesNotExist:
+            messages.error(request, "Selected equipment does not exist.")
+            return redirect('rentals')
+
+        # Check for duplicate request
+        if RentalRequest.objects.filter(equipment=equipment, requested_by=request.user.get_full_name()).exists():
+            messages.error(request, "You have already submitted a rental request for this equipment.")
+            return redirect('rentals')
+
+        RentalRequest.objects.create(
+            equipment=equipment,
+            requested_by=request.user.get_full_name() if request.user.is_authenticated else "Guest",
+            purpose=request.POST.get('purpose'),
+            rental_start_date=request.POST.get('rental_start_date'),
+            rental_end_date=request.POST.get('rental_end_date'),
+            no_of_days_hours=request.POST.get('no_of_days_hours'),
+        )
+
+        messages.success(request, "Rental request submitted successfully.")
+        return redirect('rentals')
+
+    messages.error(request, "Invalid request method.")
+    return redirect('rentals')
+
 @login_required(login_url='login')
 def dashboard(request):
     logs = LogEntry.objects.filter(user=request.user).order_by('-action_time')

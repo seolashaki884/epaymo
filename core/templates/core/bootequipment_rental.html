@@ -45,6 +45,9 @@
       href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 
     <!-- Icons. Uncomment required icon fonts -->
     <link rel="stylesheet" href="{% static '/assets/vendor/fonts/boxicons.css' %}" />
@@ -70,6 +73,16 @@
   </head>
 
   <body>
+    <style>
+      .swal2-container {
+        z-index: 9999 !important;
+      }
+      
+      .swal-zindex {
+        z-index: 10000 !important;
+      }
+      
+    </style>
     <!-- Layout wrapper -->
     <div class="layout-wrapper layout-content-navbar">
       <div class="layout-container">
@@ -120,9 +133,10 @@
                             </button>
                     
 
-                            <button type="button" class="btn rounded-pill btn-primary">
-                                <span class=" bx bx-money"></span>&nbsp; Rent
+                            <button type="button" class="btn rounded-pill btn-primary rent-button" data-id="{{ equipment.id }}" data-bs-toggle="modal" data-bs-target="#rentModal">
+                              <span class="bx bx-money"></span>&nbsp; Rent
                             </button>
+                            
 
                       </div>
                     </div>
@@ -130,52 +144,52 @@
                 {% empty %}
                     <p>No equipment available.</p>
                 {% endfor %}
-                <div class="modal fade" id="equipmentModal" tabindex="-1" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal fade" id="rentModal" tabindex="-1" aria-labelledby="rentModalLabel" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered modal-md">
                     <div class="modal-content">
-                      <div class="modal-header">
-                        <h5 class="modal-title">Equipment Details</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        <div class="row">
-                          <div class="col-md-5 text-center mb-3">
-                            <img id="modalEquipmentImage" src="" class="img-fluid rounded border" alt="Equipment Image" style="max-height: 350px; object-fit: cover; width: 100%;" />
+                      <form id="rentalForm" method="POST" action="{% url 'create_rental_request' %}">
+                        {% csrf_token %}
+                        <div class="modal-header">
+                          <h5 class="modal-title" id="rentModalLabel">Rent Equipment</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                          <input type="hidden" name="equipment_id" id="rentEquipmentId">
+
+                          <div class="mb-3">
+                            <label for="purpose" class="form-label">Purpose</label>
+                            <textarea class="form-control" name="purpose" required></textarea>
                           </div>
-                          <div class="col-md-7">
-                            <h4 id="modalEquipmentName" class="mb-2"></h4>
-                            <p id="modalEquipmentDescription" class="text-muted"></p>
-                            
-                            <p><strong>Status:</strong> <span id="modalEquipmentStatus"></span></p>
-                            <p><strong>Rental Rate:</strong> PHP <span id="modalEquipmentRate"></span></p>
+                          <div class="mb-3">
+                            <label for="rental_start_date" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" name="rental_start_date" required>
+                          </div>
+                          <div class="mb-3">
+                            <label for="rental_end_date" class="form-label">End Date</label>
+                            <input type="date" class="form-control" name="rental_end_date" required>
+                          </div>
+                          <div class="mb-3">
+                            <label for="no_of_days_hours" class="form-label">Duration (e.g. "2 days", "4 hours")</label>
+                            <input type="text" class="form-control" name="no_of_days_hours" required>
                           </div>
                         </div>
-                      </div>
-                      <div class="modal-footer">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                      </div>
+                        <div class="modal-footer">
+                          <button type="submit" class="btn btn-success">Submit Request</button>
+                          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        </div>
+                      </form>
                     </div>
                   </div>
                 </div>
+                
                 
   
   
               <div class="content-backdrop fade"></div>
             </div>
 
-
               </div>
             </div>
-
-
-
-
-
-            
-            <!-- / Content -->
-
-            
-          <!-- Content wrapper -->
         </div>
         <script>
           document.addEventListener('DOMContentLoaded', () => {
@@ -200,6 +214,62 @@
             });
         });        
         </script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+          document.addEventListener('DOMContentLoaded', function () {
+            const rentModal = document.getElementById('rentModal');
+        
+            // Listen when the rent modal is triggered to show
+            rentModal.addEventListener('show.bs.modal', function (event) {
+              const button = event.relatedTarget; // Button that triggered the modal
+              const equipmentId = button.getAttribute('data-id'); // Get data-id from button
+              document.getElementById('rentEquipmentId').value = equipmentId; // Set the hidden input value
+              console.log("Equipment ID set:", equipmentId); // Debug log
+            });
+        
+            // SweetAlert2 confirmation before submitting the form
+            const form = document.getElementById('rentalForm');
+            form.addEventListener('submit', function (e) {
+              e.preventDefault(); // Prevent actual form submission
+        
+              Swal.fire({
+                title: 'Confirm Rental',
+                text: 'Do you want to submit this rental request?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, submit it!',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                  confirmButton: 'btn btn-success me-2',
+                  cancelButton: 'btn btn-outline-danger'
+                },
+                buttonsStyling: false
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  form.submit(); // Submit only if confirmed
+                }
+              });
+            });
+          });
+        </script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        
+                
+        <script>
+          const notyf = new Notyf({
+            duration: 3000,
+            position: { x: 'right', y: 'top' }
+          });
+        
+          {% if messages %}
+            {% for message in messages %}
+              notyf.success("{{ message|escapejs }}");
+            {% endfor %}
+          {% endif %}
+        </script> 
+        
+        
+        
         <!-- / Layout page -->
       </div>
 
