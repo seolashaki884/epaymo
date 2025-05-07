@@ -133,7 +133,7 @@
                             </button>
                     
 
-                            <button type="button" class="btn rounded-pill btn-primary rent-button" data-id="{{ equipment.id }}" data-bs-toggle="modal" data-bs-target="#rentModal">
+                            <button type="button" class="btn rounded-pill btn-primary rent-button" data-id="{{ equipment.id }}" data-rate="{{ equipment.rental_rate }}"  data-bs-toggle="modal" data-bs-target="#rentModal">
                               <span class="bx bx-money"></span>&nbsp; Rent
                             </button>
                             
@@ -155,6 +155,10 @@
                         </div>
                         <div class="modal-body">
                           <input type="hidden" name="equipment_id" id="rentEquipmentId">
+                          <div class="mb-3">
+                            <label for="rental_requested_by" class="form-label">Renter Name</label>
+                            <input type="text" class="form-control" name="rental_requested_by" required>
+                          </div>
 
                           <div class="mb-3">
                             <label for="purpose" class="form-label">Purpose</label>
@@ -170,8 +174,13 @@
                           </div>
                           <div class="mb-3">
                             <label for="no_of_days_hours" class="form-label">Duration (e.g. "2 days", "4 hours")</label>
-                            <input type="text" class="form-control" name="no_of_days_hours" required>
+                            <input type="text" class="form-control" id="durationInput" name="no_of_days_hours" required>
                           </div>
+                          <div class="mb-3" id="estimatedPriceContainer" style="display: none;">
+                            <label class="form-label">Estimated price to pay:</label>
+                            <div><strong>₱ <span id="estimatedCost">0.00</span></strong></div>
+                          </div>
+                                                  
                         </div>
                         <div class="modal-footer">
                           <button type="submit" class="btn btn-success">Submit Request</button>
@@ -191,6 +200,55 @@
               </div>
             </div>
         </div>
+
+        <script>
+          document.addEventListener('DOMContentLoaded', function () {
+            let currentRate = 0;
+        
+            // Set rate when Rent button is clicked
+            document.querySelectorAll('.rent-button').forEach(button => {
+              button.addEventListener('click', () => {
+                const equipmentId = button.getAttribute('data-id');
+                currentRate = parseFloat(button.getAttribute('data-rate')) || 0;
+                document.getElementById('rentEquipmentId').value = equipmentId;
+        
+                // Reset on modal open
+                document.getElementById('estimatedCost').textContent = '₱ 0.00';
+                document.getElementById('estimatedPriceContainer').style.display = 'none';
+                document.getElementById('durationInput').value = '';
+              });
+            });
+        
+            // Handle live duration input
+            const durationInput = document.getElementById('durationInput');
+            const estimatedCostSpan = document.getElementById('estimatedCost');
+            const estimatedPriceContainer = document.getElementById('estimatedPriceContainer');
+        
+            durationInput.addEventListener('input', function () {
+              const inputText = durationInput.value.toLowerCase();
+              let hours = 0;
+        
+              const dayMatch = inputText.match(/(\d+(\.\d+)?)\s*day/);
+              const hourMatch = inputText.match(/(\d+(\.\d+)?)\s*hour/);
+        
+              if (dayMatch) hours += parseFloat(dayMatch[1]) * 24;
+              if (hourMatch) hours += parseFloat(hourMatch[1]);
+        
+              if (hours > 0 && currentRate > 0) {
+                const cost = (currentRate * hours).toFixed(2);
+                estimatedCostSpan.textContent = Number(cost).toLocaleString('en-PH', {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2
+                });
+                estimatedPriceContainer.style.display = 'block';
+              } else {
+                estimatedPriceContainer.style.display = 'none';
+              }
+            });
+          });
+        </script>
+        
+          
         <script>
           document.addEventListener('DOMContentLoaded', () => {
             const equipmentModal = document.getElementById('equipmentModal');

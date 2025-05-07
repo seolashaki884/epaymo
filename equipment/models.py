@@ -77,7 +77,7 @@ class RentalRequest(models.Model):
             total_hours = self.parse_duration_in_hours()
             rate = self.equipment.rental_rate
             cost = Decimal(rate) * Decimal(total_hours)
-            # Optionally round up to the nearest cent
+
             self.total_rent_cost = cost.quantize(Decimal('0.01'), rounding=ROUND_UP)
         super().save(*args, **kwargs)
 
