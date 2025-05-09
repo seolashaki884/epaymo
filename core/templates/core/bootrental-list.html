@@ -106,66 +106,59 @@
                 <div class="card-body" >
                   <div class="table-responsive text-nowrap">
                     <table class="table table-bordered">
-                      <thead>
-                        <tr>
-                         
-                          <th>Title</th>
-                          <th>Date placed</th>
-                          <th>Price</th>
-                          <th>Region</th>
-                          <th>Status</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {% for bid in bids %}
+                        <thead>
                           <tr>
-                            <td><strong>{{ bid.document.title }}</strong></td>
-                            <td>{{bid.bid_time}}</td>         
-                            <td>₱ {{ bid.proposed_price }}</td>
-                            <td>{{ bid.document.region }}</td>
+                            <th>Equipment</th>
+                            <th>Requested By</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Total Cost</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {% for request in rental_requests %}
+                          <tr>
+                            <td>{{ request.equipment.name }}</td>
+                            <td>{{ request.requested_by }}</td>
+                            <td>{{ request.rental_start_date }}</td>
+                            <td>{{ request.rental_end_date }}</td>
+                            <td>₱ {{ request.total_rent_cost }}</td>
                             <td>
-                              <span class="badge 
-                                {% if bid.status == 'pending' %} bg-label-warning 
-                                {% elif bid.status == 'approved' %} bg-label-success 
-                                {% elif bid.status == 'under_review' %} bg-label-info 
-                                {% elif bid.status == 'rejected' %} bg-label-danger 
-                                {% elif bid.status == 'paid' %} bg-label-success 
+                              <span class="badge
+                                {% if request.status == 'pending' %} bg-label-warning
+                                {% elif request.status == 'approved' %} bg-label-success
+                                {% elif request.status == 'returned' %} bg-label-secondary
+                                {% elif request.status == 'rejected' %} bg-label-danger
                                 {% endif %}">
-                                {{ bid.status|capfirst }}
+                                {{ request.status|capfirst }}
                               </span>
                             </td>
                             <td>
-                              <div class="dropdown">
-                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                  <i class="bx bx-dots-vertical-rounded"></i>
-                                </button>
-                                <div class="dropdown-menu">
-                                  <a class="dropdown-item" href="javascript:void(0);" onclick="openBidModal({{ bid.id }})">
-                                    <i class="bx bx-show-alt me-1"></i> View
-                                  </a>
-                                  {% if bid.status == 'pending' %}
-                                    <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="cancelBid('{{ bid.id }}')">
-                                      <i class="bx bx-trash me-1"></i> Cancel Bid
-                                    </a>
-                                  {% endif %}
-                                  {% if bid.status == 'approved' %}
-                                    <a class="dropdown-item text-success" href="javascript:void(0);" onclick="openBillingFormModal({{ bid.id }})">
-                                      <i class="bx bx-credit-card me-1"></i> Billing
-                                    </a>
-                                  {% endif %}
-                                
-                                </div>
-                              </div>
+                              <button class="btn btn-sm btn-primary" onclick="openRentalModal(this)"
+                                data-id="{{ request.id }}"
+                                data-requested_by="{{ request.requested_by }}"
+                                data-equipment="{{ request.equipment.name }}"
+                                data-purpose="{{ request.purpose }}"
+                                data-duration="{{ request.no_of_days_hours }}"
+                                data-cost="{{ request.total_rent_cost }}"
+                                data-status="{{ request.status }}"
+                                data-rental_start_date="{{ request.rental_start_date }}"
+                                data-rental_end_date="{{ request.rental_end_date }}"
+                                data-payment_status="{{ request.payment_status }}">
+                                View
+                              </button>
                             </td>
                           </tr>
-                        {% empty %}
+                          {% empty %}
                           <tr>
-                            <td colspan="7" class="text-center">No bids found.</td>
+                            <td colspan="7" class="text-center">No rental requests found.</td>
                           </tr>
-                        {% endfor %}
-                      </tbody>
-                    </table>
+                          {% endfor %}
+                        </tbody>
+                      </table>
+                      
                     
                     
                   </div>
@@ -192,7 +185,7 @@
                     
                       <div class="mb-3">
                         <label class="form-label">Full Name</label>
-                        <input type="text" name="full_name" value="{{request.user.get_full_name}}" class="form-control" required readonly>
+                        <input type="text" name="full_name" class="form-control" required>
                       </div>
                     
                       <div class="mb-3">

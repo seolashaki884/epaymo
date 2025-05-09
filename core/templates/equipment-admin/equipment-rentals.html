@@ -246,6 +246,8 @@
                                         data-duration="{{ request.no_of_days_hours }}"
                                         data-cost="{{ request.total_rent_cost }}"
                                         data-status="{{ request.status }}"
+                                        data-rental_start_date="{{ request.rental_start_date }}"
+                                        data-rental_end_date="{{ request.rental_end_date }}"
                                         data-payment_status="{{ request.payment_status }}"
                                       >
                                         <i class="bx bx-show me-1"></i> View
@@ -325,6 +327,16 @@
                       <input type="text" id="rentalPaymentStatus" class="form-control" readonly>
                     </div>
 
+                    <div class="col-md-6">
+                      <label class="form-label">Start Date</label>
+                      <input type="text" id="rentalStartDate" class="form-control" readonly>
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="form-label">End Date</label>
+                      <input type="text" id="rentalEndDate" class="form-control" readonly>
+                    </div>
+
                     <div class="col-12">
                       <label class="form-label">Purpose</label>
                       <textarea id="rentalPurpose" class="form-control" rows="2" readonly></textarea>
@@ -352,6 +364,8 @@
             document.getElementById('rentalDuration').value = el.dataset.duration;
             document.getElementById('rentalCost').value = `₱ ${parseFloat(el.dataset.cost).toFixed(2)}`;
             document.getElementById('rentalStatus').value = el.dataset.status;
+            document.getElementById('rentalStartDate').value = el.dataset.rental_start_date;
+            document.getElementById('rentalEndDate').value = el.dataset.rental_end_date;
             document.getElementById('rentalPaymentStatus').value = el.dataset.payment_status;
           }
         

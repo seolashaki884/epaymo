@@ -100,50 +100,53 @@
           <div class="content-wrapper"> 
             <div class="container-xxl flex-grow-1 container-p-y">
               <div class="row">
-
                 {% for equipment in equipment_list %}
-                {%load humanize%}
+                {% load humanize %}
                 <div class="col-md-6 col-lg-4 mb-3">
                     <div class="card h-100">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ equipment.name }}</h5>
-                        <h6 class="card-subtitle text-muted">Rental Rate | <strong>PHP {{ equipment.rental_rate }}</strong></h6>
-                         {% if equipment.image %}
-                            <div class="d-flex justify-content-center my-4" style="height: 200px; overflow: hidden;">
-                                <img src="{{ equipment.image.url }}"
-                                    class="img-fluid"
-                                    style="height: 100%; width: auto; object-fit: cover;"
-                                    alt="{{ equipment.name }}">
-                            </div>
+                        <div class="card-body">
+                            <h5 class="card-title">{{ equipment.name }}</h5>
+                            <h6 class="card-subtitle text-muted">Rental Rate | <strong>PHP {{ equipment.rental_rate }}</strong></h6>
+                
+                            {% if equipment.image %}
+                                <div class="d-flex justify-content-center my-4" style="height: 200px; overflow: hidden;">
+                                    <img src="{{ equipment.image.url }}" class="img-fluid" style="height: 100%; width: auto; object-fit: cover;" alt="{{ equipment.name }}">
+                                </div>
                             {% else %}
-                            <div class="d-flex justify-content-center my-4" style="height: 200px; overflow: hidden;">
-                                <img src="/static/images/default-image.jpg"
-                                    class="img-fluid"
-                                    style="height: 100%; width: auto; object-fit: cover;"
-                                    alt="Default Image">
-                            </div>
-                          {% endif %}
-
-                         <p class="card-text">{{ equipment.description|truncatechars:60|slice:":-3" }}...</p>
+                                <div class="d-flex justify-content-center my-4" style="height: 200px; overflow: hidden;">
+                                    <img src="/static/images/default-image.jpg" class="img-fluid" style="height: 100%; width: auto; object-fit: cover;" alt="Default Image">
+                                </div>
+                            {% endif %}
+                
+                            <p class="card-text">{{ equipment.description|truncatechars:60|slice:":-3" }}...</p>
+                
+                            <!-- View Button -->
                             <button type="button" class="btn rounded-pill btn-primary"
                                 data-bs-toggle="modal"
                                 data-bs-target="#equipmentModal"
                                 data-id="{{ equipment.id }}">
                                 <span class="tf-icons bx bx-expand-alt"></span>&nbsp; View
                             </button>
-                    
-
-                            <button type="button" class="btn rounded-pill btn-primary rent-button" data-id="{{ equipment.id }}" data-rate="{{ equipment.rental_rate }}"  data-bs-toggle="modal" data-bs-target="#rentModal">
-                              <span class="bx bx-money"></span>&nbsp; Rent
-                            </button>
-                            
-
-                      </div>
+                
+                            <!-- Rent Button or Not Available Text -->
+                            {% if equipment.id in available_ids %}
+                                <button type="button" class="btn rounded-pill btn-primary rent-button" 
+                                    data-id="{{ equipment.id }}" 
+                                    data-rate="{{ equipment.rental_rate }}"  
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#rentModal">
+                                    <span class="bx bx-money"></span>&nbsp; Rent
+                                </button>
+                            {% else %}
+                                <span class="badge bg-secondary">Not Available / Rented</span>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
                 {% empty %}
                     <p>No equipment available.</p>
                 {% endfor %}
+                
                 <div class="modal fade" id="rentModal" tabindex="-1" aria-labelledby="rentModalLabel" aria-hidden="true">
                   <div class="modal-dialog modal-dialog-centered modal-md">
                     <div class="modal-content">
@@ -157,9 +160,9 @@
                           <input type="hidden" name="equipment_id" id="rentEquipmentId">
                           <div class="mb-3">
                             <label for="rental_requested_by" class="form-label">Renter Name</label>
-                            <input type="text" class="form-control" name="rental_requested_by" required>
+                            <input type="text" class="form-control" name="rental_requested_by" 
+                                   value="{{ request.user.get_full_name }}" required readonly>
                           </div>
-
                           <div class="mb-3">
                             <label for="purpose" class="form-label">Purpose</label>
                             <textarea class="form-control" name="purpose" required></textarea>

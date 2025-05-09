@@ -458,7 +458,6 @@ def delete_document(request, doc_id):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
-@login_required(login_url='login')
 def rentals(request):
     today = timezone.now().date()
 
@@ -763,3 +762,13 @@ def my_bids_list(request):
         'bids': bids,
     }
     return render(request, 'core/bootbid_list.html', context)
+
+@login_required(login_url='login')
+def rental_request_list(request):
+    rental_requests = RentalRequest.objects.select_related('equipment').filter(
+        requested_by=request.user.get_full_name()  # <-- match full name
+    ).order_by('-created_at')
+
+    return render(request, 'core/bootrental-list.html', {
+        'rental_requests': rental_requests
+    })

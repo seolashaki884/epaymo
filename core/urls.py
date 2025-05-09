@@ -39,6 +39,7 @@ urlpatterns = [
     path('homeboot/', views.homebootstrap, name='homeboot' ),
     path('documents/<int:pk>/json/', views.document_json, name='document_json'),
     path('equipments/<int:pk>/json/', views.equipment_json, name='equipment_json'),
+    path('rental/requests/', views.rental_request_list, name='rental_request_list'),
 
 ]
 if settings.DEBUG:
