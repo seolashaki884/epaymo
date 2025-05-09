@@ -11,7 +11,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.timezone import now
 from django.http import JsonResponse, Http404
 
-@login_required
+@login_required(login_url='login')
 def equipment(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -48,6 +48,7 @@ def equipment(request):
         'equipment_list': equipment_list
     })
 
+@login_required(login_url='login')
 @csrf_exempt
 def update_equipment(request, equipment_id):
     if request.method == 'POST':
@@ -92,7 +93,7 @@ def update_equipment(request, equipment_id):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
-
+@login_required(login_url='login')
 def delete_equipment(request, equipment_id):
     if request.method == 'POST':
         try:
@@ -120,7 +121,7 @@ def delete_equipment(request, equipment_id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
         
-
+@login_required(login_url='login')
 def create_rental_request(request):
     if request.method == 'POST':
         equipment_id = request.POST.get('equipment_id')
@@ -154,6 +155,7 @@ def create_rental_request(request):
     messages.error(request, "Invalid request method.")
     return redirect('rentals')
 
+@login_required(login_url='login')
 def rental_requests_list(request):
     rental_requests = RentalRequest.objects.all()
     return render(request, 'equipment-admin/equipment-rentals.html', {'rental_requests': rental_requests})

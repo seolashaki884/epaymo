@@ -168,7 +168,7 @@
                       <div class="dropdown-divider"></div>
                     </li>
                     <li>
-                      <a class="dropdown-item" href="auth-login-basic.html">
+                      <a class="dropdown-item" href="{%url 'user_logout'%}">
                         <i class="bx bx-power-off me-2"></i>
                         <span class="align-middle">Log Out</span>
                       </a>
@@ -198,8 +198,7 @@
                                 <th>Equipment</th>
                                 <th>Purpose</th>
                                 <th>Start Date</th>
-                                <th>End Date</th>
-                                <th>Duration</th>
+
                                 <th>Total Cost</th>
                                 <th>Status</th>
                                 <th>Payment Status</th>
@@ -212,8 +211,7 @@
                                 <td>{{ request.requested_by }}</td>
                                 <td>{{ request.equipment.name }}</td>
                                 <td>{{ request.purpose }}</td>
-                                <td>{{ request.rental_start_date }}</td>
-                                <td>{{ request.rental_end_date }}</td>
+
                                 <td>{{ request.no_of_days_hours }}</td>
                                 <td>₱ {{ request.total_rent_cost|floatformat:2 }}</td>
                                 <td>
@@ -227,10 +225,34 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="" class="btn btn-info btn-sm">View</a>
-                                    {% if request.status == 'pending' %}
-                                    <a href="javascript:void(0);" onclick="cancelRentalRequest({{ request.id }})" class="btn btn-danger btn-sm">Cancel</a>
-                                    {% endif %}
+                                  <div class="dropdown">
+                                    <button
+                                      type="button"
+                                      class="btn p-0 dropdown-toggle hide-arrow"
+                                      data-bs-toggle="dropdown"
+                                    >
+                                      <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                      <a class="dropdown-item"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalEdit"
+                                        href="javascript:void(0);"
+                                        data-id="{{ equipment.id }}"
+                                        data-name="{{ equipment.name }}"
+                                        data-description="{{ equipment.description }}"
+                                        data-rental_rate="{{ equipment.rental_rate }}"
+                                        data-rental_price="{{ equipment.rental_price }}"
+                                        data-status="{{ equipment.status }}"
+                                      >
+                                        <i class="bx bx-edit-alt me-1"></i> Edit
+                                      </a>
+                          
+                                      {% if request.status == 'pending' %}
+                                      <a class="dropdown-item" href="javascript:void(0);" onclick="cancelRentalRequest({{ request.id }})"> <i class="bx bx-trash-alt me-1"></i> Cancel</a>
+                                      {% endif %}
+                                    </div>
+                                  </div>
                                 </td>
                             </tr>
                             {% empty %}
