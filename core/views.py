@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 from decimal import Decimal
 from .models import UserProfile
-from equipment.models import Equipment
+from equipment.models import Equipment, RentalRequest
 import random
 from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
@@ -460,8 +460,20 @@ def delete_document(request, doc_id):
 
 @login_required(login_url='login')
 def rentals(request):
-    equipment_list = Equipment.objects.filter(status='Available')
-    return render(request, 'core/bootequipment_rental.html', {'equipment_list': equipment_list})
+    today = timezone.now().date()
+
+    rented_equipment_ids = RentalRequest.objects.filter(
+        status='approved',
+        rental_end_date__gte=today
+    ).values_list('equipment_id', flat=True)
+
+    equipment_list = Equipment.objects.all()
+    available_ids = Equipment.objects.filter(status='available').exclude(id__in=rented_equipment_ids).values_list('id', flat=True)
+
+    return render(request, 'core/bootequipment_rental.html', {
+        'equipment_list': equipment_list,
+        'available_ids': list(available_ids),
+    })
 
 @login_required(login_url='login')
 def biddings(request):
