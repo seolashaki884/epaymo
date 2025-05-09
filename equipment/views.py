@@ -10,8 +10,11 @@ from django.contrib.admin.models import LogEntry, CHANGE, DELETION, ADDITION
 from django.contrib.contenttypes.models import ContentType
 from django.utils.timezone import now
 from django.http import JsonResponse, Http404
+from django.views.decorators.http import require_POST
+from django.http import JsonResponse, HttpResponseBadRequest
+from django.utils import timezone
 
-@login_required
+@login_required(login_url='login')
 def equipment(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -48,6 +51,7 @@ def equipment(request):
         'equipment_list': equipment_list
     })
 
+@login_required(login_url='login')
 @csrf_exempt
 def update_equipment(request, equipment_id):
     if request.method == 'POST':
@@ -92,7 +96,7 @@ def update_equipment(request, equipment_id):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
-
+@login_required(login_url='login')
 def delete_equipment(request, equipment_id):
     if request.method == 'POST':
         try:
@@ -120,7 +124,7 @@ def delete_equipment(request, equipment_id):
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
         
-
+@login_required(login_url='login')
 def create_rental_request(request):
     if request.method == 'POST':
         equipment_id = request.POST.get('equipment_id')
@@ -134,11 +138,21 @@ def create_rental_request(request):
             messages.error(request, "Selected equipment does not exist.")
             return redirect('rentals')
 
-        # Check for duplicate request
-        if RentalRequest.objects.filter(equipment=equipment, requested_by=request.user.get_full_name()).exists():
-            messages.error(request, "You have already submitted a rental request for this equipment.")
+        user_full_name = request.user.get_full_name()
+        today = timezone.now().date()
+
+        # Check for a previous active or future rental request by the same user
+        existing_request = RentalRequest.objects.filter(
+            equipment=equipment,
+            requested_by=user_full_name,
+            rental_end_date__gte=today  # active or future
+        ).exclude(status='rejected').first()
+
+        if existing_request:
+            messages.error(request, "You already have an ongoing or upcoming rental request for this equipment.")
             return redirect('rentals')
 
+        # Create the rental request
         RentalRequest.objects.create(
             equipment=equipment,
             purpose=request.POST.get('purpose'),
@@ -154,6 +168,23 @@ def create_rental_request(request):
     messages.error(request, "Invalid request method.")
     return redirect('rentals')
 
+@require_POST
+def update_rental_status(request, rental_id):
+    try:
+        data = json.loads(request.body)
+        status = data.get('status')
+
+        if status not in dict(RentalRequest.STATUS_CHOICES):
+            return HttpResponseBadRequest("Invalid status.")
+
+        rental = get_object_or_404(RentalRequest, pk=rental_id)
+        rental.status = status
+        rental.save()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+@login_required(login_url='login')
 def rental_requests_list(request):
     rental_requests = RentalRequest.objects.all()
     return render(request, 'equipment-admin/equipment-rentals.html', {'rental_requests': rental_requests})

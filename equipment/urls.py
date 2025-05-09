@@ -12,6 +12,7 @@ urlpatterns = [
     path('equipment/delete/<int:equipment_id>/', views.delete_equipment, name='delete_equipment'),
     path('rental-request/create/', views.create_rental_request, name='create_rental_request'),
     path('rental-requests/', views.rental_requests_list, name='rental_requests_list'),
+    path('rental/update-status/<int:rental_id>/', views.update_rental_status, name='update_rental_status'),
 ]
 
 

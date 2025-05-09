@@ -81,19 +81,14 @@
           </a>
         </li>
 
-        <li class="menu-item {% if request.path == '/drainagefee/' %}active{% endif %}">
-            <a href="#" class="menu-link">
-                <i class='menu-icon tf-icons bx bx-droplet'></i>
-              <div data-i18n="Analytics">Drainage Fee</div>
-            </a>
-          </li>
-
           <li class="menu-item {% if request.path == '/rentals/' %}active{% endif %}">
             <a href="{% url 'rentals' %}" class="menu-link">
                 <i class='menu-icon tf-icons bx bx-wrench' ></i>
               <div data-i18n="Analytics">Equipment Rentals</div>
             </a>
           </li>
+
+<!--         
 
           <li class="menu-item {% if request.path == '/certification/' %}active{% endif %}">
             <a href="#" class="menu-link">
@@ -130,7 +125,8 @@
               <i class="menu-icon tf-icons bx bx-badge-check"></i>
               <div data-i18n="Basic">Verification Fee</div>
             </a>
-          </li>
+          </li> 
+          -->
 
       </ul>
     </aside>

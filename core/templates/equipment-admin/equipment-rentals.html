@@ -168,7 +168,7 @@
                       <div class="dropdown-divider"></div>
                     </li>
                     <li>
-                      <a class="dropdown-item" href="auth-login-basic.html">
+                      <a class="dropdown-item" href="{%url 'user_logout'%}">
                         <i class="bx bx-power-off me-2"></i>
                         <span class="align-middle">Log Out</span>
                       </a>
@@ -198,8 +198,7 @@
                                 <th>Equipment</th>
                                 <th>Purpose</th>
                                 <th>Start Date</th>
-                                <th>End Date</th>
-                                <th>Duration</th>
+
                                 <th>Total Cost</th>
                                 <th>Status</th>
                                 <th>Payment Status</th>
@@ -212,8 +211,7 @@
                                 <td>{{ request.requested_by }}</td>
                                 <td>{{ request.equipment.name }}</td>
                                 <td>{{ request.purpose }}</td>
-                                <td>{{ request.rental_start_date }}</td>
-                                <td>{{ request.rental_end_date }}</td>
+
                                 <td>{{ request.no_of_days_hours }}</td>
                                 <td>₱ {{ request.total_rent_cost|floatformat:2 }}</td>
                                 <td>
@@ -227,10 +225,38 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="" class="btn btn-info btn-sm">View</a>
-                                    {% if request.status == 'pending' %}
-                                    <a href="javascript:void(0);" onclick="cancelRentalRequest({{ request.id }})" class="btn btn-danger btn-sm">Cancel</a>
-                                    {% endif %}
+                                  <div class="dropdown">
+                                    <button
+                                      type="button"
+                                      class="btn p-0 dropdown-toggle hide-arrow"
+                                      data-bs-toggle="dropdown"
+                                    >
+                                      <i class="bx bx-dots-vertical-rounded"></i>
+                                    </button>
+                                    <div class="dropdown-menu">
+                                      <a class="dropdown-item"
+                                        href="javascript:void(0);"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalView"
+                                        onclick="openRentalModal(this)"
+                                        data-id="{{ request.id }}"
+                                        data-requested_by="{{ request.requested_by }}"
+                                        data-equipment="{{ request.equipment.name }}"
+                                        data-purpose="{{ request.purpose }}"
+                                        data-duration="{{ request.no_of_days_hours }}"
+                                        data-cost="{{ request.total_rent_cost }}"
+                                        data-status="{{ request.status }}"
+                                        data-payment_status="{{ request.payment_status }}"
+                                      >
+                                        <i class="bx bx-show me-1"></i> View
+                                      </a>
+                                   
+                          
+                                      {% if request.status == 'pending' %}
+                                      <a class="dropdown-item" href="javascript:void(0);" onclick="cancelRentalRequest({{ request.id }})"> <i class="bx bx-trash-alt me-1"></i> Cancel</a>
+                                      {% endif %}
+                                    </div>
+                                  </div>
                                 </td>
                             </tr>
                             {% empty %}
@@ -250,56 +276,153 @@
             
           </div>
 
-          <div class="modal fade" id="bidModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-              <div class="modal-content">
-                <div class="modal-header">
-                  <h5 class="modal-title">View/Edit Bid</h5>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                  <form id="bidEditForm">
-                    {% csrf_token %}
-                    <input type="hidden" id="bidId">
-                    <div class="mb-3">
-                      <label class="form-label">Document Title</label>
-                      <input type="text" id="bidDocTitle" class="form-control" readonly>
+        <!-- Modal -->
+        <div class="modal fade" id="modalView" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered"> <!-- Changed to modal-lg -->
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title">View/Update Rental Request</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <form id="rentalStatusForm">
+                  {% csrf_token %}
+                  <input type="hidden" id="rentalRequestId">
+
+                  <div class="row g-3">
+                    <div class="col-md-6">
+                      <label class="form-label">Requested By</label>
+                      <input type="text" id="rentalRequestedBy" class="form-control" readonly>
                     </div>
-                    <div class="mb-3">
-                      <label class="form-label">Bidder</label>
-                      <input type="text" id="bidUser" class="form-control" readonly>
+
+                    <div class="col-md-6">
+                      <label class="form-label">Equipment</label>
+                      <input type="text" id="rentalEquipment" class="form-control" readonly>
                     </div>
-                    <div class="mb-3">
-                      <label class="form-label">Document Price</label>
-                      <input type="text" id="bidPrice" class="form-control" readonly>
+
+                    <div class="col-md-6">
+                      <label class="form-label">Duration</label>
+                      <input type="text" id="rentalDuration" class="form-control" readonly>
                     </div>
-                    <div class="mb-3">
+
+                    <div class="col-md-6">
+                      <label class="form-label">Total Cost (₱)</label>
+                      <input type="text" id="rentalCost" class="form-control" readonly>
+                    </div>
+
+                    <div class="col-md-6">
                       <label class="form-label">Status</label>
-                      <select id="bidStatus" class="form-select">
+                      <select id="rentalStatus" class="form-select">
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
-                        <option value="under_review">Under Review</option>
                         <option value="rejected">Rejected</option>
+                        <option value="returned">Returned</option>
                       </select>
                     </div>
-                    <div class="mb-3">
-                      <label class="form-label">Document Price</label>
-                      <input type="text" id="bidPrice" class="form-control" readonly>
+
+                    <div class="col-md-6">
+                      <label class="form-label">Payment Status</label>
+                      <input type="text" id="rentalPaymentStatus" class="form-control" readonly>
                     </div>
-                  </form>
-                </div>
-                <div class="modal-footer">
-                  <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                  <button type="button" class="btn btn-primary" onclick="saveBidStatus()">Save Changes</button>
-                </div>
+
+                    <div class="col-12">
+                      <label class="form-label">Purpose</label>
+                      <textarea id="rentalPurpose" class="form-control" rows="2" readonly></textarea>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <div class="modal-footer">
+                <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                <button class="btn btn-primary" onclick="saveRentalStatus()">Save Changes</button>
               </div>
             </div>
           </div>
+        </div>
 
-       
-            
 
-               
+        <script>
+          // Function to open the rental status modal
+          function openRentalModal(el) {
+            document.getElementById('rentalRequestId').value = el.dataset.id;
+            document.getElementById('rentalRequestedBy').value = el.dataset.requested_by;
+            document.getElementById('rentalEquipment').value = el.dataset.equipment;
+            document.getElementById('rentalPurpose').value = el.dataset.purpose;
+            document.getElementById('rentalDuration').value = el.dataset.duration;
+            document.getElementById('rentalCost').value = `₱ ${parseFloat(el.dataset.cost).toFixed(2)}`;
+            document.getElementById('rentalStatus').value = el.dataset.status;
+            document.getElementById('rentalPaymentStatus').value = el.dataset.payment_status;
+          }
+        
+          // Function to save rental status with SweetAlert2 confirmation and success
+          function saveRentalStatus() {
+            Swal.fire({
+              title: 'Are you sure?',
+              text: "You are about to update the rental status.",
+              icon: 'warning',
+              showCancelButton: true,
+              confirmButtonText: 'Yes, update it!',
+              cancelButtonText: 'Cancel',
+              customClass: {
+                confirmButton: 'btn btn-success btn-lg',  // Custom success button
+                cancelButton: 'btn btn-danger btn-lg'    // Custom cancel button
+              },
+              // Confirmation handler
+            }).then((result) => {
+              if (result.isConfirmed) {
+                const requestId = document.getElementById('rentalRequestId').value;
+                const status = document.getElementById('rentalStatus').value;
+        
+                // Call the server to update rental status
+                fetch(`/rental/update-status/${requestId}/`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                  },
+                  body: JSON.stringify({ status })
+                })
+                .then(res => {
+                  if (res.ok) {
+                    // On success, show a success alert with SweetAlert2
+                    Swal.fire({
+                      icon: 'success',
+                      title: 'Updated!',
+                      text: 'Rental status has been updated.',
+                      timer: 1500,
+                      showConfirmButton: false
+                    }).then(() => {
+                      location.reload(); // Reload the page after update
+                    });
+                  } else {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Oops!',
+                      text: 'Something went wrong while updating.',
+                      confirmButtonText: 'Try Again',
+                      customClass: {
+                        confirmButton: 'btn btn-warning btn-lg'  // Custom button for retry
+                      }
+                    });
+                  }
+                })
+                .catch(() => {
+                  // Show error if fetch fails
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to update the request.',
+                    customClass: {
+                      confirmButton: 'btn btn-danger btn-lg' // Custom error button
+                    }
+                  });
+                });
+              }
+            });
+          }
+        </script>
+         
           <!-- SweetAlert2 CDN -->
           <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

@@ -24,19 +24,13 @@
                 </a>
           </li>
           <li>
-              <a href="{% url 'home' %}?category=drainage_fee"
-                 class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
-                 {% if selected_category == 'drainage_fee' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
-                  <i class='bx bx-droplet mr-2'></i> Drainage fee
-              </a>
-          </li>
-          <li>
               <a href="{% url 'rentals' %}"
                  class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
                  {% if selected_category == 'equipment_rental' %}bg-blue-50 border-l-4 border-l-blue-600{% endif %}">
                   <i class='bx bx-wrench mr-2'></i> Equipment rental
               </a>
           </li>
+          <!--
           <li>
               <a href="{% url 'home' %}?category=filling_fee_certification"
                  class="text-slate-700 font-medium text-[15px] block hover:text-slate-900 hover:bg-gray-100 rounded px-4 py-2 transition-all
@@ -72,6 +66,7 @@
                   <i class='bx bx-badge-check mr-2'></i> Verification fee
               </a>
           </li>
+          -->
       </ul>
   </div>
   

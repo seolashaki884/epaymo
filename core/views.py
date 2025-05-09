@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 from decimal import Decimal
 from .models import UserProfile
-from equipment.models import Equipment
+from equipment.models import Equipment, RentalRequest
 import random
 from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
@@ -216,7 +216,7 @@ def view_cart(request):
         'total_price': total_price,
     })
 
-@login_required
+@login_required(login_url='login')
 def remove_from_cart(request, item_id):
     if request.method == 'POST':
         cart_item = get_object_or_404(Cart, id=item_id, user=request.user)
@@ -226,7 +226,7 @@ def remove_from_cart(request, item_id):
         return render(request, 'core/viewcart.html')  # Update with the correct template path for your cart view
     return JsonResponse({'status': 'error'}, status=400)
 
-@login_required
+@login_required(login_url='login')
 @require_POST
 def update_cart_quantity(request):
     try:
@@ -267,11 +267,11 @@ def get_cart_count(request):
     cart_count = request.user.cart_set.count()
     return JsonResponse({'cart_count': cart_count})
 
-@login_required
+@login_required(login_url='login')
 def billing_prep(request):
     return render(request, 'core/billingprep.html')
 
-
+@login_required(login_url='login')
 def adminhome(request):
     # Ensure that the logged-in user is a staff member
     if not request.user.is_staff:
@@ -282,7 +282,7 @@ def adminhome(request):
 
     return render(request, 'bac-admin/dashboard.html', {'logs': logs})
 
-
+@login_required(login_url='login')
 def BAC(request):
     if request.method == 'POST':
         title = request.POST.get('title')
@@ -345,10 +345,12 @@ def BAC(request):
     documents = Document.objects.filter(category='bidding_documents').order_by('-id')
     return render(request, 'bac-admin/BAC-add.html', {'documents': documents})
 
+@login_required(login_url='login')
 def bac_edit(request):
     documents = Document.objects.all().order_by('-id')
     return render(request, 'bac-admin/BAC-edit.html', {'documents': documents})
 
+@login_required(login_url='login')
 @csrf_exempt
 def update_document(request, doc_id):
     if request.method == 'POST':
@@ -413,6 +415,7 @@ def update_document(request, doc_id):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
 
+@login_required(login_url='login')
 @csrf_exempt
 def delete_document(request, doc_id):
     if request.method == 'POST':
@@ -455,15 +458,29 @@ def delete_document(request, doc_id):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
-
+@login_required(login_url='login')
 def rentals(request):
-    equipment_list = Equipment.objects.filter(status='Available')
-    return render(request, 'core/bootequipment_rental.html', {'equipment_list': equipment_list})
+    today = timezone.now().date()
 
+    rented_equipment_ids = RentalRequest.objects.filter(
+        status='approved',
+        rental_end_date__gte=today
+    ).values_list('equipment_id', flat=True)
+
+    equipment_list = Equipment.objects.all()
+    available_ids = Equipment.objects.filter(status='available').exclude(id__in=rented_equipment_ids).values_list('id', flat=True)
+
+    return render(request, 'core/bootequipment_rental.html', {
+        'equipment_list': equipment_list,
+        'available_ids': list(available_ids),
+    })
+
+@login_required(login_url='login')
 def biddings(request):
     bids = Bid.objects.order_by('-bid_time')
     return render(request, 'bac-admin/BAC-biddings.html', {'bids': bids})
 
+@login_required(login_url='login')
 def get_bid_json(request, bid_id):
     try:
         bid = Bid.objects.select_related('user', 'document').get(id=bid_id)
@@ -477,6 +494,7 @@ def get_bid_json(request, bid_id):
     except Bid.DoesNotExist:
         return JsonResponse({'error': 'Bid not found'}, status=404)
 
+@login_required(login_url='login')
 @csrf_exempt  # only use this in development — better to use @require_POST with CSRF
 def update_bid_status(request, bid_id):
     if request.method == 'POST':
@@ -522,7 +540,7 @@ def document_json(request, pk):
     except Document.DoesNotExist:
         raise Http404("Document not found")
     
-@login_required
+@login_required(login_url='login')
 def place_bid(request):
     if request.method == 'POST':
         document_id = request.POST.get('document_id')
@@ -548,7 +566,7 @@ def place_bid(request):
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
 
-
+@login_required(login_url='login')
 @csrf_exempt
 def create_paymaya_payment(request, bid_id):
     if request.method == 'POST':
@@ -646,7 +664,7 @@ def payment_cancel(request, billing_id):
     messages.warning(request, "Payment was cancelled.")
     return redirect('/my-bids/')
 
-
+@login_required(login_url='login')
 def submit_billing_info(request, bid_id):
     if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
         try:
@@ -693,7 +711,7 @@ def equipment_json(request, pk):
     except Equipment.DoesNotExist:
         raise Http404("Equipment not found")
 
-
+login_required(login_url='login')
 def homebootstrap(request):
       # Get category filter from query parameters
     category_filter = request.GET.get('category') 
@@ -737,7 +755,7 @@ def homebootstrap(request):
 
     })
 
-@login_required
+@login_required(login_url='login')
 def my_bids_list(request):
     bids = Bid.objects.filter(user=request.user).select_related('document').order_by('-bid_time')
     
