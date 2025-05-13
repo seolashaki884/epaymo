@@ -25,6 +25,8 @@ import base64
 import requests
 import uuid
 import logging
+from django.db.models import Sum, Count
+
 logger = logging.getLogger(__name__)
 
 
@@ -709,6 +711,28 @@ def equipment_json(request, pk):
         })
     except Equipment.DoesNotExist:
         raise Http404("Equipment not found")
+    
+def get_bid_details(request, bid_id):
+    try:
+        bid = Bid.objects.get(id=bid_id)
+        document = bid.document
+        bid_details = {
+            'document_title': document.title,
+            'document_description': document.description,
+            'document_category': dict(Document.CATEGORY_CHOICES).get(document.category),
+            'document_abc': str(document.abc),
+            'document_price': str(document.price),
+            'document_image': document.image.url if document.image else '',
+            'bidding_start_date': document.bidding_start_date.strftime('%Y-%m-%d %H:%M:%S') if document.bidding_start_date else '',
+            'bidding_end_date': document.bidding_end_date.strftime('%Y-%m-%d %H:%M:%S') if document.bidding_end_date else '',
+            'bid_time': bid.bid_time.strftime('%Y-%m-%d %H:%M:%S'),
+            'proposed_price': str(bid.proposed_price),
+            'region': document.region,
+            'bid_status': bid.status
+        }
+        return JsonResponse(bid_details)
+    except Bid.DoesNotExist:
+        return JsonResponse({'error': 'Bid not found'}, status=404)
 
 login_required(login_url='login')
 def homebootstrap(request):
@@ -766,9 +790,11 @@ def my_bids_list(request):
 @login_required(login_url='login')
 def rental_request_list(request):
     rental_requests = RentalRequest.objects.select_related('equipment').filter(
-        requested_by=request.user.get_full_name()  # <-- match full name
+        requested_by=request.user
     ).order_by('-created_at')
 
     return render(request, 'core/bootrental-list.html', {
         'rental_requests': rental_requests
     })
+
+
