@@ -213,7 +213,7 @@
                             <td>{{ bid.bid_time }}</td>
                             <td>
                               <span class="badge 
-                                {% if bid.status == 'pending' %} bg-label-warning {% elif bid.status == 'approved' %} bg-label-success {% elif bid.status == 'under_review' %} bg-label-info {% elif bid.status == 'rejected' %} bg-label-danger {% elif bid.status == 'paid' %} bg-label-success {% endif %}
+                                {% if bid.status == 'pending' %} bg-label-warning {% elif bid.status == 'approved' %} bg-label-success {% elif bid.status == 'under_review' %} bg-label-info {% elif bid.status == 'rejected' %} bg-label-danger {% elif bid.status == 'paid' %} bg-label-success {% elif bid.status == 'cancelled' %} bg-label-secondary {% endif %}
                               ">
                                 {{ bid.status|capfirst }}
                               </span>

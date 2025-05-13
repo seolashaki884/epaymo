@@ -25,7 +25,9 @@ import base64
 import requests
 import uuid
 import logging
-from django.db.models import Sum, Count
+from django.core.files.storage import default_storage
+import os
+from django.db.models import Sum, Count, Case, When, Value, IntegerField
 
 logger = logging.getLogger(__name__)
 
@@ -352,61 +354,54 @@ def bac_edit(request):
     documents = Document.objects.all().order_by('-id')
     return render(request, 'bac-admin/BAC-edit.html', {'documents': documents})
 
-@login_required(login_url='login')
 @csrf_exempt
+@login_required(login_url='login')
 def update_document(request, doc_id):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
             document = Document.objects.get(id=doc_id)
+
+            if request.content_type.startswith('multipart'):
+                data = request.POST
+                image = request.FILES.get('image')
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Invalid form encoding'}, status=400)
 
             abc_raw = data['abc']
             abc = Decimal(abc_raw.replace(',', '')) if isinstance(abc_raw, str) else Decimal(abc_raw)
 
+            # Pricing logic
             if abc < 500000:
                 price = Decimal(500)
-            elif 500000 <= abc < 1000000:
+            elif abc < 1000000:
                 price = Decimal(1000)
-            elif 1000000 <= abc < 5000000:
+            elif abc < 5000000:
                 price = Decimal(5000)
-            elif 5000000 <= abc < 10000000:
+            elif abc < 10000000:
                 price = Decimal(10000)
-            elif 10000000 <= abc < 50000000:
+            elif abc < 50000000:
                 price = Decimal(25000)
-            elif 50000000 <= abc < 500000000:
+            elif abc < 500000000:
                 price = Decimal(50000)
             else:
                 price = Decimal(75000)
 
-            start_date = datetime.strptime(data['bidding_start_date'], "%Y-%m-%dT%H:%M")
-            end_date = datetime.strptime(data['bidding_end_date'], "%Y-%m-%dT%H:%M")
-
             # Update document fields
-            old_title = document.title  # Store old title for logging
-            old_description = document.description  # Store old description for logging
-            old_abc = document.abc  # Store old abc for logging
-            old_region = document.region  # Store old region for logging
-            old_price = document.price  # Store old price for logging
-
             document.title = data['title']
             document.description = data['description']
             document.abc = abc
             document.region = data['region']
-            document.price = price  # ✅ Auto-updated price
-            document.bidding_start_date = start_date
-            document.bidding_end_date = end_date
-            document.save()
+            document.price = price
+            document.bidding_start_date = datetime.strptime(data['bidding_start_date'], "%Y-%m-%dT%H:%M")
+            document.bidding_end_date = datetime.strptime(data['bidding_end_date'], "%Y-%m-%dT%H:%M")
 
-            # Log the document update in admin logs
-            content_type = ContentType.objects.get_for_model(Document)
-            LogEntry.objects.log_action(
-                user_id=request.user.id,
-                content_type_id=content_type.id,
-                object_id=document.id,
-                object_repr=str(document),
-                action_flag=CHANGE,  # Action type: CHANGE (existing object updated)
-                change_message=f"Updated document from title '{old_title}' to '{document.title}', description '{old_description}' to '{document.description}', ABC from {old_abc} to {document.abc}, price from {old_price} to {document.price}, and region from '{old_region}' to '{document.region}'."
-            )
+            # ✅ Delete old image if a new one is uploaded
+            if image:
+                if document.image and default_storage.exists(document.image.path):
+                    os.remove(document.image.path)
+                document.image = image
+
+            document.save()
 
             return JsonResponse({'status': 'success'})
 
@@ -471,15 +466,32 @@ def rentals(request):
     equipment_list = Equipment.objects.all()
     available_ids = Equipment.objects.filter(status='available').exclude(id__in=rented_equipment_ids).values_list('id', flat=True)
 
+    # Retrieve a list of rental requests (you can filter based on conditions if needed)
+    rental_requests = RentalRequest.objects.all()  # Adjust according to your needs
+
     return render(request, 'core/bootequipment_rental.html', {
         'equipment_list': equipment_list,
         'available_ids': list(available_ids),
+        'rental_requests': rental_requests,
     })
+
 
 @login_required(login_url='login')
 def biddings(request):
     bids = Bid.objects.order_by('-bid_time')
     return render(request, 'bac-admin/BAC-biddings.html', {'bids': bids})
+
+@login_required(login_url='login')
+def cancel_bid(request, bid_id):
+    try:
+        bid = Bid.objects.get(id=bid_id, user=request.user, status='pending')  # Only allow cancel if the status is pending
+        bid.status = 'cancelled'
+        bid.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Bid has been cancelled successfully.'})
+    
+    except Bid.DoesNotExist:
+        return JsonResponse({'status': 'error', 'message': 'Bid not found or already processed.'})
 
 @login_required(login_url='login')
 def get_bid_json(request, bid_id):
@@ -496,18 +508,38 @@ def get_bid_json(request, bid_id):
         return JsonResponse({'error': 'Bid not found'}, status=404)
 
 @login_required(login_url='login')
-@csrf_exempt  # only use this in development — better to use @require_POST with CSRF
+@csrf_exempt  # Use this only in development, or handle CSRF token properly
 def update_bid_status(request, bid_id):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
             status = data.get('status')
-            bid = Bid.objects.get(id=bid_id)
+            bid = Bid.objects.select_related('document').get(id=bid_id)
+
+            # If attempting to approve this bid
+            if status == 'approved':
+                # Check if another bid for the same document is already approved
+                other_approved = Bid.objects.filter(
+                    document=bid.document,
+                    status='approved'
+                ).exclude(id=bid_id).exists()
+
+                if other_approved:
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Another bid for this document is already approved.'
+                    })
+
+            # Proceed to update the bid status
             bid.status = status
             bid.save()
             return JsonResponse({'success': True})
+
         except Bid.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Bid not found'})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)})
+
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 def rentalform(request):
@@ -550,8 +582,8 @@ def place_bid(request):
             document = Document.objects.get(id=document_id)
             user = request.user
 
-            # Optional: Prevent duplicate bids
-            if Bid.objects.filter(user=user, document=document).exists():
+            # Prevent duplicate bids that are not cancelled
+            if Bid.objects.filter(user=user, document=document).exclude(status='cancelled').exists():
                 return JsonResponse({'error': 'You have already placed a bid on this document.'}, status=400)
 
             bid = Bid.objects.create(
@@ -566,7 +598,6 @@ def place_bid(request):
             return JsonResponse({'error': 'Document not found.'}, status=404)
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
-
 @login_required(login_url='login')
 @csrf_exempt
 def create_paymaya_payment(request, bid_id):
@@ -780,8 +811,18 @@ def homebootstrap(request):
 
 @login_required(login_url='login')
 def my_bids_list(request):
-    bids = Bid.objects.filter(user=request.user).select_related('document').order_by('-bid_time')
-    
+    bids = Bid.objects.filter(user=request.user).select_related('document').annotate(
+        priority=Case(
+            When(status='pending', then=Value(0)),  # Pending bids first
+            When(status='approved', then=Value(1)),  # Approved bids next
+            When(status='under_review', then=Value(2)),  # Under review
+            When(status='rejected', then=Value(3)),  # Rejected
+            When(status='cancelled', then=Value(4)),  # Cancelled bids last
+            default=Value(5),
+            output_field=IntegerField()
+        )
+    ).order_by('priority', '-bid_time')  # First order by priority, then by bid_time
+
     context = {
         'bids': bids,
     }

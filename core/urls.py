@@ -29,6 +29,7 @@ urlpatterns = [
     path('bids/<int:bid_id>/json/', views.get_bid_json, name='bid_json'),
     path('bids/<int:bid_id>/update/', views.update_bid_status, name='update_bid'),
     path('get_bid_details/<int:bid_id>/', views.get_bid_details, name='get_bid_details'),
+    path('cancel_bid/<int:bid_id>/', views.cancel_bid, name='cancel_bid'),
 
 
     path('bids/<int:bid_id>/billing/form/', views.submit_billing_info, name='submit_billing_info'),

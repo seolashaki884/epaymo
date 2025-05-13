@@ -189,7 +189,7 @@
                                 <td>{{ request.equipment.name }}</td>
                                 <td>{{ request.purpose }}</td>
 
-                                <td>{{ request.no_of_days_hours }}</td>
+                                <td>{{ request.rental_start_date }}</td>
                                 <td>₱ {{ request.total_rent_cost|floatformat:2 }}</td>
                                 <td>
                                     <span class="badge {% if request.status == 'pending' %}bg-warning{% elif request.status == 'approved' %}bg-success{% elif request.status == 'rejected' %}bg-danger{% elif request.status == 'returned' %}bg-secondary{% endif %}">
@@ -330,89 +330,154 @@
           </div>
         </div>
 
-
         <script>
-          // Function to open the rental status modal
-          function openRentalModal(el) {
-            document.getElementById('rentalRequestId').value = el.dataset.id;
-            document.getElementById('rentalRequestedBy').value = el.dataset.requested_by;
-            document.getElementById('rentalEquipment').value = el.dataset.equipment;
-            document.getElementById('rentalPurpose').value = el.dataset.purpose;
-            document.getElementById('rentalDuration').value = el.dataset.duration;
-            document.getElementById('rentalCost').value = `₱ ${parseFloat(el.dataset.cost).toFixed(2)}`;
-            document.getElementById('rentalStatus').value = el.dataset.status;
-            document.getElementById('rentalStartDate').value = el.dataset.rental_start_date;
-            document.getElementById('rentalEndDate').value = el.dataset.rental_end_date;
-            document.getElementById('rentalPaymentStatus').value = el.dataset.payment_status;
+          function loadRentalIntoForm(rentalId) {
+            // Set the rental ID
+            $('#rentalRequestId').val(rentalId);
+          
+            // Make AJAX call to get rental details + check for conflicts
+            fetch(`/check-equipment-availability/${rentalId}/`)
+              .then(response => response.json())
+              .then(data => {
+                const approveOption = document.querySelector('#rentalStatus option[value="approved"]');
+                if (data.has_active_approved) {
+                  // Disable or hide the Approved option
+                  if (approveOption) {
+                    approveOption.remove();
+                  }
+                } else {
+                  // Re-insert it if needed
+                  const select = document.getElementById('rentalStatus');
+                  if (!approveOption) {
+                    const option = document.createElement("option");
+                    option.value = "approved";
+                    option.text = "Approved";
+                    select.add(option, select.options[1]);  // Insert in position 1
+                  }
+                }
+              });
           }
-        
-          // Function to save rental status with SweetAlert2 confirmation and success
-          function saveRentalStatus() {
-            Swal.fire({
-              title: 'Are you sure?',
-              text: "You are about to update the rental status.",
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonText: 'Yes, update it!',
-              cancelButtonText: 'Cancel',
-              customClass: {
-                confirmButton: 'btn btn-success btn-lg',  // Custom success button
-                cancelButton: 'btn btn-danger btn-lg'    // Custom cancel button
-              },
-              // Confirmation handler
-            }).then((result) => {
-              if (result.isConfirmed) {
-                const requestId = document.getElementById('rentalRequestId').value;
-                const status = document.getElementById('rentalStatus').value;
-        
-                // Call the server to update rental status
-                fetch(`/rental/update-status/${requestId}/`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
-                  },
-                  body: JSON.stringify({ status })
-                })
-                .then(res => {
-                  if (res.ok) {
-                    // On success, show a success alert with SweetAlert2
-                    Swal.fire({
-                      icon: 'success',
-                      title: 'Updated!',
-                      text: 'Rental status has been updated.',
-                      timer: 1500,
-                      showConfirmButton: false
-                    }).then(() => {
-                      location.reload(); // Reload the page after update
-                    });
+          </script>
+          
+          <script>
+            // Function to open the rental status modal
+            function openRentalModal(el) {
+              // Populate modal fields
+              document.getElementById('rentalRequestId').value = el.dataset.id;
+              document.getElementById('rentalRequestedBy').value = el.dataset.requested_by;
+              document.getElementById('rentalEquipment').value = el.dataset.equipment;
+              document.getElementById('rentalPurpose').value = el.dataset.purpose;
+              document.getElementById('rentalDuration').value = el.dataset.duration;
+              document.getElementById('rentalCost').value = `₱ ${parseFloat(el.dataset.cost).toFixed(2)}`;
+              document.getElementById('rentalStatus').value = el.dataset.status;
+              document.getElementById('rentalStartDate').value = el.dataset.rental_start_date;
+              document.getElementById('rentalEndDate').value = el.dataset.rental_end_date;
+              document.getElementById('rentalPaymentStatus').value = el.dataset.payment_status;
+          
+              // ✅ Now safely call this
+              loadRentalIntoForm(el.dataset.id);
+            }
+          
+            // Function to load equipment availability
+            function loadRentalIntoForm(rentalId) {
+              // Set the rental ID
+              document.getElementById('rentalRequestId').value = rentalId;
+          
+              // AJAX call to check equipment availability
+              fetch(`/check-equipment-availability/${rentalId}/`)
+                .then(response => response.json())
+                .then(data => {
+                  console.log("Availability check response:", data);  // ✅ Debugging
+          
+                  const select = document.getElementById('rentalStatus');
+                  let approveOption = select.querySelector('option[value="approved"]');
+          
+                  if (data.has_active_approved) {
+                    if (approveOption) {
+                      approveOption.disabled = true;
+                      approveOption.textContent = "Approved (Unavailable)";
+                    }
                   } else {
-                    Swal.fire({
-                      icon: 'error',
-                      title: 'Oops!',
-                      text: 'Something went wrong while updating.',
-                      confirmButtonText: 'Try Again',
-                      customClass: {
-                        confirmButton: 'btn btn-warning btn-lg'  // Custom button for retry
-                      }
-                    });
+                    if (!approveOption) {
+                      approveOption = document.createElement("option");
+                      approveOption.value = "approved";
+                      approveOption.text = "Approved";
+                      select.add(approveOption, select.options[1]);
+                    } else {
+                      approveOption.disabled = false;
+                      approveOption.textContent = "Approved";
+                    }
                   }
                 })
-                .catch(() => {
-                  // Show error if fetch fails
-                  Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Failed to update the request.',
-                    customClass: {
-                      confirmButton: 'btn btn-danger btn-lg' // Custom error button
-                    }
-                  });
+                .catch(error => {
+                  console.error("Error checking availability:", error);
                 });
-              }
-            });
-          }
-        </script>
+            }
+          
+            // Function to save rental status with SweetAlert2 confirmation and success
+            function saveRentalStatus() {
+              Swal.fire({
+                title: 'Are you sure?',
+                text: "You are about to update the rental status.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, update it!',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                  confirmButton: 'btn btn-success btn-lg',
+                  cancelButton: 'btn btn-danger btn-lg'
+                }
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  const requestId = document.getElementById('rentalRequestId').value;
+                  const status = document.getElementById('rentalStatus').value;
+          
+                  fetch(`/rental/update-status/${requestId}/`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({ status })
+                  })
+                  .then(res => {
+                    if (res.ok) {
+                      Swal.fire({
+                        icon: 'success',
+                        title: 'Updated!',
+                        text: 'Rental status has been updated.',
+                        timer: 1500,
+                        showConfirmButton: false
+                      }).then(() => {
+                        location.reload();
+                      });
+                    } else {
+                      Swal.fire({
+                        icon: 'error',
+                        title: 'Oops!',
+                        text: 'Something went wrong while updating.',
+                        confirmButtonText: 'Try Again',
+                        customClass: {
+                          confirmButton: 'btn btn-warning btn-lg'
+                        }
+                      });
+                    }
+                  })
+                  .catch(() => {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'Error',
+                      text: 'Failed to update the request.',
+                      customClass: {
+                        confirmButton: 'btn btn-danger btn-lg'
+                      }
+                    });
+                  });
+                }
+              });
+            }
+          </script>
+          
          
           <!-- SweetAlert2 CDN -->
           <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

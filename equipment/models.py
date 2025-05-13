@@ -27,7 +27,7 @@ class RentalRequest(models.Model):
         ('pending', 'Pending'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
-        ('returned', 'Returned'),
+        ('returned', 'Returned'),    
     ]
 
     PAYMENT_CHOICES = [
