@@ -143,30 +143,7 @@
                     <li>
                       <div class="dropdown-divider"></div>
                     </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <i class="bx bx-user me-2"></i>
-                        <span class="align-middle">My Profile</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <i class="bx bx-cog me-2"></i>
-                        <span class="align-middle">Settings</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <span class="d-flex align-items-center align-middle">
-                          <i class="flex-shrink-0 bx bx-credit-card me-2"></i>
-                          <span class="flex-grow-1 align-middle">Billing</span>
-                          <span class="flex-shrink-0 badge badge-center rounded-pill bg-danger w-px-20 h-px-20">4</span>
-                        </span>
-                      </a>
-                    </li>
-                    <li>
-                      <div class="dropdown-divider"></div>
-                    </li>
+
                     <li>
                       <a class="dropdown-item" href="{%url 'user_logout'%}">
                         <i class="bx bx-power-off me-2"></i>
@@ -288,16 +265,17 @@
                                         <textarea style="height: 50px" id="editDescription" class="form-control" placeholder="Enter Description"></textarea>
                                     </div>
                                 </div>
-                                <div class="row g-2">
+                                <div class="row">
+                                  <div class="col mb-3">
+                                      <label for="editRentalRate" class="form-label">Rental Rate</label>
+                                      <input type="text" id="editRentalRate" class="form-control" placeholder="Enter Rental Rate" />
+                                  </div>
+                              </div>
+
                                     <div class="col mb-0">
-                                        <label for="editRentalRate" class="form-label">Rental Rate</label>
-                                        <input type="text" id="editRentalRate" class="form-control" placeholder="Enter Rental Rate" />
+                                        <input type="text" id="editRentalPrice" class="form-control" placeholder="Enter Rental Price" readonly hidden />
                                     </div>
-                                    <div class="col mb-0">
-                                        <label for="editRentalPrice" class="form-label">Rental Price</label>
-                                        <input type="text" id="editRentalPrice" class="form-control" placeholder="Enter Rental Price" />
-                                    </div>
-                                </div>
+                          
                                 <div class="row">
                                     <div class="col mb-3">
                                         <label for="editStatus" class="form-label">Status</label>

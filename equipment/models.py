@@ -38,7 +38,7 @@ class RentalRequest(models.Model):
     ]
 
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='rental_requests')
-    requested_by = models.CharField(max_length=255)
+    requested_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='rental_requests')
     purpose = models.TextField()
     rental_start_date = models.DateField()
     rental_end_date = models.DateField()
@@ -82,5 +82,5 @@ class RentalRequest(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.requested_by} - {self.equipment.name} ({self.status})"
+       return f"{self.requested_by.get_full_name()} - {self.equipment.name} ({self.status})"
 

@@ -13,6 +13,7 @@ urlpatterns = [
     path('rental-request/create/', views.create_rental_request, name='create_rental_request'),
     path('rental-requests/', views.rental_requests_list, name='rental_requests_list'),
     path('rental/update-status/<int:rental_id>/', views.update_rental_status, name='update_rental_status'),
+    path('rental-statistics/', views.rental_statistics_view, name='rental_statistics'),
 ]
 
 

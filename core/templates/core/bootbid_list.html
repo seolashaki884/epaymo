@@ -119,50 +119,42 @@
                       </thead>
                       <tbody>
                         {% for bid in bids %}
-                          <tr>
-                            <td><strong>{{ bid.document.title }}</strong></td>
-                            <td>{{bid.bid_time}}</td>         
-                            <td>₱ {{ bid.proposed_price }}</td>
-                            <td>{{ bid.document.region }}</td>
-                            <td>
-                              <span class="badge 
-                                {% if bid.status == 'pending' %} bg-label-warning 
-                                {% elif bid.status == 'approved' %} bg-label-success 
-                                {% elif bid.status == 'under_review' %} bg-label-info 
-                                {% elif bid.status == 'rejected' %} bg-label-danger 
-                                {% elif bid.status == 'paid' %} bg-label-success 
-                                {% endif %}">
-                                {{ bid.status|capfirst }}
-                              </span>
-                            </td>
-                            <td>
-                              <div class="dropdown">
-                                <button type="button" class="btn p-0 dropdown-toggle hide-arrow" data-bs-toggle="dropdown">
-                                  <i class="bx bx-dots-vertical-rounded"></i>
-                                </button>
-                                <div class="dropdown-menu">
-                                  <a class="dropdown-item" href="javascript:void(0);" onclick="openBidModal({{ bid.id }})">
-                                    <i class="bx bx-show-alt me-1"></i> View
-                                  </a>
-                                  {% if bid.status == 'pending' %}
-                                    <a class="dropdown-item text-danger" href="javascript:void(0);" onclick="cancelBid('{{ bid.id }}')">
-                                      <i class="bx bx-trash me-1"></i> Cancel Bid
-                                    </a>
-                                  {% endif %}
-                                  {% if bid.status == 'approved' %}
-                                    <a class="dropdown-item text-success" href="javascript:void(0);" onclick="openBillingFormModal({{ bid.id }})">
-                                      <i class="bx bx-credit-card me-1"></i> Billing
-                                    </a>
-                                  {% endif %}
-                                
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
+                        <tr>
+                          <td><strong>{{ bid.document.title }}</strong></td>
+                          <td>{{ bid.bid_time }}</td>         
+                          <td>₱ {{ bid.proposed_price }}</td>
+                          <td>{{ bid.document.region }}</td>
+                          <td>
+                            <span class="badge 
+                              {% if bid.status == 'pending' %} bg-label-warning 
+                              {% elif bid.status == 'approved' %} bg-label-success 
+                              {% elif bid.status == 'under_review' %} bg-label-info 
+                              {% elif bid.status == 'rejected' %} bg-label-danger 
+                              {% elif bid.status == 'paid' %} bg-label-success 
+                              {% endif %}">
+                              {{ bid.status|capfirst }}
+                            </span>
+                          </td>
+                          <td>
+                            <button class="btn btn-sm btn-primary" href="javascript:void(0);" onclick="openBidModal({{ bid.id }})">
+                              View
+                            </button>
+                            {% if bid.status == "pending" %}
+                            <button class="btn btn-sm btn-success" onclick="cancelBid('{{ bid.id }}')">
+                              Cancel Bid
+                            </button>
+                            {% endif %}
+                            {% if bid.status == "approved" %}
+                            <button class="btn btn-sm btn-success" href="javascript:void(0);" onclick="openBillingFormModal({{ bid.id }})">
+                              Billing
+                            </button>
+                            {% endif %}
+                          </td>
+                        </tr>
                         {% empty %}
-                          <tr>
-                            <td colspan="7" class="text-center">No bids found.</td>
-                          </tr>
+                        <tr>
+                          <td colspan="7" class="text-center">No bids found.</td>
+                        </tr>
                         {% endfor %}
                       </tbody>
                     </table>
@@ -223,6 +215,92 @@
           </div>
           <!-- Content wrapper -->
         </div>
+
+          <!-- Modal for bid details -->
+          <div class="modal fade" id="bidModal" tabindex="-1" aria-labelledby="bidModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="bidModalLabel">Bid Details</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <!-- Two-column layout for inputs -->
+                  <div class="row mb-3">
+                    <div class="col-sm-6">
+                      <label for="documentTitle" class="form-label">Document Title</label>
+                      <input type="text" class="form-control" id="documentTitle" readonly>
+                    </div>
+                    <div class="col-sm-6">
+                      <label for="documentDescription" class="form-label">Description</label>
+                      <textarea class="form-control" id="documentDescription" rows="3" readonly></textarea>
+                    </div>
+                  </div>
+                  
+                  <div class="row mb-3">
+                    <div class="col-sm-6">
+                      <label for="documentCategory" class="form-label">Category</label>
+                      <input type="text" class="form-control" id="documentCategory" readonly>
+                    </div>
+                    <div class="col-sm-6">
+                      <label for="documentABC" class="form-label">Approved Budget (ABC)</label>
+                      <input type="text" class="form-control" id="documentABC" readonly>
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-sm-6">
+                      <label for="documentPrice" class="form-label">Price</label>
+                      <input type="text" class="form-control" id="documentPrice" readonly>
+                    </div>
+                    <div class="col-sm-6">
+                      <label for="documentImage" class="form-label">Image</label>
+                      <!-- Display image as a link -->
+                      <a id="documentImage" class="form-control" href="#" target="_blank">View Image</a>
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-sm-6">
+                      <label for="biddingStartDate" class="form-label">Bidding Start Date</label>
+                      <input type="text" class="form-control" id="biddingStartDate" readonly>
+                    </div>
+                    <div class="col-sm-6">
+                      <label for="biddingEndDate" class="form-label">Bidding End Date</label>
+                      <input type="text" class="form-control" id="biddingEndDate" readonly>
+                    </div>
+                  </div>
+
+                  <!-- Bid details (readonly) -->
+                  <div class="row mb-3">
+                    <div class="col-sm-6">
+                      <label for="bidTime" class="form-label">Bid Time</label>
+                      <input type="text" class="form-control" id="bidTime" readonly>
+                    </div>
+                    <div class="col-sm-6">
+                      <label for="proposedPrice" class="form-label">Proposed Price</label>
+                      <input type="text" class="form-control" id="proposedPrice" readonly>
+                    </div>
+                  </div>
+
+                  <div class="row mb-3">
+                    <div class="col-sm-6">
+                      <label for="region" class="form-label">Region</label>
+                      <input type="text" class="form-control" id="region" readonly>
+                    </div>
+                    <div class="col-sm-6">
+                      <label for="bidStatus" class="form-label">Bid Status</label>
+                      <input type="text" class="form-control" id="bidStatus" readonly>
+                    </div>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <script>
             function getCSRFToken() {
               return document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -285,6 +363,49 @@
                 notyf.success("{{ message|escapejs }}");
               {% endfor %}
             {% endif %}
+          </script>
+          <script>
+            function openBidModal(bidId) {
+              // Fetch the bid details and document details via AJAX
+              $.ajax({
+                url: `/get_bid_details/${bidId}/`,  // Your API endpoint to fetch bid details
+                method: 'GET',
+                success: function(data) {
+                  // Populate modal with document details
+                  document.getElementById('documentTitle').value = data.document_title;
+                  document.getElementById('documentDescription').value = data.document_description;
+                  document.getElementById('documentCategory').value = data.document_category;
+                  document.getElementById('documentABC').value = `₱ ${data.document_abc}`;
+                  document.getElementById('documentPrice').value = `₱ ${data.document_price}`;
+                  
+                  // Set image link
+                  const imageLink = document.getElementById('documentImage');
+                  if (data.document_image) {
+                    imageLink.href = data.document_image;  // Set the link to the image URL
+                    imageLink.textContent = 'View Image';  // Set the text for the link
+                  } else {
+                    imageLink.href = '#';
+                    imageLink.textContent = 'No Image Available';
+                  }
+            
+                  document.getElementById('biddingStartDate').value = data.bidding_start_date;
+                  document.getElementById('biddingEndDate').value = data.bidding_end_date;
+            
+                  // Populate modal with bid details
+                  document.getElementById('bidTime').value = data.bid_time;
+                  document.getElementById('proposedPrice').value = `₱ ${data.proposed_price}`;
+                  document.getElementById('region').value = data.region;
+                  document.getElementById('bidStatus').value = data.bid_status;
+            
+                  // Show the modal
+                  $('#bidModal').modal('show');
+                },
+                error: function() {
+                  alert('Error loading bid details');
+                }
+              });
+            }
+            
           </script>
         
         

@@ -102,7 +102,7 @@
             <div class="container-xxl flex-grow-2 container-p-y">
          
               <div class="card">
-                <h5 class="card-header">Bidding Document Requests</h5>
+                <h5 class="card-header">Rental Requests</h5>
                 <div class="card-body" >
                   <div class="table-responsive text-nowrap">
                     <table class="table table-bordered">
@@ -121,7 +121,7 @@
                           {% for request in rental_requests %}
                           <tr>
                             <td>{{ request.equipment.name }}</td>
-                            <td>{{ request.requested_by }}</td>
+                            <td>   {{ request.requested_by.get_full_name|default:request.requested_by.username }}</td>
                             <td>{{ request.rental_start_date }}</td>
                             <td>{{ request.rental_end_date }}</td>
                             <td>₱ {{ request.total_rent_cost }}</td>
@@ -136,9 +136,10 @@
                               </span>
                             </td>
                             <td>
+                             
                               <button class="btn btn-sm btn-primary" onclick="openRentalModal(this)"
                                 data-id="{{ request.id }}"
-                                data-requested_by="{{ request.requested_by }}"
+                                data-requested_by="{{ request.requested_by.get_full_name|default:request.requested_by.username }}"
                                 data-equipment="{{ request.equipment.name }}"
                                 data-purpose="{{ request.purpose }}"
                                 data-duration="{{ request.no_of_days_hours }}"
@@ -149,7 +150,23 @@
                                 data-payment_status="{{ request.payment_status }}">
                                 View
                               </button>
-                            </td>
+                                {%if request.status == "approved"  %}
+                                <button class="btn btn-sm btn-success"
+                                data-id="{{ request.id }}"
+                                data-requested_by="{{ request.requested_by.get_full_name|default:request.requested_by.username }}"
+                                data-equipment="{{ request.equipment.name }}"
+                                data-purpose="{{ request.purpose }}"
+                                data-duration="{{ request.no_of_days_hours }}"
+                                data-cost="{{ request.total_rent_cost }}"
+                                data-status="{{ request.status }}"
+                                data-rental_start_date="{{ request.rental_start_date }}"
+                                data-rental_end_date="{{ request.rental_end_date }}"
+                                data-payment_status="{{ request.payment_status }}">
+                                Billing
+                              </button>
+                              {%endif%}
+
+                            </td>                            
                           </tr>
                           {% empty %}
                           <tr>
@@ -168,54 +185,125 @@
           
             <!-- / Content -->
             <div class="content-backdrop fade"></div>
-                        <!-- Billing Form Modal -->
             <div class="modal fade" id="billingFormModal" tabindex="-1" aria-hidden="true">
               <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
-
+            
                   <div class="modal-header">
-                    <h5 class="modal-title">Billing Information</h5>
+                    <h5 class="modal-title">Rental Request Details</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                   </div>
-
+            
                   <div class="modal-body">
                     <form id="billingForm" method="POST">
                       {% csrf_token %}
                       <input type="hidden" name="bid_id" id="billingBidId" />
-                    
-                      <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" name="full_name" class="form-control" required>
+            
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label">Full Name</label>
+                          <input type="text" name="full_name" class="form-control" id="modalFullName" required readonly>
+                        </div>
+            
+                        <div class="col-md-6">
+                          <label class="form-label">Email Address</label>
+                          <input type="email" value="{{ request.user.email }}" name="email_add" class="form-control" id="modalEmail" required readonly>
+                        </div>
                       </div>
-                    
-                      <div class="mb-3">
-                        <label class="form-label">Address</label>
-                        <textarea name="address" class="form-control" rows="2" required></textarea>
+            
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label">Equipment</label>
+                          <input type="text" id="modalEquipment" class="form-control" readonly>
+                        </div>
+            
+                        <div class="col-md-6">
+                          <label class="form-label">Purpose</label>
+                          <input type="text" id="modalPurpose" class="form-control" readonly>
+                        </div>
                       </div>
-                    
-                      <div class="mb-3">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" value="{{ request.user.email }}" name="email_add" class="form-control" required readonly>
+            
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label">Duration</label>
+                          <input type="text" id="modalDuration" class="form-control" readonly>
+                        </div>
+            
+                        <div class="col-md-6">
+                          <label class="form-label">Rental Dates</label>
+                          <input type="text" id="modalDates" class="form-control" readonly>
+                        </div>
                       </div>
-                    
-                      <div class="mb-3">
-                        <label class="form-label">Phone Number</label>
-                        <input type="number" name="number" class="form-control">
+            
+                      <div class="row mb-3">
+                        <div class="col-md-6">
+                          <label class="form-label">Total Cost</label>
+                          <input type="text" id="modalCost" class="form-control" readonly>
+                        </div>
+            
+   
+                        <div class="col-md-6">
+                          <label class="form-label">Status</label>
+                          <input type="text" id="modalStatus" class="form-control" readonly>
+                        </div>
                       </div>
-                    
-                      <button type="submit" class="btn btn-primary">Proceed to Payment</button>
+            
+                      <div class="row mb-3">
+  
+                        <div class="col-md-6">
+                          <label class="form-label">Payment Status</label>
+                          <input type="text" id="modalPaymentStatus" class="form-control" readonly>
+                        </div>
+                      </div>
                     </form>
-                    
                   </div>
-
+            
                 </div>
               </div>
             </div>
+            
 
             
           </div>
           <!-- Content wrapper -->
         </div>
+        <script>
+          function openRentalModal(button) {
+            // Open modal via Bootstrap Modal API
+            const modal = new bootstrap.Modal(document.getElementById('billingFormModal'));
+        
+            // Fetch data attributes from the clicked button
+            const id = button.getAttribute('data-id');
+            const fullName = button.getAttribute('data-requested_by');
+            const equipment = button.getAttribute('data-equipment');
+            const purpose = button.getAttribute('data-purpose');
+            const duration = button.getAttribute('data-duration');
+            const cost = button.getAttribute('data-cost');
+            const status = button.getAttribute('data-status');
+            const rentalStart = button.getAttribute('data-rental_start_date');
+            const rentalEnd = button.getAttribute('data-rental_end_date');
+            const paymentStatus = button.getAttribute('data-payment_status');
+        
+            // Fill the form fields with the corresponding values
+            document.getElementById('billingBidId').value = id; // Hidden field for bid ID
+            document.getElementById('modalFullName').value = fullName; // Full Name input field
+            document.getElementById('modalEmail').value = "{{ request.user.email }}"; // Email field
+        
+            // Fill the display fields with the rental request data
+            document.getElementById('modalEquipment').value = equipment; // Equipment Name
+            document.getElementById('modalPurpose').value = purpose; // Purpose
+            document.getElementById('modalDuration').value = duration; // Rental Duration
+            document.getElementById('modalDates').value = rentalStart + " to " + rentalEnd; // Rental Dates
+            document.getElementById('modalCost').value = "₱ " + parseFloat(cost).toFixed(2); // Total Cost
+            document.getElementById('modalStatus').value = status.charAt(0).toUpperCase() + status.slice(1); // Status
+            document.getElementById('modalPaymentStatus').value = paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1); // Payment Status
+        
+            // Show the modal
+            modal.show();
+          }
+        </script>
+        
+        
           <script>
             function getCSRFToken() {
               return document.querySelector('[name=csrfmiddlewaretoken]').value;

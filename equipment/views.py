@@ -13,6 +13,9 @@ from django.http import JsonResponse, Http404
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.utils import timezone
+from datetime import datetime
+from django.db.models import Sum, Count
+from decimal import Decimal
 
 @login_required(login_url='login')
 def equipment(request):
@@ -138,14 +141,28 @@ def create_rental_request(request):
             messages.error(request, "Selected equipment does not exist.")
             return redirect('rentals')
 
-        user_full_name = request.user.get_full_name()
+        try:
+            rental_start_date = datetime.strptime(request.POST.get('rental_start_date'), "%Y-%m-%d").date()
+            rental_end_date = datetime.strptime(request.POST.get('rental_end_date'), "%Y-%m-%d").date()
+        except (TypeError, ValueError):
+            messages.error(request, "Invalid rental start or end date.")
+            return redirect('rentals')
+
         today = timezone.now().date()
+
+        if rental_start_date < today:
+            messages.error(request, "Rental start date cannot be in the past.")
+            return redirect('rentals')
+
+        if rental_start_date > rental_end_date:
+            messages.error(request, "Rental end date cannot be earlier than start date.")
+            return redirect('rentals')
 
         # Check for a previous active or future rental request by the same user
         existing_request = RentalRequest.objects.filter(
             equipment=equipment,
-            requested_by=user_full_name,
-            rental_end_date__gte=today  # active or future
+            requested_by=request.user,
+            rental_end_date__gte=today
         ).exclude(status='rejected').first()
 
         if existing_request:
@@ -155,18 +172,18 @@ def create_rental_request(request):
         # Create the rental request
         RentalRequest.objects.create(
             equipment=equipment,
+            requested_by=request.user,
             purpose=request.POST.get('purpose'),
-            rental_start_date=request.POST.get('rental_start_date'),
-            rental_end_date=request.POST.get('rental_end_date'),
+            rental_start_date=rental_start_date,
+            rental_end_date=rental_end_date,
             no_of_days_hours=request.POST.get('no_of_days_hours'),
-            requested_by=request.POST.get('rental_requested_by'),
         )
 
         messages.success(request, "Rental request submitted successfully.")
         return redirect('rentals')
 
     messages.error(request, "Invalid request method.")
-    return redirect('rentals')
+    return redirect('rentals')  
 
 @require_POST
 def update_rental_status(request, rental_id):
@@ -200,3 +217,23 @@ def equipment_list(request):
     equipment_list = Equipment.objects.order_by('-created_at')
     return render(request, 'equipment-admin/equipment-edit.html', { 'equipment_list': equipment_list })
 
+def rental_statistics_view(request):
+    total_revenue = RentalRequest.objects.aggregate(total=Sum('total_rent_cost'))['total']
+    if total_revenue is None:
+        total_revenue = Decimal('0.00')
+
+    total_rentals = RentalRequest.objects.count()
+
+    top_equipment_rentals = (
+        Equipment.objects
+        .annotate(rental_count=Count('rental_requests'))
+        .filter(rental_count__gt=0)
+        .order_by('-rental_count')[:4]
+    )
+
+    context = {
+        'total_revenue': total_revenue,
+        'total_rentals': total_rentals,   
+        'top_equipment_rentals': top_equipment_rentals,
+    }
+    return render(request, 'equipment-admin/dashboard.html', context)
