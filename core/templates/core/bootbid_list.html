@@ -131,6 +131,7 @@
                               {% elif bid.status == 'under_review' %} bg-label-info 
                               {% elif bid.status == 'rejected' %} bg-label-danger 
                               {% elif bid.status == 'paid' %} bg-label-success 
+                              {% elif bid.status == 'cancelled' %} bg-label-secondary
                               {% endif %}">
                               {{ bid.status|capfirst }}
                             </span>
@@ -140,10 +141,10 @@
                               View
                             </button>
                             {% if bid.status == "pending" %}
-                            <button class="btn btn-sm btn-success" onclick="cancelBid('{{ bid.id }}')">
+                            <button class="btn btn-sm btn-danger" onclick="cancelBid('{{ bid.id }}')">
                               Cancel Bid
                             </button>
-                            {% endif %}
+                            {% endif %}                        
                             {% if bid.status == "approved" %}
                             <button class="btn btn-sm btn-success" href="javascript:void(0);" onclick="openBillingFormModal({{ bid.id }})">
                               Billing
@@ -407,6 +408,84 @@
             }
             
           </script>
+          <script>
+            function cancelBid(bidId) {
+              // Show SweetAlert2 confirmation dialog
+              Swal.fire({
+                title: 'Are you sure?',
+                text: 'You won\'t be able to revert this!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',  // Bootstrap's danger color
+                cancelButtonColor: '#28a745',   // Bootstrap's success color
+                confirmButtonText: 'Yes, cancel it!',
+                cancelButtonText: 'Cancel',
+                customClass: {
+                  confirmButton: 'btn btn-danger', // Confirm button with Bootstrap styling
+                  cancelButton: 'btn btn-secondary' // Cancel button with Bootstrap styling
+                }
+              }).then((result) => {
+                if (result.isConfirmed) {
+                  // Start loading spinner
+                  Swal.fire({
+                    title: 'Cancelling...',
+                    text: 'Please wait while we process your request.',
+                    icon: 'info',
+                    showConfirmButton: false,  // Hide the confirm button
+                    allowOutsideClick: false,  // Prevent closing by clicking outside
+                    onOpen: () => {
+                      Swal.showLoading();  // Show the loading spinner
+                    }
+                  });
+          
+                  // Perform the AJAX request to cancel the bid
+                  fetch(`/cancel_bid/${bidId}/`, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    },
+                    body: JSON.stringify({ 'bid_id': bidId })
+                  })
+                  .then(response => response.json())
+                  .then(data => {
+                    if (data.status === 'success') {
+                      // Show success message after cancellation and auto-close it after 2 seconds
+                      Swal.fire({
+                        title: 'Cancelled!',
+                        text: 'The bid has been cancelled successfully.',
+                        icon: 'success',
+                        showConfirmButton: false,  // No button
+                        timer: 2000,  // Auto-close after 2 seconds
+                        timerProgressBar: true,  // Show progress bar while waiting
+                        didClose: () => {
+                          // Optionally, reload the page or update the row dynamically after success
+                          location.reload();  // Reload the page after successful cancellation
+                        }
+                      });
+                    } else {
+                      // Handle error or failure
+                      Swal.fire(
+                        'Oops!',
+                        data.message || 'Something went wrong. Please try again.',
+                        'error'
+                      );
+                    }
+                  })
+                  .catch(error => {
+                    console.error('Error:', error);
+                    // Handle AJAX error
+                    Swal.fire(
+                      'Oops!',
+                      'Something went wrong. Please try again later.',
+                      'error'
+                    );
+                  });
+                }
+              });
+            }
+          </script>
+          
         
         
         <!-- / Layout page -->

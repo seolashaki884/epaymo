@@ -206,6 +206,7 @@
                                     href="javascript:void(0);"
                                     data-id="{{ equipment.id }}"
                                     data-name="{{ equipment.name }}"
+                                    data-image="{{equipment.image.url}}"
                                     data-description="{{ equipment.description }}"
                                     data-rental_rate="{{ equipment.rental_rate }}"
                                     data-rental_price="{{ equipment.rental_price }}"
@@ -271,6 +272,18 @@
                                       <input type="text" id="editRentalRate" class="form-control" placeholder="Enter Rental Rate" />
                                   </div>
                               </div>
+                              <div class="row">
+                                <div class="col mb-3">
+                                    <label for="editImage" class="form-label">Image</label>
+                                    <input type="file" id="editImage" class="form-control" accept="image/*">
+                                </div>
+                            </div>
+                            <div class="row">
+                              <div class="col mb-3">
+                                  <label for="editImage" class="form-label">Equipment Image </label>
+                                  <a id="editImageLink" href="#" target="_blank" class="text-primary"> View Image</a>
+                              </div>
+                          </div>
 
                                     <div class="col mb-0">
                                         <input type="text" id="editRentalPrice" class="form-control" placeholder="Enter Rental Price" readonly hidden />
@@ -298,87 +311,96 @@
         </div>
 
         <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              const modalEdit = document.getElementById('modalEdit');
-              const saveBtn = document.getElementById('saveChangesBtn');
-            
-              // When the modal opens, populate it
-              modalEdit.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-            
-                // Get equipment details from data attributes
-                const id = button.getAttribute('data-id');
-                const name = button.getAttribute('data-name');
-                const description = button.getAttribute('data-description');
-                const rentalRate = button.getAttribute('data-rental_rate');
-                const rentalPrice = button.getAttribute('data-rental_price');
-                const status = button.getAttribute('data-status');
-            
-                // Set input values
-                document.getElementById('editName').value = name;
-                document.getElementById('editDescription').value = description;
-                document.getElementById('editRentalRate').value = rentalRate;
-                document.getElementById('editRentalPrice').value = rentalPrice;
-                document.getElementById('editStatus').value = status;
-            
-                // Attach equipment ID to save button
-                saveBtn.setAttribute('data-id', id);
-              });
-            
-              // Save the updated equipment details
-              saveBtn.addEventListener('click', function () {
-                const docId = saveBtn.getAttribute('data-id');
-                const updatedName = document.getElementById('editName').value;
-                const updatedDescription = document.getElementById('editDescription').value;
-                const updatedRentalRate = document.getElementById('editRentalRate').value;
-                const updatedRentalPrice = document.getElementById('editRentalPrice').value;
-                const updatedStatus = document.getElementById('editStatus').value;
-              
-                // Check if rental_price is "None" or empty, and set it to null if true
-                const rentalPrice = updatedRentalPrice === 'None' || updatedRentalPrice === '' ? null : updatedRentalPrice;
-              
-                // Send the updated data
-                fetch(`/equipment/edit/${docId}/`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                  },
-                  body: JSON.stringify({
-                    name: updatedName,
-                    description: updatedDescription,
-                    rental_rate: updatedRentalRate,
-                    rental_price: rentalPrice,  // Send null if empty or "None"
-                    status: updatedStatus
-                  })
-                })
-                .then(response => {
-                  if (response.ok) {
-                    Swal.fire({
-                      title: 'Updated!',
-                      text: 'Equipment has been updated.',
-                      icon: 'success',
-                      showConfirmButton: false,
-                      timer: 2000,
-                      timerProgressBar: true,
-                    }).then(() => {
-                      window.location.reload();
-                    });
-                  } else {
+          document.addEventListener('DOMContentLoaded', function () {
+            const modalEdit = document.getElementById('modalEdit');
+            const saveBtn = document.getElementById('saveChangesBtn');
+            const imageInput = document.getElementById('editImage');
+          
+            modalEdit.addEventListener('show.bs.modal', function (event) {
+              const button = event.relatedTarget;
+          
+              const id = button.getAttribute('data-id');
+              const name = button.getAttribute('data-name');
+              const description = button.getAttribute('data-description');
+              const rentalRate = button.getAttribute('data-rental_rate');
+              const rentalPrice = button.getAttribute('data-rental_price');
+              const status = button.getAttribute('data-status');
+              const imageUrl = button.getAttribute('data-image');
+          
+              const imageLink = document.getElementById('editImageLink');
+              if (imageUrl) {
+                imageLink.href = imageUrl;
+                imageLink.style.display = 'inline';
+              } else {
+                imageLink.href = '#';
+                imageLink.style.display = 'none';
+              }
+          
+              document.getElementById('editName').value = name;
+              document.getElementById('editDescription').value = description;
+              document.getElementById('editRentalRate').value = rentalRate;
+              document.getElementById('editRentalPrice').value = rentalPrice;
+              document.getElementById('editStatus').value = status;
+          
+              imageInput.value = "";
+              saveBtn.setAttribute('data-id', id);
+            });
+          
+            saveBtn.addEventListener('click', function () {
+              const docId = saveBtn.getAttribute('data-id');
+              const updatedName = document.getElementById('editName').value;
+              const updatedDescription = document.getElementById('editDescription').value;
+              const updatedRentalRate = document.getElementById('editRentalRate').value;
+              const updatedRentalPrice = document.getElementById('editRentalPrice').value;
+              const updatedStatus = document.getElementById('editStatus').value;
+          
+              const rentalPrice = updatedRentalPrice === 'None' || updatedRentalPrice === '' ? '' : updatedRentalPrice;
+          
+              const formData = new FormData();
+              formData.append('name', updatedName);
+              formData.append('description', updatedDescription);
+              formData.append('rental_rate', updatedRentalRate);
+              formData.append('rental_price', rentalPrice);
+              formData.append('status', updatedStatus);
+              if (imageInput.files.length > 0) {
+                formData.append('image', imageInput.files[0]);
+              }
+          
+              fetch(`/equipment/edit/${docId}/`, {
+                method: 'POST',
+                headers: {
+                  'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+              })
+              .then(response => {
+                if (response.ok) {
+                  Swal.fire({
+                    title: 'Updated!',
+                    text: 'Equipment has been updated.',
+                    icon: 'success',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                  }).then(() => {
+                    window.location.reload();
+                  });
+                } else {
+                  return response.json().then(data => {
                     Swal.fire({
                       title: 'Error!',
-                      text: 'Something went wrong.',
+                      text: data.message || 'Something went wrong.',
                       icon: 'error',
                       showConfirmButton: false,
                       timer: 2000
                     });
-                  }
-                });
+                  });
+                }
               });
-              
             });
+          });
           </script>
-
+          
           <script>
             document.addEventListener('DOMContentLoaded', function () {
               // Get all delete buttons

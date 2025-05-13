@@ -68,7 +68,8 @@ class Bid(models.Model):
         ('approved', 'Approved'),
         ('under_review', 'Under Review'),
         ('rejected', 'Rejected'),
-        ('paid', 'Paid' )
+        ('paid', 'Paid' ),
+        ('cancelled', 'Cancelled'),
     ]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)

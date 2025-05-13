@@ -232,6 +232,9 @@
                                 data-title="{{ doc.title }}"
                                 data-description="{{ doc.description }}"
                                 data-abc="{{ doc.abc }}"
+
+                                data-image="{{ doc.image.url }}"
+            
                                 data-region="{{ doc.region }}"
                                 data-start="{{ doc.bidding_start_date|date:'Y-m-d\\TH:i' }}"
                                 data-end="{{ doc.bidding_end_date|date:'Y-m-d\\TH:i' }}">
@@ -322,9 +325,21 @@
                             class="form-control"
                             placeholder="Enter Region"
                           />
+                        </div> 
+                        <div class="mb-3">
+                          <label class="form-label">Document Image</label><br>
+                          <a id="editImageLink" href="#" target="_blank" class="text-primary">View Image</a>
+                        </div>
+                        
+            
+
+                      <div class="mb-3">
+                        <label for="editImage" class="form-label">Document Image</label>
+                        <input type="file" id="editImage" class="form-control" accept="image/*">
                         </div>
                       </div>
 
+                      
                       <div class="row g-2">
                         <div class="col mb-0">
                           <label for="editStartDate" class="form-label">Bidding Start Date</label>
@@ -354,13 +369,14 @@
             document.addEventListener('DOMContentLoaded', function () {
               const modalEdit = document.getElementById('modalEdit');
               const saveBtn = document.getElementById('saveChangesBtn');
-          
-              // When the modal opens, populate it
               const startDateInput = document.getElementById('editStartDate');
               const endDateInput = document.getElementById('editEndDate');
+              const imageInput = document.getElementById('editImage'); // Image input field
+              
+              // Modal trigger
               modalEdit.addEventListener('show.bs.modal', function (event) {
                 const button = event.relatedTarget;
-          
+            
                 // Get document details from data attributes
                 const id = button.getAttribute('data-id');
                 const title = button.getAttribute('data-title');
@@ -369,43 +385,59 @@
                 const region = button.getAttribute('data-region');
                 const start = button.getAttribute('data-start');
                 const end = button.getAttribute('data-end');
-          
-                // Set input values
+                const imageUrl = button.getAttribute('data-image'); // Getting the image URL
+                
+                // Find the image link and set the href to the image URL
+                const imageLink = document.getElementById('editImageLink');
+                
+                // If an image URL exists, make the link visible and set href
+                if (imageUrl) {
+                  imageLink.href = imageUrl;
+                  imageLink.style.display = 'inline'; // Show the link
+                } else {
+                  imageLink.href = '#';
+                  imageLink.style.display = 'none'; // Hide the link if no image
+                }
+            
+                // Populate form fields
                 document.getElementById('editTitle').value = title;
                 document.getElementById('editDescription').value = description;
                 document.getElementById('editABC').value = abc;
                 document.getElementById('editRegion').value = region;
                 startDateInput.value = start;
                 endDateInput.value = end;
-          
-                // Attach doc ID to save button
+            
+                // Reset file input
+                imageInput.value = "";
+            
+                // Store document ID on save button for later use
                 saveBtn.setAttribute('data-id', id);
               });
-          
-              // ✅ Only one event listener
+            
+              // Save changes when the save button is clicked
               saveBtn.addEventListener('click', function () {
                 const docId = saveBtn.getAttribute('data-id');
-                const updatedTitle = document.getElementById('editTitle').value;
-                const updatedDescription = document.getElementById('editDescription').value;
-                const updatedABC = document.getElementById('editABC').value;
-                const updatedRegion = document.getElementById('editRegion').value;
-                const updatedStartDate = startDateInput.value;
-                const updatedEndDate = endDateInput.value;
-          
+            
+                const formData = new FormData();
+                formData.append('title', document.getElementById('editTitle').value);
+                formData.append('description', document.getElementById('editDescription').value);
+                formData.append('abc', document.getElementById('editABC').value);
+                formData.append('region', document.getElementById('editRegion').value);
+                formData.append('bidding_start_date', startDateInput.value);
+                formData.append('bidding_end_date', endDateInput.value);
+            
+                // Append image if a new one is selected
+                if (imageInput.files.length > 0) {
+                  formData.append('image', imageInput.files[0]);
+                }
+            
+                // Send the data to the backend
                 fetch(`/bac-edit/${docId}/update/`, {
                   method: 'POST',
                   headers: {
-                    'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                   },
-                  body: JSON.stringify({
-                    title: updatedTitle,
-                    description: updatedDescription,
-                    abc: updatedABC,
-                    region: updatedRegion,
-                    bidding_start_date: updatedStartDate,
-                    bidding_end_date: updatedEndDate
-                  })
+                  body: formData
                 })
                 .then(response => {
                   if (response.ok) {
@@ -415,7 +447,7 @@
                       icon: 'success',
                       showConfirmButton: false,
                       timer: 2000,
-                      timerProgressBar: true, 
+                      timerProgressBar: true
                     }).then(() => {
                       window.location.reload();
                     });
@@ -431,7 +463,10 @@
                 });
               });
             });
+            
           </script>
+          
+          
 
                       <script>
             document.querySelectorAll('.delete-btn').forEach(button => {

@@ -16,6 +16,9 @@ from django.utils import timezone
 from datetime import datetime
 from django.db.models import Sum, Count
 from decimal import Decimal
+import os
+from django.core.files.storage import default_storage
+from django.db.models import Sum, Count, Case, When, Value, IntegerField
 
 @login_required(login_url='login')
 def equipment(request):
@@ -59,41 +62,48 @@ def equipment(request):
 def update_equipment(request, equipment_id):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)  # Parse the JSON request body
+            if not request.content_type.startswith('multipart'):
+                return JsonResponse({'status': 'error', 'message': 'Invalid form encoding'}, status=400)
 
-            # Get the existing equipment
+            data = request.POST
+            image = request.FILES.get('image')
+
             equipment = get_object_or_404(Equipment, id=equipment_id)
 
-            # Old values to log the changes
             old_name = equipment.name
             old_description = equipment.description
             old_rental_rate = equipment.rental_rate
             old_status = equipment.status
 
-            # Update equipment fields
-            equipment.name = data['name']
-            equipment.description = data['description']
-            equipment.rental_rate = data['rental_rate']
-            equipment.status = data['status']
+            equipment.name = data.get('name', equipment.name)
+            equipment.description = data.get('description', equipment.description)
+            equipment.rental_rate = data.get('rental_rate', equipment.rental_rate)
+            equipment.status = data.get('status', equipment.status)
+
+            if image:
+                if equipment.image and default_storage.exists(equipment.image.path):
+                    os.remove(equipment.image.path)
+                equipment.image = image
+
             equipment.save()
 
-            # Log the update action
             content_type = ContentType.objects.get_for_model(Equipment)
             LogEntry.objects.log_action(
                 user_id=request.user.id,
                 content_type_id=content_type.id,
                 object_id=equipment.id,
                 object_repr=str(equipment),
-                action_flag=CHANGE,  # Action type: Change (existing object updated)
-                change_message=f"Updated equipment: Name from '{old_name}' to '{equipment.name}', Description from '{old_description}' to '{equipment.description}', Rental rate from {old_rental_rate} to {equipment.rental_rate}, Status from '{old_status}' to '{equipment.status}'"
+                action_flag=CHANGE,
+                change_message=(
+                    f"Updated equipment: Name from '{old_name}' to '{equipment.name}', "
+                    f"Description from '{old_description}' to '{equipment.description}', "
+                    f"Rental rate from {old_rental_rate} to {equipment.rental_rate}, "
+                    f"Status from '{old_status}' to '{equipment.status}'"
+                )
             )
 
             return JsonResponse({'status': 'success'})
 
-        except json.JSONDecodeError:
-            return JsonResponse({'status': 'error', 'message': 'Invalid JSON format'}, status=400)
-        except Equipment.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Equipment not found'}, status=404)
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
@@ -200,6 +210,21 @@ def update_rental_status(request, rental_id):
         return JsonResponse({'success': True})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=400)
+    
+def check_equipment_availability(request, rental_id):
+    try:
+        rental = RentalRequest.objects.select_related('equipment').get(pk=rental_id)
+        equipment = rental.equipment
+
+        # Check for other 'approved' requests for the same equipment that are not returned
+        has_active_approved = RentalRequest.objects.filter(
+            equipment=equipment,
+            status='approved'
+        ).exclude(pk=rental_id).exists()
+
+        return JsonResponse({'has_active_approved': has_active_approved})
+    except RentalRequest.DoesNotExist:
+        return JsonResponse({'error': 'Rental not found'}, status=404)
 
 @login_required(login_url='login')
 def rental_requests_list(request):
