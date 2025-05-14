@@ -839,3 +839,42 @@ def rental_request_list(request):
     })
 
 
+@login_required(login_url='login')
+def profile(request):
+    user = request.user
+
+    # Ensure profile exists (with defaults to avoid DB errors)
+    profile, created = UserProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            'category': 'drainage_fee',
+            'region': '',
+            'phone': 0,
+            'address': '',
+        }
+    )
+
+    if request.method == 'POST':
+        # Update User fields
+        user.first_name = request.POST.get('firstName', '')
+        user.last_name = request.POST.get('lastName', '')
+        user.save()
+
+        # Update UserProfile fields
+        profile.region = request.POST.get('organization', '')
+        profile.phone = request.POST.get('phoneNumber') or 0
+        profile.address = request.POST.get('address', '')
+
+        # Check if file is uploaded
+        if 'profile_image' in request.FILES:
+            print("File uploaded:", request.FILES['profile_image'])
+            profile.profile_image = request.FILES['profile_image']
+        else:
+            print("No file uploaded")
+
+        profile.save()
+
+        return redirect('userProfile')  # Avoid resubmitting form on refresh
+
+    return render(request, 'core/bootprofile.html', {'user': user, 'profile': profile})
+
