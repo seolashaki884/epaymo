@@ -42,6 +42,7 @@ urlpatterns = [
     path('documents/<int:pk>/json/', views.document_json, name='document_json'),
     path('equipments/<int:pk>/json/', views.equipment_json, name='equipment_json'),
     path('rental/requests/', views.rental_request_list, name='rental_request_list'),
+    path('user/profile/', views.profile, name='userProfile'),
 
 ]
 if settings.DEBUG:

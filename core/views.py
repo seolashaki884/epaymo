@@ -839,3 +839,8 @@ def rental_request_list(request):
     })
 
 
+@login_required(login_url='login')
+def profile(request):
+    return render(request, 'core/bootprofile.html')
+
+
