@@ -16,6 +16,14 @@ class UserProfile(models.Model):
 ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
+    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+    region = models.CharField(max_length=255)
+    phone = models.BigIntegerField(null=True)
+    address = models.CharField(max_length=255)
+
+
+    def __str__(self):
+        return self.user.username
 
 class Document(models.Model):
     CATEGORY_CHOICES = [
