@@ -43,6 +43,7 @@ urlpatterns = [
     path('equipments/<int:pk>/json/', views.equipment_json, name='equipment_json'),
     path('rental/requests/', views.rental_request_list, name='rental_request_list'),
     path('user/profile/', views.profile, name='userProfile'),
+    path('validate_old_password/', views.validate_old_password, name='validate_old_password'),
 
 ]
 if settings.DEBUG:
