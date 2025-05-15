@@ -12,6 +12,7 @@ class UserProfile(models.Model):
     ('scraped_fix_assets', 'Scraped Fix Assets'),
     ('verification_authentication', 'Verification and Authentication'),
     ('bidding_documents', 'Bidding Documents'),
+    ('finance', 'Finance'),
 
 ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
