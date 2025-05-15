@@ -44,6 +44,7 @@ urlpatterns = [
     path('rental/requests/', views.rental_request_list, name='rental_request_list'),
     path('user/profile/', views.profile, name='userProfile'),
     path('validate_old_password/', views.validate_old_password, name='validate_old_password'),
+    path('finance-dashboard/', views.financedashboard, name='finance_dashboard'),
 
 ]
 if settings.DEBUG:

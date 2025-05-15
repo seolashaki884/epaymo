@@ -847,7 +847,7 @@ def profile(request):
     profile, created = UserProfile.objects.get_or_create(
         user=user,
         defaults={
-            'category': 'drainage_fee',
+            'category': '',
             'region': '',
             'phone': 0,
             'address': '',
@@ -919,3 +919,8 @@ def validate_old_password(request):
         else:
             return JsonResponse({'is_old_password_correct': False})
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+@login_required(login_url='login')
+def financedashboard(request):
+    return render(request, 'finance-admin/finance-dashboard.html')
