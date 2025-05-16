@@ -182,32 +182,30 @@
                     <form id="billingForm" method="POST">
                       {% csrf_token %}
                       <input type="hidden" name="bid_id" id="billingBidId" />
-                    
+
                       <div class="mb-3">
                         <label class="form-label">Full Name</label>
-                        <input type="text" name="full_name" value="{{request.user.get_full_name}}" class="form-control" required readonly>
+                        <input type="text" name="full_name" value="{{ request.user.get_full_name }}" class="form-control" required readonly>
                       </div>
-                    
+
                       <div class="mb-3">
                         <label class="form-label">Address</label>
-                        <textarea name="address" class="form-control" rows="2" required></textarea>
+                        <textarea name="address" class="form-control" rows="2" required>{{ request.user.userprofile.address }}</textarea>
                       </div>
-                    
+
                       <div class="mb-3">
                         <label class="form-label">Email Address</label>
                         <input type="email" value="{{ request.user.email }}" name="email_add" class="form-control" required readonly>
                       </div>
-                    
+
                       <div class="mb-3">
                         <label class="form-label">Phone Number</label>
-                        <input type="number" name="number" class="form-control">
+                        <input type="number" value="{{ request.user.userprofile.phone }}" name="number" class="form-control">
                       </div>
-                    
-                      <button type="submit" class="btn btn-primary">Proceed to Payment</button>
-                    </form>
-                    
-                  </div>
 
+                      <button type="submit" class="btn btn-primary">Proceed to Payment</button>
+                    </form>                    
+                  </div>
                 </div>
               </div>
             </div>

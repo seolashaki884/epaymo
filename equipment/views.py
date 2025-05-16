@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import Equipment, RentalRequest
+from core.models import UserProfile
 from django.views.decorators.csrf import csrf_exempt
 import json
 from django.contrib.admin.models import LogEntry, CHANGE, DELETION, ADDITION
@@ -22,6 +23,17 @@ from django.db.models import Sum, Count, Case, When, Value, IntegerField
 
 @login_required(login_url='login')
 def equipment(request):
+    if not request.user.is_staff:
+        return redirect('error')
+
+    # Check if the user has a profile and the correct category
+    try:
+        profile = request.user.userprofile
+        if not profile.category or profile.category != 'equipment_rental':
+            return redirect('error')
+    except UserProfile.DoesNotExist:
+        return redirect('error')  # Handle users without a profile
+    
     if request.method == 'POST':
         name = request.POST.get('name')
         description = request.POST.get('description')
@@ -228,21 +240,62 @@ def check_equipment_availability(request, rental_id):
 
 @login_required(login_url='login')
 def rental_requests_list(request):
+    if not request.user.is_staff:
+        return redirect('error')
+
+    # Check if the user has a profile and the correct category
+    try:
+        profile = request.user.userprofile
+        if not profile.category or profile.category != 'equipment_rental':
+            return redirect('error')
+    except UserProfile.DoesNotExist:
+        return redirect('error')  # Handle users without a profile
+    
     rental_requests = RentalRequest.objects.all()
     return render(request, 'equipment-admin/equipment-rentals.html', {'rental_requests': rental_requests})
 
 @login_required(login_url='login')
 def dashboard(request):
+    if not request.user.is_staff:
+        return redirect('error')
+
+    # Check if the user has a profile and the correct category
+    try:
+        profile = request.user.userprofile
+        if not profile.category or profile.category != 'equipment_rental':
+            return redirect('error')
+    except UserProfile.DoesNotExist:
+        return redirect('error')  # Handle users without a profile
     logs = LogEntry.objects.filter(user=request.user).order_by('-action_time')
     return render(request, 'equipment-admin/dashboard.html', {'logs': logs})
 
 
 @login_required(login_url='login')
 def equipment_list(request):
+    if not request.user.is_staff:
+        return redirect('error')
+
+    # Check if the user has a profile and the correct category
+    try:
+        profile = request.user.userprofile
+        if not profile.category or profile.category != 'equipment_rental':
+            return redirect('error')
+    except UserProfile.DoesNotExist:
+        return redirect('error')  # Handle users without a profile
     equipment_list = Equipment.objects.order_by('-created_at')
     return render(request, 'equipment-admin/equipment-edit.html', { 'equipment_list': equipment_list })
 
 def rental_statistics_view(request):
+    if not request.user.is_staff:
+        return redirect('error')
+
+    # Check if the user has a profile and the correct category
+    try:
+        profile = request.user.userprofile
+        if not profile.category or profile.category != 'equipment_rental':
+            return redirect('error')
+    except UserProfile.DoesNotExist:
+        return redirect('error')  # Handle users without a profile
     total_revenue = RentalRequest.objects.aggregate(total=Sum('total_rent_cost'))['total']
     if total_revenue is None:
         total_revenue = Decimal('0.00')

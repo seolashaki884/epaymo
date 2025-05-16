@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+{% load static tailwind_tags %}
+{%load static%}
+{%tailwind_css%}
+<html
+  lang="en"
+  class="light-style layout-menu-fixed"
+  dir="ltr"
+  data-theme="theme-default"
+  data-assets-path="/assets/"
+  data-template="vertical-menu-template-free"
+>
+  <head>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+
+    <!-- Notyf JS -->
+    <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+
+    <title>Home | Epaymo</title>
+
+    <meta name="description" content="" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/assets/img/favicon/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script> 
+    <link
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Icons. Uncomment required icon fonts -->
+    <link rel="stylesheet" href="{% static '/assets/vendor/fonts/boxicons.css' %}" />
+
+    <!-- Core CSS -->
+    <link rel="stylesheet" href="{% static '/assets/vendor/css/core.css' %}" class="template-customizer-core-css" />
+    <link rel="stylesheet" href="{% static '/assets/vendor/css/theme-default.css' %}" class="template-customizer-theme-css" />
+    <link rel="stylesheet" href="{% static '/assets/css/demo.css' %}" />
+
+    <!-- Vendors CSS -->
+    <link rel="stylesheet" href="{% static '/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+
+    <link rel="stylesheet" href="{% static '/assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+
+    <!-- Page CSS -->
+
+    <!-- Helpers -->
+    <script src="{% static '/assets/vendor/js/helpers.js' %}"></script>
+
+    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+    <script src="{% static '/assets/js/config.js' %}"></script>
+  </head>
+<style>
+  @import url("https://fonts.googleapis.com/css?family=Montserrat:100,200,300,400,500,600,700,800,900|Nunito:200,300,400,600,700,800,900&display=swap");
+/*font import from google fonts*/
+body {
+  font-family: "Nunito", sans-serif;
+  transition: all 0.5s ease;
+}
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Montserrat", sans-serif;
+}
+.page-wrap {
+  padding: 30px 15px;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  .page-not-found {
+    width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    .img-key {
+      margin-bottom: 0px;
+    }
+    h1.text-xl {
+      color: #000;
+      text-transform: uppercase;
+      line-height: 50px;
+      font-size: 160px;
+      font-weight: 800;
+      letter-spacing: -28px;
+      text-shadow: -6px 4px 0px #fff;
+      margin-left: -20px;
+      margin-top: 50px;
+      margin-bottom: 50px;
+      span {
+        transition: all 1s ease;
+        display: inline-block;
+        animation: pulse 5s infinite;
+      }
+    }
+    h4.text-md,
+    h4.text-sm {
+      letter-spacing: 0.38px;
+      font-weight: 300;
+      line-height: 20px;
+      font-size: 14px;
+      text-transform: none;
+      color: rgba(0, 0, 0, 0.5);
+      margin-bottom: 0px;
+      width: 100%;
+      a {
+        color: #1177bd;
+        text-decoration: underline;
+        font-weight: 700;
+        &:hover,
+        &:focus {
+          text-decoration: none;
+        }
+      }
+    }
+    h4.text-md {
+      font-size: 50px;
+      font-weigth: 700;
+      color: #1177bd;
+      text-transform: none;
+    }
+    h4.text-sm-btm {
+      top: auto;
+      bottom: 40px;
+    }
+  }
+}
+@keyframes pulse {
+  0% {
+    color: #000;
+  }
+  50% {
+    color: rgba(240, 48, 48, 1);
+  }
+  100% {
+    color: #000;
+  }
+}
+@media (max-width: 768px) {
+  .page-wrap {
+    .page-not-found {
+      h1.text-xl {
+        font-size: 120px;
+        letter-spacing: -20px;
+        margin-bottom: 30px;
+      }
+      h4.text-sm {
+        top: 10px;
+      }
+      h4.text-sm-btm {
+        bottom: -60px;
+      }
+      h4.text-md {
+        font-size: 30px;
+      }
+    }
+  }
+}
+
+</style>
+<style>
+    .img-key {
+      width: 120px;
+      display: block;
+      margin: 0 auto 20px auto; /* center + bottom margin */
+    }
+    .text-xl {
+      font-size: 48px;
+      font-weight: bold;
+    }
+    .text-md {
+      font-size: 24px;
+      margin: 10px 0;
+    }
+    .text-sm {
+      font-size: 16px;
+    }
+    .text-sm-btm {
+      color: #666;
+    }
+    .broken {
+      color: #dc3545; /* red */
+    }
+  </style>
+
+<body class="d-flex justify-content-center align-items-center vh-100">
+  <div class="page-wrap items-center text-center">
+    <div class="page-not-found">
+        <img src="https://res.cloudinary.com/razeshzone/image/upload/v1588316204/house-key_yrqvxv.svg" class="img-key" alt="Key Icon">
+      <h1 class="text-xl">
+        <span>4</span>
+        <span>0</span>
+        <span class="broken">4</span>
+      </h1>
+      <h4 class="text-md" style="padding-bottom: 15px">Not Found!</h4>
+      <h4 class="text-sm text-sm-btm">
+        The page you are looking for doesn't exist. 
+        <a href="#" onclick="history.back()">previous page</a>
+      </h4>
+    </div>
+  </div>
+</body>
+
+
+</html>
