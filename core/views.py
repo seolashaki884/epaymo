@@ -25,6 +25,8 @@ import base64
 import requests
 import uuid
 import logging
+from itertools import chain
+from operator import itemgetter
 from pathlib import Path
 from django.core.files.storage import default_storage
 import os
@@ -280,9 +282,17 @@ def billing_prep(request):
 
 @login_required(login_url='login')
 def adminhome(request):
-    # Ensure that the logged-in user is a staff member
+    # Ensure the logged-in user is a staff member
     if not request.user.is_staff:
-        return render(request, 'core/login.html')
+        return redirect('error')  # Better to redirect than render login again
+
+    # Check if the user has a profile and the correct category
+    try:
+        profile = request.user.userprofile
+        if not profile.category or profile.category != 'bidding_documents':
+            return redirect('error')
+    except UserProfile.DoesNotExist:
+        return redirect('error')  # Handle users without a profile
 
     # Filter logs for the logged-in user
     logs = LogEntry.objects.filter(user=request.user).order_by('-action_time')
@@ -291,6 +301,18 @@ def adminhome(request):
 
 @login_required(login_url='login')
 def BAC(request):
+
+    if not request.user.is_staff:
+        return redirect('error')
+
+    # Check if the user has a profile and the correct category
+    try:
+        profile = request.user.userprofile
+        if not profile.category or profile.category != 'bidding_documents':
+            return redirect('error')
+    except UserProfile.DoesNotExist:
+        return redirect('error')  # Handle users without a profile
+    
     if request.method == 'POST':
         title = request.POST.get('title')
         description = request.POST.get('description')
@@ -354,6 +376,18 @@ def BAC(request):
 
 @login_required(login_url='login')
 def bac_edit(request):
+    if not request.user.is_staff:
+        return redirect('error')
+
+    # Check if the user has a profile and the correct category
+    try:
+        profile = request.user.userprofile
+        if not profile.category or profile.category != 'bidding_documents':
+            return redirect('error')
+        
+    except UserProfile.DoesNotExist:
+        return redirect('error')  # Handle users without a profile
+    
     documents = Document.objects.all().order_by('-id')
     return render(request, 'bac-admin/BAC-edit.html', {'documents': documents})
 
@@ -459,6 +493,7 @@ def delete_document(request, doc_id):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=400)
 
 def rentals(request):
+    
     today = timezone.now().date()
 
     rented_equipment_ids = RentalRequest.objects.filter(
@@ -481,6 +516,18 @@ def rentals(request):
 
 @login_required(login_url='login')
 def biddings(request):
+
+    if not request.user.is_staff:
+        return redirect('error')
+
+    # Check if the user has a profile and the correct category
+    try:
+        profile = request.user.userprofile
+        if not profile.category or profile.category != 'bidding_documents':
+            return redirect('error')
+    except UserProfile.DoesNotExist:
+        return redirect('error')  # Handle users without a profile
+    
     bids = Bid.objects.order_by('-bid_time')
     return render(request, 'bac-admin/BAC-biddings.html', {'bids': bids})
 
@@ -923,4 +970,68 @@ def validate_old_password(request):
 
 @login_required(login_url='login')
 def financedashboard(request):
-    return render(request, 'finance-admin/finance-dashboard.html')
+
+    if not request.user.is_staff:
+        return redirect('error')
+
+    # Check if the user has a profile and the correct category
+    try:
+        profile = request.user.userprofile
+        if not profile.category or profile.category != 'finance':
+            return redirect('error')
+    except UserProfile.DoesNotExist:
+        return redirect('error')  # Handle users without a profile
+    
+    paid_rentals = RentalRequest.objects.filter(payment_status='paid')
+    total_revenue = paid_rentals.aggregate(total=Sum('total_rent_cost'))['total'] or Decimal('0.00')
+
+    total_rentals = RentalRequest.objects.count()
+
+    top_equipment_rentals = Equipment.objects.annotate(
+        rental_count=Count('rental_requests')
+    ).order_by('-rental_count')[:4]
+
+    chart_labels = [eq.name for eq in top_equipment_rentals]
+    chart_data = [eq.rental_count for eq in top_equipment_rentals]
+
+    paid_bills = Billing.objects.filter(payment_status='paid').select_related('bid__document', 'bid__user')
+
+    rental_txns = [{
+        'type': 'rental',
+        'label': f"Rental: {rental.equipment.name}",
+        'description': rental.purpose[:30],
+        'amount': rental.total_rent_cost,
+        'image_url': rental.equipment.image.url if rental.equipment.image else None,
+    } for rental in paid_rentals]
+
+    billing_txns = [{
+        'type': 'billing',
+        'label': f"Bid: {bill.bid.document.title[:30]}",
+        'description': f"Invoice #{bill.invoice_number}",
+        'amount': bill.amount,
+        'image_url': bill.bid.document.image.url if bill.bid.document.image else None,
+    } for bill in paid_bills]
+
+    all_transactions = sorted(
+        chain(rental_txns, billing_txns),
+        key=itemgetter('amount'),
+        reverse=True
+    )
+
+    context = {
+        'total_revenue': total_revenue,
+        'total_rentals': total_rentals,
+        'top_equipment_rentals': top_equipment_rentals,
+        'chart_labels': json.dumps(chart_labels),
+        'chart_data': json.dumps(chart_data),
+        'transactions': all_transactions,
+    }
+
+    return render(request, 'finance-admin/finance-dashboard.html', context)
+
+
+def error(request):
+    return render(request, 'core/booterror.html')
+
+def custom_404_view(request, exception):
+    return render(request, 'core/404.html', {}, status=404)

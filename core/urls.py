@@ -2,6 +2,8 @@ from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
 from . import views
+from django.conf.urls import handler404
+from django.shortcuts import render
 
 urlpatterns = [
     path('home/', views.home, name='home'), 
@@ -45,7 +47,10 @@ urlpatterns = [
     path('user/profile/', views.profile, name='userProfile'),
     path('validate_old_password/', views.validate_old_password, name='validate_old_password'),
     path('finance-dashboard/', views.financedashboard, name='finance_dashboard'),
+    path('error/', views.error, name='error'),
 
 ]
+handler404 = 'core.views.custom_404_view'
+
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

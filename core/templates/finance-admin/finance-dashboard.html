@@ -44,6 +44,9 @@
     <link rel="stylesheet" href="{% static '/assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
 
     <link rel="stylesheet" href="{% static '/assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+    <!-- ApexCharts CDN -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
 
     <!-- Page CSS -->
 
@@ -170,64 +173,54 @@
               </div>
               <div class="row">
                 <!-- Order Statistics -->
-                <div class="col-md-6 col-lg-4 col-xl-4 order-0 mb-4">
-                  <div class="card h-100">
-                    <div class="card-header d-flex align-items-center justify-content-between pb-0">
-                      <div class="card-title mb-0">
-                        <h5 class="m-0 me-2">Rental Statistics</h5>
-                        <small class="text-muted">₱{{ total_revenue|floatformat:2 }} Total Revenue</small>
-
-                      </div>
-                      <div class="dropdown">
-                        <button
-                          class="btn p-0"
-                          type="button"
-                          id="rentalStatistics"
-                          data-bs-toggle="dropdown"
-                          aria-haspopup="true"
-                          aria-expanded="false"
-                        >
-                          <i class="bx bx-dots-vertical-rounded"></i>
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-end" aria-labelledby="rentalStatistics">
-                          <a class="dropdown-item" href="#">Filter</a>
-                          <a class="dropdown-item" href="#">Export</a>
-                          <a class="dropdown-item" href="#">Print</a>
-                        </div>
-                      </div>
+               <div class="col-md-6 col-lg-4 col-xl-4 order-0 mb-4">
+                 <div class="card h-100">
+                  <div class="card-header d-flex align-items-center justify-content-between pb-0">
+                    <div class="card-title mb-0">
+                      <h5 class="m-0 me-2">Rental Statistics</h5>
+                      <small class="text-muted">{{ equipment.rental_count }} Total Rents</small>
                     </div>
-                    <div class="card-body">
-                      <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex flex-column align-items-center gap-1">
-                          <h2 class="mb-2">{{ total_rentals }}</h2>
-                          <span>Total Rentals</span>
-                        </div>
-                        <div id="rentalStatisticsChart"></div>
+                    <div class="dropdown">
+                      <button class="btn p-0" type="button" id="orederStatistics" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="bx bx-dots-vertical-rounded"></i>
+                      </button>
+                      <div class="dropdown-menu dropdown-menu-end" aria-labelledby="orederStatistics">
+                        <a class="dropdown-item" href="javascript:void(0);">Select All</a>
+                        <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
+                        <a class="dropdown-item" href="javascript:void(0);">Share</a>
                       </div>
-                      <ul class="p-0 m-0">
-                        {% for equipment in top_equipment_rentals %}
-                          <li class="d-flex mb-4 pb-1">
-                            <div class="avatar flex-shrink-0 me-3">
-                              <span class="avatar-initial rounded bg-label-primary">
-                                <i class="bx bx-box"></i>
-                              </span>
-                            </div>
-                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                              <div class="me-2">
-                                <h6 class="mb-0">{{ equipment.name }}</h6>
-                                <small class="text-muted">{{ equipment.description|default:"No description" }}</small>
-                              </div>
-                              <div class="user-progress">
-                                <small class="fw-semibold">{{ equipment.rental_count }} rentals</small>
-                              </div>
-                            </div>
-                          </li>
-                        {% empty %}
-                          <li>No equipment rentals yet.</li>
-                        {% endfor %}
-                      </ul>                                          
                     </div>
                   </div>
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <div class="d-flex flex-column align-items-center gap-1">
+                         <h2 class="mb-2">{{ total_revenue }}</h2> <!-- Display total rent dynamically -->
+                         <span>Total Rent</span> <!-- Changed text -->
+                      </div>
+                      <div id="orderStatisticsChart"></div>
+                    </div>
+                    <ul class="p-0 m-0">
+                      {% for equipment in top_equipment_rentals %}
+                      <li class="d-flex mb-4 pb-1">
+                        <div class="avatar flex-shrink-0 me-3">
+                          <span class="avatar-initial rounded bg-label-primary">
+                            <img src="{{ equipment.image.url }}" alt="{{ equipment.name }}" class="img-fluid rounded" style="width: 40px; height: 40px;" />
+                          </span>
+                        </div>
+                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                          <div class="me-2">
+                            <h6 class="mb-0">{{ equipment.name }}</h6>
+                            <small class="text-muted">{{ equipment.category }}</small>  <!-- Assuming each equipment has a category -->
+                          </div>
+                          <div class="user-progress">
+                            <small class="fw-semibold">{{ equipment.rental_count }} rentals</small>  <!-- Display rental count -->
+                          </div>
+                        </div>
+                      </li>
+                      {% endfor %}
+                    </ul>
+                  </div>
+                </div>
                 </div>
                 
                 
@@ -307,96 +300,29 @@
                     </div>
                     <div class="card-body">
                       <ul class="p-0 m-0">
+                       {% for txn in transactions %}
                         <li class="d-flex mb-4 pb-1">
                           <div class="avatar flex-shrink-0 me-3">
-                            <img src="{% static '/assets/img/icons/unicons/paypal.png' %}" alt="User" class="rounded" />
+                            {% if txn.image_url %}
+                              <img src="{{ txn.image_url }}" alt="Transaction" class="rounded" width="40" height="40" />
+                            {% else %}
+                              <img src="{% static 'assets/img/icons/unicons/default.png' %}" alt="Default Icon" class="rounded" width="40" height="40" />
+                            {% endif %}
                           </div>
                           <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
                             <div class="me-2">
-                              <small class="text-muted d-block mb-1">Paypal</small>
-                              <h6 class="mb-0">Send money</h6>
+                              <small class="text-muted d-block mb-1">{{ txn.label }}</small>
+                              <h6 class="mb-0">{{ txn.description }}</h6>
                             </div>
                             <div class="user-progress d-flex align-items-center gap-1">
-                              <h6 class="mb-0">+82.6</h6>
-                              <span class="text-muted">USD</span>
+                              <h6 class="mb-0">+{{ txn.amount }}</h6>
+                              <span class="text-muted">PHP</span>
                             </div>
                           </div>
                         </li>
-                        <li class="d-flex mb-4 pb-1">
-                          <div class="avatar flex-shrink-0 me-3">
-                            <img src="{% static '/assets/img/icons/unicons/wallet.png' %}" alt="User" class="rounded" />
-                          </div>
-                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                              <small class="text-muted d-block mb-1">Wallet</small>
-                              <h6 class="mb-0">Mac'D</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-1">
-                              <h6 class="mb-0">+270.69</h6>
-                              <span class="text-muted">USD</span>
-                            </div>
-                          </div>
-                        </li>
-                        <li class="d-flex mb-4 pb-1">
-                          <div class="avatar flex-shrink-0 me-3">
-                            <img src="{% static '/assets/img/icons/unicons/chart.png' %}" alt="User" class="rounded" />
-                          </div>
-                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                              <small class="text-muted d-block mb-1">Transfer</small>
-                              <h6 class="mb-0">Refund</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-1">
-                              <h6 class="mb-0">+637.91</h6>
-                              <span class="text-muted">USD</span>
-                            </div>
-                          </div>
-                        </li>
-                        <li class="d-flex mb-4 pb-1">
-                          <div class="avatar flex-shrink-0 me-3">
-                            <img src="{% static '/assets/img/icons/unicons/cc-success.png' %}" alt="User" class="rounded" />
-                          </div>
-                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                              <small class="text-muted d-block mb-1">Credit Card</small>
-                              <h6 class="mb-0">Ordered Food</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-1">
-                              <h6 class="mb-0">-838.71</h6>
-                              <span class="text-muted">USD</span>
-                            </div>
-                          </div>
-                        </li>
-                        <li class="d-flex mb-4 pb-1">
-                          <div class="avatar flex-shrink-0 me-3">
-                            <img src="{% static '/assets/img/icons/unicons/wallet.png' %}" alt="User" class="rounded" />
-                          </div>
-                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                              <small class="text-muted d-block mb-1">Wallet</small>
-                              <h6 class="mb-0">Starbucks</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-1">
-                              <h6 class="mb-0">+203.33</h6>
-                              <span class="text-muted">USD</span>
-                            </div>
-                          </div>
-                        </li>
-                        <li class="d-flex">
-                          <div class="avatar flex-shrink-0 me-3">
-                            <img src="{% static '/assets/img/icons/unicons/cc-warning.png' %}" alt="User" class="rounded" />
-                          </div>
-                          <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                              <small class="text-muted d-block mb-1">Mastercard</small>
-                              <h6 class="mb-0">Ordered Food</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-1">
-                              <h6 class="mb-0">-92.45</h6>
-                              <span class="text-muted">USD</span>
-                            </div>
-                          </div>
-                        </li>
+                        {% empty %}
+                        <li class="text-muted text-center py-3">No paid transactions available.</li>
+                        {% endfor %}
                       </ul>
                     </div>
                   </div>
@@ -405,6 +331,82 @@
               </div>
             </div>
             <!-- / Content -->
+         <script>
+            document.addEventListener("DOMContentLoaded", function () {
+              const chartOrderStatistics = document.querySelector('#orderStatisticsChart');
+              const labels = {{ chart_labels|default:"['No Data']"|safe }};  // Render labels from Django template
+              const series = {{ chart_data|default:"[0]"|safe }};  // Render data from Django template
+
+              const orderChartConfig = {
+                chart: {
+                  height: 165,
+                  width: 130,
+                  type: 'donut',
+                },
+                labels: labels,
+                series: series,
+                // Define your colors for the chart
+                colors: ['#696CFF', '#71DD37', '#03C3EC', '#8592A3', '#FFAB00'],
+                
+                dataLabels: {
+                  enabled: false,
+                },
+                legend: {
+                  show: false,
+                },
+                grid: {
+                  padding: {
+                    top: 0,
+                    bottom: 0,
+                    right: 15,
+                  },
+                },
+                plotOptions: {
+                  pie: {
+                    donut: {
+                      size: '75%',
+                      labels: {
+                        show: true,
+                        value: {
+                          fontSize: '1.5rem',
+                          fontFamily: 'Public Sans',
+                          color: '#333', // Set this color for value text
+                          offsetY: -15,
+                          formatter: function (val) {
+                            return parseInt(val) + '%';
+                          },
+                        },
+                        name: {
+                          offsetY: 20,
+                          fontFamily: 'Public Sans',
+                        },
+                        total: {
+                          show: true,
+                          fontSize: '0.8125rem',
+                          color: '#666',  // Set color for the total label
+                          label: 'Weekly',
+                          formatter: function (w) {
+                            const total = w.globals.seriesTotals.reduce((a, b) => a + b, 0);
+                            return total + ' total';
+                          },
+                        },
+                      },
+                    },
+                  },
+                },
+              };
+
+              // Create and render the chart
+              if (chartOrderStatistics !== null) {
+                const statisticsChart = new ApexCharts(chartOrderStatistics, orderChartConfig);
+                statisticsChart.render();
+              }
+            });
+          </script>
+
+
+
+  
 
 
             <div class="content-backdrop fade"></div>
