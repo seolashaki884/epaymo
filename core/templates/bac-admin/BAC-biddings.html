@@ -253,40 +253,102 @@
           </div>
 
           <div class="modal fade" id="bidModal" tabindex="-1" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-dialog modal-dialog-centered modal-xl" role="document">
               <div class="modal-content">
                 <div class="modal-header">
                   <h5 class="modal-title">View/Edit Bid</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body">
-                  <form id="bidEditForm">
-                    {% csrf_token %}
-                    <input type="hidden" id="bidId">
-                    <div class="mb-3">
-                      <label class="form-label">Document Title</label>
-                      <input type="text" id="bidDocTitle" class="form-control" readonly>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Bidder</label>
-                      <input type="text" id="bidUser" class="form-control" readonly>
-                    </div>
-                    <div class="mb-3">
-                      <label class="form-label">Document Price</label>
-                      <input type="text" id="bidPrice" class="form-control" readonly>
-                    </div>
-                    <div class="mb-3" id="statusDropdownContainer">
-                      <label class="form-label">Status</label>
-                      <select id="bidStatus" class="form-select">
-                        <option value="pending">Pending</option>
-                        <option value="approved">Approved</option>
-                        <option value="under_review">Under Review</option>
-                        <option value="rejected">Rejected</option>
-                      </select>
-                    </div>
-                    
-                  </form>
-                </div>
+                  <div class="modal-body">
+                    <form id="bidEditForm">
+                      {% csrf_token %}
+                      <input type="hidden" id="bidId">
+
+                      <div class="row">
+                        <!-- Column 1: Document Details -->
+                        <div class="col-md-4 mb-4">
+                          <h6>📄 Document Details</h6>
+
+                          <label class="form-label">Title</label>
+                          <input type="text" id="documentTitle" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Description</label>
+                          <textarea id="documentDescription" class="form-control mb-2" rows="2" readonly></textarea>
+
+                          <label class="form-label">Category</label>
+                          <input type="text" id="documentCategory" class="form-control mb-2" readonly>
+
+                          <label class="form-label">ABC</label>
+                          <input type="text" id="documentABC" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Price</label>
+                          <input type="text" id="documentPrice" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Image</label>
+                          <a id="documentImage" class="form-control mb-2 text-decoration-underline" href="#" target="_blank">View Image</a>
+
+                          <label class="form-label">Start Date</label>
+                          <input type="text" id="biddingStartDate" class="form-control mb-2" readonly>
+
+                          <label class="form-label">End Date</label>
+                          <input type="text" id="biddingEndDate" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Region</label>
+                          <input type="text" id="region" class="form-control" readonly>
+                        </div>
+
+                        <!-- Column 2: Bid Details -->
+                        <div class="col-md-4 mb-4">
+                          <h6>📝 Bid Details</h6>
+
+                          <label class="form-label">Document Title</label>
+                          <input type="text" id="bidDocTitle" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Bidder</label>
+                          <input type="text" id="bidUser" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Proposed Price</label>
+                          <input type="text" id="bidPrice" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Bid Time</label>
+                          <input type="text" id="bidTime" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Status</label>
+                          <select id="bidStatus" class="form-select">
+                            <option value="pending">Pending</option>
+                            <option value="approved">Approved</option>
+                            <option value="under_review">Under Review</option>
+                            <option value="rejected">Rejected</option>
+                            <option value="cancelled">Cancelled</option>
+                            <option value="paid">Paid</option>
+                          </select>
+                        </div>
+
+                        <!-- Column 3: Billing Details -->
+                        <div class="col-md-4 mb-4">
+                          <h6>💳 Billing Details</h6>
+
+                          <label class="form-label">Full Name</label>
+                          <input type="text" id="billingFullName" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Email</label>
+                          <input type="text" id="billingEmail" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Invoice #</label>
+                          <input type="text" id="billingInvoice" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Amount</label>
+                          <input type="text" id="billingAmount" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Issued Date</label>
+                          <input type="text" id="billingIssuedDate" class="form-control mb-2" readonly>
+
+                          <label class="form-label">Payment Status</label>
+                          <input type="text" id="billingPaymentStatus" class="form-control" readonly>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
                 <div class="modal-footer">
                   <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
                   <button type="button" class="btn btn-primary" onclick="saveBidStatus()">Save Changes</button>
@@ -299,6 +361,8 @@
             function saveBidStatus() {
               const bidId = $('#bidId').val();
               const status = $('#bidStatus').val();
+              // Disable status select if status is "paid"
+
             
               // Show confirmation dialog
               Swal.fire({
@@ -373,16 +437,82 @@
             </script>
             <script>
               function openBidModal(bidId) {
-                // Fetch bid details
                 fetch(`/bids/${bidId}/json/`)
-                  .then(response => response.json())
+                  .then(response => {
+                    if (!response.ok) {
+                      throw new Error('Failed to fetch bid data');
+                    }
+                    return response.json();
+                  })
                   .then(data => {
-                    $('#bidId').val(data.id);
-                    $('#bidDocTitle').val(data.document_title);
-                    $('#bidUser').val(data.user_full_name);
-                    $('#bidPrice').val(data.proposed_price);
-                    $('#bidStatus').val(data.status);
-            
+                    // Safe update function
+                    const setValue = (id, value) => {
+                      const el = document.getElementById(id);
+                      if (el) el.value = value;
+                    };
+                    const setLink = (id, url) => {
+                      const el = document.getElementById(id);
+                      if (el) {
+                        el.href = url || '#';
+                        el.textContent = url ? 'View Image' : 'No Image';
+                      }
+                    };
+
+                    // Bid Info
+                    setValue('bidId', data.id);
+                    setValue('bidDocTitle', data.document_title);
+                    setValue('bidUser', data.user_full_name);
+                    setValue('bidPrice', data.proposed_price);
+                    setValue('bidTime', data.bid_time);
+
+                    // Document Info
+                    setValue('documentTitle', data.document_title);
+                    setValue('documentDescription', data.document_description);
+                    setValue('documentCategory', data.document_category);
+                    setValue('documentABC', data.documentABC);
+                    setValue('documentPrice', data.documentPrice);
+                    setLink('documentImage', data.documentImage);
+                    setValue('biddingStartDate', data.biddingStartDate);
+                    setValue('biddingEndDate', data.biddingEndDate);
+                    setValue('region', data.region);
+
+                    // Billing Info
+                    if (data.billing) {
+                      setValue('billingFullName', data.billing.full_name);
+                      setValue('billingEmail', data.billing.email_add);
+                      setValue('billingInvoice', data.billing.invoice_number);
+                      setValue('billingAmount', data.billing.amount);
+                      setValue('billingIssuedDate', data.billing.issued_date);
+                      setValue('billingPaymentStatus', data.billing.payment_status);
+                    } else {
+                      // If billing doesn't exist, set to N/A or empty
+                      setValue('billingFullName', 'N/A');
+                      setValue('billingEmail', 'N/A');
+                      setValue('billingInvoice', 'N/A');
+                      setValue('billingAmount', 'N/A');
+                      setValue('billingIssuedDate', 'N/A');
+                      setValue('billingPaymentStatus', 'N/A');
+                    }
+
+                    // Select the correct status in the dropdown
+                    const statusSelect = document.getElementById('bidStatus');
+                    const paidOption = document.querySelector('#bidStatus option[value="paid"]');
+                    
+                    if (statusSelect) {
+                      // Set the correct status value
+                      statusSelect.value = data.status;  // Automatically set to 'paid' if status is 'paid'
+
+                      // If the status is 'paid', disable the select and hide the 'paid' option
+                      if (data.status === 'paid') {
+                        statusSelect.disabled = true;  // Disable select if status is 'paid'
+                      } else {
+                        statusSelect.disabled = false;  // Enable select if not 'paid'
+                        if (paidOption) {
+                          paidOption.style.display = 'none';  // Hide 'paid' option if not paid
+                        }
+                      }
+                    }
+
                     // Show the modal
                     const modal = new bootstrap.Modal(document.getElementById('bidModal'));
                     modal.show();
@@ -402,6 +532,13 @@
                   });
               }
             </script>
+
+
+
+
+
+
+
             
 
                

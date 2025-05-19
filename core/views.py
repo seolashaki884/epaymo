@@ -99,6 +99,8 @@ def user_login(request):
                     return redirect('admin-home')  # path('adminhome/', ...)
                 elif user_profile.category == 'equipment_rental':
                     return redirect('equipmentdashboard')
+                elif user_profile.category == 'finance':
+                    return redirect('finance_dashboard')
                 else:
                     return redirect('homeboot')
             except UserProfile.DoesNotExist:
@@ -547,15 +549,40 @@ def cancel_bid(request, bid_id):
 def get_bid_json(request, bid_id):
     try:
         bid = Bid.objects.select_related('user', 'document').get(id=bid_id)
-        return JsonResponse({
+        document = bid.document
+        billing = getattr(bid, 'billing', None)
+
+        data = {
             'id': bid.id,
-            'document_title': bid.document.title,
+            'document_title': document.title,
+            'document_description': document.description,
+            'document_category': document.get_category_display(),
+            'documentABC': str(document.abc),
+            'documentPrice': str(document.price),
+            'documentImage': document.image.url if document.image else '',
+            'biddingStartDate': document.bidding_start_date.strftime('%Y-%m-%d %H:%M:%S') if document.bidding_start_date else '',
+            'biddingEndDate': document.bidding_end_date.strftime('%Y-%m-%d %H:%M:%S') if document.bidding_end_date else '',
+            'region': document.region,
+
             'user_full_name': bid.user.get_full_name() or bid.user.username,
             'proposed_price': str(bid.proposed_price),
+            'bid_time': bid.bid_time.strftime('%Y-%m-%d %H:%M:%S'),
             'status': bid.status,
-        })
+
+            'billing': {
+                'full_name': billing.full_name,
+                'email_add': billing.email_add,
+                'invoice_number': billing.invoice_number,
+                'amount': str(billing.amount),
+                'issued_date': billing.issued_date.strftime('%Y-%m-%d'),
+                'payment_status': billing.payment_status,
+            } if billing else None
+        }
+
+        return JsonResponse(data)
     except Bid.DoesNotExist:
         return JsonResponse({'error': 'Bid not found'}, status=404)
+
 
 @login_required(login_url='login')
 @csrf_exempt  # Use this only in development, or handle CSRF token properly
@@ -967,35 +994,34 @@ def validate_old_password(request):
             return JsonResponse({'is_old_password_correct': False})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
-
-@login_required(login_url='login')
 def financedashboard(request):
-
     if not request.user.is_staff:
         return redirect('error')
 
-    # Check if the user has a profile and the correct category
     try:
         profile = request.user.userprofile
         if not profile.category or profile.category != 'finance':
             return redirect('error')
     except UserProfile.DoesNotExist:
-        return redirect('error')  # Handle users without a profile
-    
+        return redirect('error')
+
+    # Fetch paid rentals and associated transactions
     paid_rentals = RentalRequest.objects.filter(payment_status='paid')
     total_revenue = paid_rentals.aggregate(total=Sum('total_rent_cost'))['total'] or Decimal('0.00')
 
-    total_rentals = RentalRequest.objects.count()
-
+    # Get the top 4 equipment rentals
     top_equipment_rentals = Equipment.objects.annotate(
         rental_count=Count('rental_requests')
     ).order_by('-rental_count')[:4]
 
+    # Extracting chart labels and data for equipment
     chart_labels = [eq.name for eq in top_equipment_rentals]
     chart_data = [eq.rental_count for eq in top_equipment_rentals]
 
+    # Fetch paid bills and related transactions
     paid_bills = Billing.objects.filter(payment_status='paid').select_related('bid__document', 'bid__user')
 
+    # Prepare rental transactions
     rental_txns = [{
         'type': 'rental',
         'label': f"Rental: {rental.equipment.name}",
@@ -1004,6 +1030,7 @@ def financedashboard(request):
         'image_url': rental.equipment.image.url if rental.equipment.image else None,
     } for rental in paid_rentals]
 
+    # Prepare billing transactions
     billing_txns = [{
         'type': 'billing',
         'label': f"Bid: {bill.bid.document.title[:30]}",
@@ -1012,23 +1039,52 @@ def financedashboard(request):
         'image_url': bill.bid.document.image.url if bill.bid.document.image else None,
     } for bill in paid_bills]
 
+    # Combine all transactions and sort by amount
     all_transactions = sorted(
         chain(rental_txns, billing_txns),
         key=itemgetter('amount'),
         reverse=True
     )
 
+    # Get all bids for statistics (not just approved)
+    bids_by_status = Bid.objects.values('status').annotate(count=Count('id')).order_by('status')
+    
+    bids_by_document = Bid.objects.values('document__title').annotate(
+        count=Count('id')
+    ).order_by('-count')[:6]  # Get top 6 documents with most bids
+
+    # Prepare bidding statistics data
+    bidding_labels = [doc['document__title'][:15] + '...' if len(doc['document__title']) > 15 else doc['document__title'] for doc in bids_by_document]
+    bidding_data = [doc['count'] for doc in bids_by_document]
+    
+    
+    # Get top bids for the list display (same as before)
+    top_bids = Bid.objects.select_related('document', 'user').order_by('-proposed_price')[:5]
+
+    bids_by_status = Bid.objects.values('status').annotate(count=Count('id')).order_by('status')
+    total_bids = Bid.objects.count()
+    
+    # Get document-wise bid counts
+    bids_by_document = Bid.objects.values('document__title').annotate(
+        count=Count('id')
+    ).order_by('-count')[:6]  # Get top 6 documents with most bids
+
+    # Prepare chart data
     context = {
         'total_revenue': total_revenue,
-        'total_rentals': total_rentals,
         'top_equipment_rentals': top_equipment_rentals,
         'chart_labels': json.dumps(chart_labels),
         'chart_data': json.dumps(chart_data),
         'transactions': all_transactions,
+        'status_labels': json.dumps([dict(Bid.STATUS_CHOICES).get(status['status'], status['status']) for status in bids_by_status]),
+        'status_data': json.dumps([status['count'] for status in bids_by_status]),
+        'document_labels': json.dumps([doc['document__title'][:15] + '...' if len(doc['document__title']) > 15 else doc['document__title'] for doc in bids_by_document]),
+        'document_data': json.dumps([doc['count'] for doc in bids_by_document]),
+        'top_bids': top_bids,
+        'total_bids': total_bids,
     }
 
     return render(request, 'finance-admin/finance-dashboard.html', context)
-
 
 def error(request):
     return render(request, 'core/booterror.html')
