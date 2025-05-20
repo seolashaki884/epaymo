@@ -48,6 +48,9 @@ urlpatterns = [
     path('validate_old_password/', views.validate_old_password, name='validate_old_password'),
     path('finance-dashboard/', views.financedashboard, name='finance_dashboard'),
     path('error/', views.error, name='error'),
+    path('export/pdf/', views.export_transactions_pdf, name='export_transactions_pdf'),
+    path('export/excel/', views.export_transactions_excel, name='export_transactions_excel'),
+    path('finance/profile/', views.financeprofile, name='finance-profile')
 
 ]
 handler404 = 'core.views.custom_404_view'

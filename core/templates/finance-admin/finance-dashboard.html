@@ -86,21 +86,21 @@
                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                   <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                     <div class="avatar avatar-online">
-                      <img src="https://www.shareicon.net/data/512x512/2017/02/05/878221_user_512x512.png" alt class="w-px-40 h-auto rounded-circle" />
+                      <img src="{% if request.user.userprofile.profile_image %}{{ request.user.userprofile.profile_image.url }}{% else %}https://www.shareicon.net/data/512x512/2017/02/05/878221_user_512x512.png{% endif %}" alt class="w-px-40 h-auto rounded-circle" />
                     </div>
                   </a>
                   <ul class="dropdown-menu dropdown-menu-end">
                     <li>
-                      <a class="dropdown-item" href="#">
+                      <a class="dropdown-item" href="{% url 'finance-profile' %}">
                         <div class="d-flex">
                           <div class="flex-shrink-0 me-3">
                             <div class="avatar avatar-online">
-                              <img src="https://www.shareicon.net/data/512x512/2017/02/05/878221_user_512x512.png" alt class="w-px-40 h-auto rounded-circle" />
+                               <img src="{% if request.user.userprofile.profile_image %}{{ request.user.userprofile.profile_image.url }}{% else %}https://www.shareicon.net/data/512x512/2017/02/05/878221_user_512x512.png{% endif %}" alt class="w-px-40 h-auto rounded-circle" />
                             </div>
                           </div>
                           <div class="flex-grow-1">
-                            <span class="fw-semibold d-block">John Doe</span>
-                            <small class="text-muted">Admin</small>
+                            <span class="fw-semibold d-block">{{ request.user.get_full_name }}</span>
+                            <small class="text-muted">Finance Admin</small>
                           </div>
                         </div>
                       </a>
@@ -217,6 +217,7 @@
 
                 <!-- Transactions -->
                 <div class="col-md-6 col-lg-4 order-2 mb-4">
+                  
                   <div class="card h-100">
                     <div class="card-header d-flex align-items-center justify-content-between">
                       <h5 class="card-title m-0 me-2">Transactions</h5>
@@ -253,9 +254,6 @@
                 </div>
                 <!--/ Transactions -->
               </div>
-
-
-
               
               <div class="row">
                 <div class="col-lg mb-4 order-0">
@@ -263,11 +261,11 @@
                   <div class="d-flex justify-content-between align-items-center">
                     <h5 class="card-header m-0">Transaction Table</h5>
                     <div class="me-3 mt-2">
-                      <a href="#" class="btn btn-primary">
-                        Export as PDF
+                      <a href="{% url 'export_transactions_pdf' %}" class="btn btn-primary">
+                        <i class="fas fa-file-pdf"></i> Export as PDF
                       </a>
-                       <a href="#" class="btn btn-primary">
-                        Export as Excel
+                      <a href="{% url 'export_transactions_excel' %}" class="btn btn-primary">
+                        <i class="fas fa-file-excel"></i> Export as Excel
                       </a>
                     </div>
                   </div>
@@ -359,7 +357,7 @@
                             color: '#333',
                             offsetY: -15,
                             formatter: function (val) {
-                              return parseInt(val) + '%';
+                              return parseInt(val);
                             },
                           },
                           name: {
