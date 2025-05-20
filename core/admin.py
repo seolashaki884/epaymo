@@ -55,20 +55,6 @@ class DocumentAdmin(admin.ModelAdmin):
         return f"₱ {intcomma(f'{obj.price:.2f}')}"
     formatted_price.short_description = 'Price'
 
-@admin.register(Bid)
-class BidADmin(admin.ModelAdmin):
-    list_display = ('user', 'document', 'bid_time', 'status')
-
-
-@admin.register(Cart)
-class CartAdmin(admin.ModelAdmin):
-    list_display = ('user', 'document', 'quantity', 'added_at', 'formatted_total_price')
-
-    def formatted_total_price(self, obj):
-        return intcomma(obj.total_price())  # Format total price with commas
-    formatted_total_price.short_description = 'Total Price'
-
-
 class EmailAuthenticationForm(AuthenticationForm):
     username = forms.EmailField(label=_("Email"), widget=forms.TextInput(attrs={"autofocus": True}))
 

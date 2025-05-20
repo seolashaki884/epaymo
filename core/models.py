@@ -4,13 +4,7 @@ from django.utils import timezone
 
 class UserProfile(models.Model):
     CATEGORY_CHOICES = [
-    ('drainage_fee', 'Drainage Fee'),
     ('equipment_rental', 'Equipment Rental'),
-    ('filling_fee_certification', 'Filling Fee/Certification'),
-    ('inspection_fee', 'Inspection Fee'),
-    ('irrigation_services_fee', 'Irrigation Services Fee'),
-    ('scraped_fix_assets', 'Scraped Fix Assets'),
-    ('verification_authentication', 'Verification and Authentication'),
     ('bidding_documents', 'Bidding Documents'),
     ('finance', 'Finance'),
 
