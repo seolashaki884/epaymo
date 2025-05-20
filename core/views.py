@@ -28,6 +28,7 @@ import logging
 from itertools import chain
 from operator import itemgetter
 from pathlib import Path
+from django.contrib.auth.hashers import check_password
 from django.core.files.storage import default_storage
 import os
 from django.db.models import Sum, Count, Case, When, Value, IntegerField
@@ -85,6 +86,14 @@ def user_login(request):
             messages.error(request, "This email is not registered. Please check and try again.")
             return render(request, "core/login.html", {'email': email})
 
+        if not user_obj.check_password(password):
+            messages.error(request, "Invalid password. Please try again.")
+            return render(request, "core/login.html", {'email': email})
+
+        if not user_obj.is_active:
+            messages.error(request, "Your account is disabled. Please contact the administrator.")
+            return render(request, "core/login.html", {'email': email})
+
         user = authenticate(request, username=user_obj.username, password=password)
 
         if user is not None:
@@ -104,18 +113,9 @@ def user_login(request):
                 else:
                     return redirect('homeboot')
             except UserProfile.DoesNotExist:
-                # No UserProfile found, fallback
-                if user.is_staff:
-                    return redirect('/home/')
                 return redirect('homeboot')
 
-        else:
-            messages.error(request, "Invalid password. Please try again.")
-            return render(request, "core/login.html", {'email': email})
-
     return render(request, "core/login.html")
-
-
 
 def signup(request):
     if request.method == "POST":
@@ -285,8 +285,7 @@ def billing_prep(request):
 @login_required(login_url='login')
 def adminhome(request):
     # Ensure the logged-in user is a staff member
-    if not request.user.is_staff:
-        return redirect('error')  # Better to redirect than render login again
+
 
     # Check if the user has a profile and the correct category
     try:
@@ -304,8 +303,6 @@ def adminhome(request):
 @login_required(login_url='login')
 def BAC(request):
 
-    if not request.user.is_staff:
-        return redirect('error')
 
     # Check if the user has a profile and the correct category
     try:
@@ -378,8 +375,7 @@ def BAC(request):
 
 @login_required(login_url='login')
 def bac_edit(request):
-    if not request.user.is_staff:
-        return redirect('error')
+
 
     # Check if the user has a profile and the correct category
     try:
@@ -519,8 +515,6 @@ def rentals(request):
 @login_required(login_url='login')
 def biddings(request):
 
-    if not request.user.is_staff:
-        return redirect('error')
 
     # Check if the user has a profile and the correct category
     try:
@@ -995,8 +989,6 @@ def validate_old_password(request):
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def financedashboard(request):
-    if not request.user.is_staff:
-        return redirect('error')
 
     try:
         profile = request.user.userprofile

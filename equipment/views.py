@@ -23,8 +23,6 @@ from django.db.models import Sum, Count, Case, When, Value, IntegerField
 
 @login_required(login_url='login')
 def equipment(request):
-    if not request.user.is_staff:
-        return redirect('error')
 
     # Check if the user has a profile and the correct category
     try:
@@ -240,8 +238,6 @@ def check_equipment_availability(request, rental_id):
 
 @login_required(login_url='login')
 def rental_requests_list(request):
-    if not request.user.is_staff:
-        return redirect('error')
 
     # Check if the user has a profile and the correct category
     try:
@@ -256,8 +252,6 @@ def rental_requests_list(request):
 
 @login_required(login_url='login')
 def dashboard(request):
-    if not request.user.is_staff:
-        return redirect('error')
 
     # Check if the user has a profile and the correct category
     try:
@@ -272,8 +266,6 @@ def dashboard(request):
 
 @login_required(login_url='login')
 def equipment_list(request):
-    if not request.user.is_staff:
-        return redirect('error')
 
     # Check if the user has a profile and the correct category
     try:
@@ -286,8 +278,6 @@ def equipment_list(request):
     return render(request, 'equipment-admin/equipment-edit.html', { 'equipment_list': equipment_list })
 
 def rental_statistics_view(request):
-    if not request.user.is_staff:
-        return redirect('error')
 
     # Check if the user has a profile and the correct category
     try:

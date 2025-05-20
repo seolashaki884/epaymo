@@ -189,8 +189,8 @@
                                 <li class="d-flex mb-4 pb-1">
                                     <div class="avatar flex-shrink-0 me-3">
                                         <span class="avatar-initial rounded bg-label-primary">
-                                            {% if bid.user.userprofile.profile_picture %}
-                                                <img src="{{ bid.user.userprofile.profile_picture.url }}" alt="{{ bid.user.username }}" class="img-fluid rounded" style="width: 40px; height: 40px;" />
+                                            {% if bid.document.image %}
+                                                <img src="{{ bid.document.image.url }}" alt="{{ bid.user.username }}" class="img-fluid rounded" style="width: 40px; height: 40px;" />
                                             {% else %}
                                                 <i class="bx bx-user"></i>
                                             {% endif %}
