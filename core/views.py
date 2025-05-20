@@ -9,7 +9,11 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.db import transaction
 from decimal import Decimal
+from reportlab.lib.pagesizes import A4, landscape
 from .models import UserProfile
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from equipment.models import Equipment, RentalRequest
 import random
 from django.core.mail import send_mail
@@ -20,9 +24,13 @@ from django.contrib.contenttypes.models import ContentType
 from datetime import datetime
 from django.utils import timezone
 from django.utils.timezone import now as timezone_now
-import pytz
-import base64
-import requests
+import pytz, base64, requests
+from django.http import HttpResponse
+from openpyxl import Workbook
+from io import BytesIO
+from reportlab.pdfgen import canvas
+from itertools import chain
+from operator import itemgetter
 import uuid
 import logging
 from itertools import chain
@@ -1078,8 +1086,199 @@ def financedashboard(request):
 
     return render(request, 'finance-admin/finance-dashboard.html', context)
 
+
+def export_transactions_excel(request):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Transactions"
+
+    # Headers
+    headers = ['Type', 'Label', 'Description', 'Amount']
+    ws.append(headers)
+
+    # Format
+    currency_format = '₱ #,##0.00'
+
+    # Fetch data
+    paid_rentals = RentalRequest.objects.filter(payment_status='paid')
+    paid_bills = Billing.objects.filter(payment_status='paid').select_related('bid__document', 'bid__user')
+
+    rental_txns = [{
+        'type': 'Rental',
+        'label': f"Rental: {rental.equipment.name}",
+        'description': rental.purpose[:30],
+        'amount': float(rental.total_rent_cost),
+    } for rental in paid_rentals]
+
+    billing_txns = [{
+        'type': 'Bidding',
+        'label': f"Bid: {bill.bid.document.title[:30]}",
+        'description': f"Invoice #{bill.invoice_number}",
+        'amount': float(bill.amount),
+    } for bill in paid_bills]
+
+    transactions = sorted(chain(rental_txns, billing_txns), key=itemgetter('amount'), reverse=True)
+
+    # Populate rows
+    for row_idx, txn in enumerate(transactions, start=2):
+        ws.append([txn['type'], txn['label'], txn['description'], txn['amount']])
+        ws.cell(row=row_idx, column=4).number_format = currency_format
+
+    # Auto width
+    for col in ws.columns:
+        max_length = 0
+        column = col[0].column_letter
+        for cell in col:
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
+        ws.column_dimensions[column].width = max_length + 2
+
+    # Return response
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    response = HttpResponse(
+        output,
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=transactions.xlsx'
+    return response
+
+def export_transactions_pdf(request):
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,  # 📏 Portrait A4
+        rightMargin=30, leftMargin=30, topMargin=30, bottomMargin=30
+    )
+
+    elements = []
+    styles = getSampleStyleSheet()
+
+    # Title
+    elements.append(Paragraph("Transaction Report", styles['Title']))
+    elements.append(Spacer(1, 12))
+
+    # Table headers
+    data = [['Type', 'Label', 'Description', 'Amount (₱)']]
+
+    # Fetch data
+    paid_rentals = RentalRequest.objects.filter(payment_status='paid')
+    paid_bills = Billing.objects.filter(payment_status='paid').select_related('bid__document', 'bid__user')
+
+    rental_txns = [{
+        'type': 'Rental',
+        'label': f"Rental: {rental.equipment.name}",
+        'description': rental.purpose[:60],
+        'amount': float(rental.total_rent_cost),
+    } for rental in paid_rentals]
+
+    billing_txns = [{
+        'type': 'Bidding',
+        'label': f"Bid: {bill.bid.document.title[:60]}",
+        'description': f"Invoice #{bill.invoice_number}",
+        'amount': float(bill.amount),
+    } for bill in paid_bills]
+
+    transactions = sorted(chain(rental_txns, billing_txns), key=itemgetter('amount'), reverse=True)
+
+    for txn in transactions:
+        data.append([
+            txn['type'],
+            txn['label'],
+            txn['description'],
+            f"{txn['amount']:,.2f}"
+        ])
+
+    # Set column widths to use available portrait A4 space (~530 points wide after margins)
+    column_widths = [70, 180, 200, 80]  # Adjust as needed for your layout
+
+    table = Table(data, colWidths=column_widths, repeatRows=1)
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#007BFF')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.lightgrey]),
+    ]))
+
+    elements.append(table)
+
+    doc.build(elements)
+    buffer.seek(0)
+
+    return HttpResponse(buffer, content_type='application/pdf', headers={
+        'Content-Disposition': 'attachment; filename=transactions.pdf'
+    })
+
 def error(request):
     return render(request, 'core/booterror.html')
 
 def custom_404_view(request, exception):
     return render(request, 'core/404.html', {}, status=404)
+
+def financeprofile(request):
+    user = request.user
+    profile, created = UserProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            'category': '',
+            'region': '',
+            'phone': '',
+            'address': '',
+        }
+    )
+
+    if request.method == 'POST':
+        # Update user fields
+        user.first_name = request.POST.get('firstName', user.first_name)
+        user.last_name = request.POST.get('lastName', user.last_name)
+        user.save()
+
+        # Update profile fields
+        profile.region = request.POST.get('organization', profile.region)
+        profile.phone = request.POST.get('phoneNumber', profile.phone)
+        profile.address = request.POST.get('address', profile.address)
+
+        # Handle profile image update
+        if 'profile_image' in request.FILES:
+            # Delete old image if it exists and is not default
+            if profile.profile_image and profile.profile_image.name != 'default.png':
+                profile.profile_image.delete(save=False)
+            # Save new image
+            profile.profile_image = request.FILES['profile_image']
+
+        # Handle password change if any password field is filled
+        old_password = request.POST.get('oldPassword', '').strip()
+        new_password = request.POST.get('newPassword', '').strip()
+        confirm_new_password = request.POST.get('confirmNewPassword', '').strip()
+
+        if old_password or new_password or confirm_new_password:
+            if not old_password:
+                messages.error(request, "Old password is required to change password.")
+            elif not user.check_password(old_password):
+                messages.error(request, "Old password is incorrect.")
+            elif not new_password or not confirm_new_password:
+                messages.error(request, "New password fields cannot be empty.")
+            elif new_password != confirm_new_password:
+                messages.error(request, "New passwords do not match.")
+            else:
+                user.set_password(new_password)
+                user.save()
+                update_session_auth_hash(request, user)  # Keep user logged in
+                messages.success(request, "Password updated successfully!")
+                return redirect('finance-profile')
+
+        profile.save()
+        messages.success(request, "Profile updated successfully!")
+        return redirect('finance-profile')
+
+    return render(request, 'finance-admin/finance-profile.html', {
+        'user': user,
+        'profile': profile
+    })

@@ -1,0 +1,27 @@
+/* Adjust Jet admin's light-green theme */
+body {
+    background-color: #2F4F4F !important;  /* Dark gray background */
+    color: white !important;
+}
+
+.navbar {
+    background-color: #006400 !important;  /* Dark green navbar */
+}
+
+.sidebar {
+    background-color: #006400 !important;  /* Dark green sidebar */
+}
+
+.sidebar .nav-pills .nav-link.active {
+    background-color: #004d00 !important;  /* Even darker green */
+}
+
+/* Optional: Darken the sidebar icons */
+.sidebar .nav-pills .nav-link i {
+    color: #fff !important;
+}
+
+/* Adjust text on button hover */
+button:hover {
+    background-color: #004d00 !important;  /* Dark green hover */
+}
