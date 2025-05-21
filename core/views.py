@@ -982,7 +982,71 @@ def profile(request):
 
     return render(request, 'core/bootprofile.html', {'user': user, 'profile': profile})
 
-# Validate the old password via AJAX
+login_required(login_url='login')
+def bacprofile(request):
+    user = request.user
+    profile, created = UserProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            'category': '',
+            'region': '',
+            'phone': 0,
+            'address': '',
+        }
+    )
+
+    if request.method == 'POST':
+        user.first_name = request.POST.get('firstName', '')
+        user.last_name = request.POST.get('lastName', '')
+        user.save()
+
+        profile.region = request.POST.get('organization', '')
+        profile.phone = request.POST.get('phoneNumber') or 0
+        profile.address = request.POST.get('address', '')
+
+        # Handle profile image update
+        if 'profile_image' in request.FILES:
+            # Delete old image if it exists and is not default
+            if profile.profile_image:
+                old_image_path = Path(profile.profile_image.path)
+                if old_image_path.is_file():
+                    old_image_path.unlink()
+
+            # Save new image
+            profile.profile_image = request.FILES['profile_image']
+        else:
+            print("No file uploaded")
+
+        # Handle password change - optional fields
+        old_password = request.POST.get('oldPassword', '').strip()
+        new_password = request.POST.get('newPassword', '').strip()
+        confirm_new_password = request.POST.get('confirmNewPassword', '').strip()
+
+        # Check if the user provided any passwords and validate if necessary
+        if old_password or new_password or confirm_new_password:  # Only validate if any password field is filled
+            if not old_password:
+                messages.error(request, "Old password is required if you want to change the password.")
+            elif not user.check_password(old_password):
+                messages.error(request, "Old password is incorrect.")
+            elif new_password != confirm_new_password:
+                messages.error(request, "New passwords do not match.")
+            elif new_password == "" or confirm_new_password == "":
+                messages.error(request, "New password fields cannot be empty.")
+            else:
+                # If everything is valid, change the password
+                user.set_password(new_password)
+                user.save()
+                update_session_auth_hash(request, user)  # Keep the user logged in after password change
+                messages.success(request, "Password updated successfully!")
+                return redirect('bacprofile')  # Redirect to the profile page after successful password change
+
+        profile.save()
+
+        # Return to the profile page with error messages if password validation failed
+        return redirect('bacprofile')
+    return render(request, 'bac-admin/BAC-profile.html', {'user': user, 'profile': profile})
+
+
 @login_required(login_url='login')
 def validate_old_password(request):
     if request.method == 'POST':
@@ -1005,71 +1069,59 @@ def financedashboard(request):
     except UserProfile.DoesNotExist:
         return redirect('error')
 
-    # Fetch paid rentals and associated transactions
     paid_rentals = RentalRequest.objects.filter(payment_status='paid')
     total_revenue = paid_rentals.aggregate(total=Sum('total_rent_cost'))['total'] or Decimal('0.00')
 
-    # Get the top 4 equipment rentals
     top_equipment_rentals = Equipment.objects.annotate(
         rental_count=Count('rental_requests')
     ).order_by('-rental_count')[:4]
 
-    # Extracting chart labels and data for equipment
     chart_labels = [eq.name for eq in top_equipment_rentals]
     chart_data = [eq.rental_count for eq in top_equipment_rentals]
 
-    # Fetch paid bills and related transactions
     paid_bills = Billing.objects.filter(payment_status='paid').select_related('bid__document', 'bid__user')
 
-    # Prepare rental transactions
     rental_txns = [{
         'type': 'rental',
         'label': f"Rental: {rental.equipment.name}",
-        'description': rental.purpose[:30],
+        'description': f"{rental.purpose[:30]} - Rented by: {rental.user.get_full_name() or rental.user.username}",
         'amount': rental.total_rent_cost,
         'image_url': rental.equipment.image.url if rental.equipment.image else None,
     } for rental in paid_rentals]
 
-    # Prepare billing transactions
     billing_txns = [{
         'type': 'billing',
         'label': f"Bid: {bill.bid.document.title[:30]}",
-        'description': f"Invoice #{bill.invoice_number}",
+        'description': f"Invoice #{bill.invoice_number} - Bid by: {bill.bid.user.get_full_name() or bill.bid.user.username}",
         'amount': bill.amount,
         'image_url': bill.bid.document.image.url if bill.bid.document.image else None,
     } for bill in paid_bills]
 
-    # Combine all transactions and sort by amount
     all_transactions = sorted(
         chain(rental_txns, billing_txns),
         key=itemgetter('amount'),
         reverse=True
     )
 
-    # Get all bids for statistics (not just approved)
     bids_by_status = Bid.objects.values('status').annotate(count=Count('id')).order_by('status')
     
     bids_by_document = Bid.objects.values('document__title').annotate(
         count=Count('id')
-    ).order_by('-count')[:6]  # Get top 6 documents with most bids
+    ).order_by('-count')[:6] 
 
-    # Prepare bidding statistics data
     bidding_labels = [doc['document__title'][:15] + '...' if len(doc['document__title']) > 15 else doc['document__title'] for doc in bids_by_document]
     bidding_data = [doc['count'] for doc in bids_by_document]
     
     
-    # Get top bids for the list display (same as before)
     top_bids = Bid.objects.select_related('document', 'user').order_by('-proposed_price')[:5]
 
     bids_by_status = Bid.objects.values('status').annotate(count=Count('id')).order_by('status')
     total_bids = Bid.objects.count()
     
-    # Get document-wise bid counts
     bids_by_document = Bid.objects.values('document__title').annotate(
         count=Count('id')
-    ).order_by('-count')[:6]  # Get top 6 documents with most bids
+    ).order_by('-count')[:6]
 
-    # Prepare chart data
     context = {
         'total_revenue': total_revenue,
         'top_equipment_rentals': top_equipment_rentals,

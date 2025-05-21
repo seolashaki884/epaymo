@@ -15,6 +15,7 @@ urlpatterns = [
     path('rental/update-status/<int:rental_id>/', views.update_rental_status, name='update_rental_status'),
     path('rental-statistics/', views.rental_statistics_view, name='rental_statistics'),
     path('check-equipment-availability/<int:rental_id>/', views.check_equipment_availability, name='check_equipment_availability'),
+    path('equipment/profile/', views.equipmentprofile, name='equipmentprofile'),
 
 
 ]
