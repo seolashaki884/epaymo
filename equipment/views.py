@@ -14,9 +14,11 @@ from django.http import JsonResponse, Http404
 from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.utils import timezone
+from django.contrib.auth import update_session_auth_hash
 from datetime import datetime
 from django.db.models import Sum, Count
 from decimal import Decimal
+from pathlib import Path
 import os
 from django.core.files.storage import default_storage
 from django.db.models import Sum, Count, Case, When, Value, IntegerField
@@ -305,3 +307,68 @@ def rental_statistics_view(request):
         'top_equipment_rentals': top_equipment_rentals,
     }
     return render(request, 'equipment-admin/dashboard.html', context)
+
+
+login_required(login_url='login')
+def equipmentprofile(request):
+    user = request.user
+    profile, created = UserProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            'category': '',
+            'region': '',
+            'phone': 0,
+            'address': '',
+        }
+    )
+
+    if request.method == 'POST':
+        user.first_name = request.POST.get('firstName', '')
+        user.last_name = request.POST.get('lastName', '')
+        user.save()
+
+        profile.region = request.POST.get('organization', '')
+        profile.phone = request.POST.get('phoneNumber') or 0
+        profile.address = request.POST.get('address', '')
+
+        # Handle profile image update
+        if 'profile_image' in request.FILES:
+            # Delete old image if it exists and is not default
+            if profile.profile_image:
+                old_image_path = Path(profile.profile_image.path)
+                if old_image_path.is_file():
+                    old_image_path.unlink()
+
+            # Save new image
+            profile.profile_image = request.FILES['profile_image']
+        else:
+            print("No file uploaded")
+
+        # Handle password change - optional fields
+        old_password = request.POST.get('oldPassword', '').strip()
+        new_password = request.POST.get('newPassword', '').strip()
+        confirm_new_password = request.POST.get('confirmNewPassword', '').strip()
+
+        # Check if the user provided any passwords and validate if necessary
+        if old_password or new_password or confirm_new_password:  # Only validate if any password field is filled
+            if not old_password:
+                messages.error(request, "Old password is required if you want to change the password.")
+            elif not user.check_password(old_password):
+                messages.error(request, "Old password is incorrect.")
+            elif new_password != confirm_new_password:
+                messages.error(request, "New passwords do not match.")
+            elif new_password == "" or confirm_new_password == "":
+                messages.error(request, "New password fields cannot be empty.")
+            else:
+                # If everything is valid, change the password
+                user.set_password(new_password)
+                user.save()
+                update_session_auth_hash(request, user)  # Keep the user logged in after password change
+                messages.success(request, "Password updated successfully!")
+                return redirect('equipmentprofile')  # Redirect to the profile page after successful password change
+
+        profile.save()
+
+        # Return to the profile page with error messages if password validation failed
+        return redirect('equipmentprofile')
+    return render(request, 'equipment-admin/equipment-profile.html', {'user': user, 'profile': profile})

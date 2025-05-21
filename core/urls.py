@@ -50,7 +50,8 @@ urlpatterns = [
     path('error/', views.error, name='error'),
     path('export/pdf/', views.export_transactions_pdf, name='export_transactions_pdf'),
     path('export/excel/', views.export_transactions_excel, name='export_transactions_excel'),
-    path('finance/profile/', views.financeprofile, name='finance-profile')
+    path('finance/profile/', views.financeprofile, name='finance-profile'),
+    path('BAC/profile/', views.bacprofile, name='bacprofile')
 
 ]
 handler404 = 'core.views.custom_404_view'
