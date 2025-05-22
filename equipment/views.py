@@ -309,7 +309,7 @@ def rental_statistics_view(request):
     return render(request, 'equipment-admin/dashboard.html', context)
 
 
-login_required(login_url='login')
+@login_required(login_url='login')
 def equipmentprofile(request):
     user = request.user
     profile, created = UserProfile.objects.get_or_create(

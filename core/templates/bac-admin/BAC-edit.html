@@ -279,104 +279,164 @@
 
 
           <script>
-            document.addEventListener('DOMContentLoaded', function () {
-              const modalEdit = document.getElementById('modalEdit');
-              const saveBtn = document.getElementById('saveChangesBtn');
-              const startDateInput = document.getElementById('editStartDate');
-              const endDateInput = document.getElementById('editEndDate');
-              const imageInput = document.getElementById('editImage'); // Image input field
+          document.addEventListener('DOMContentLoaded', function () {
+            const modalEdit = document.getElementById('modalEdit');
+            const saveBtn = document.getElementById('saveChangesBtn');
+            const startDateInput = document.getElementById('editStartDate');
+            const endDateInput = document.getElementById('editEndDate');
+            const imageInput = document.getElementById('editImage');
+            
+            // Modal trigger
+            modalEdit.addEventListener('show.bs.modal', function (event) {
+              const button = event.relatedTarget;
+
+              // Get document details from data attributes
+              const id = button.getAttribute('data-id');
+              const title = button.getAttribute('data-title');
+              const description = button.getAttribute('data-description');
+              const abc = button.getAttribute('data-abc');
+              const region = button.getAttribute('data-region');
+              const start = button.getAttribute('data-start');
+              const end = button.getAttribute('data-end');
+              const imageUrl = button.getAttribute('data-image');
               
-              // Modal trigger
-              modalEdit.addEventListener('show.bs.modal', function (event) {
-                const button = event.relatedTarget;
-            
-                // Get document details from data attributes
-                const id = button.getAttribute('data-id');
-                const title = button.getAttribute('data-title');
-                const description = button.getAttribute('data-description');
-                const abc = button.getAttribute('data-abc');
-                const region = button.getAttribute('data-region');
-                const start = button.getAttribute('data-start');
-                const end = button.getAttribute('data-end');
-                const imageUrl = button.getAttribute('data-image'); // Getting the image URL
-                
-                // Find the image link and set the href to the image URL
-                const imageLink = document.getElementById('editImageLink');
-                
-                // If an image URL exists, make the link visible and set href
-                if (imageUrl) {
-                  imageLink.href = imageUrl;
-                  imageLink.style.display = 'inline'; // Show the link
-                } else {
-                  imageLink.href = '#';
-                  imageLink.style.display = 'none'; // Hide the link if no image
-                }
-            
-                // Populate form fields
-                document.getElementById('editTitle').value = title;
-                document.getElementById('editDescription').value = description;
-                document.getElementById('editABC').value = abc;
-                document.getElementById('editRegion').value = region;
-                startDateInput.value = start;
-                endDateInput.value = end;
-            
-                // Reset file input
-                imageInput.value = "";
-            
-                // Store document ID on save button for later use
-                saveBtn.setAttribute('data-id', id);
-              });
-            
-              // Save changes when the save button is clicked
-              saveBtn.addEventListener('click', function () {
-                const docId = saveBtn.getAttribute('data-id');
-            
-                const formData = new FormData();
-                formData.append('title', document.getElementById('editTitle').value);
-                formData.append('description', document.getElementById('editDescription').value);
-                formData.append('abc', document.getElementById('editABC').value);
-                formData.append('region', document.getElementById('editRegion').value);
-                formData.append('bidding_start_date', startDateInput.value);
-                formData.append('bidding_end_date', endDateInput.value);
-            
-                // Append image if a new one is selected
-                if (imageInput.files.length > 0) {
-                  formData.append('image', imageInput.files[0]);
-                }
-            
-                // Send the data to the backend
-                fetch(`/bac-edit/${docId}/update/`, {
-                  method: 'POST',
-                  headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
+              // Find the image link and set the href to the image URL
+              const imageLink = document.getElementById('editImageLink');
+              
+              // If an image URL exists, make the link visible and set href
+              if (imageUrl) {
+                imageLink.href = imageUrl;
+                imageLink.style.display = 'inline';
+              } else {
+                imageLink.href = '#';
+                imageLink.style.display = 'none';
+              }
+
+              // Populate form fields
+              document.getElementById('editTitle').value = title;
+              document.getElementById('editDescription').value = description;
+              document.getElementById('editABC').value = abc;
+              document.getElementById('editRegion').value = region;
+              startDateInput.value = start;
+              endDateInput.value = end;
+
+              // Reset file input
+              imageInput.value = "";
+
+              // Store document ID on save button for later use
+              saveBtn.setAttribute('data-id', id);
+            });
+
+            // Date validation function
+            function validateDates() {
+              const startDate = new Date(startDateInput.value);
+              const endDate = new Date(endDateInput.value);
+              
+              if (startDate && endDate && endDate <= startDate) {
+                endDateInput.setCustomValidity('End date must be after start date');
+                return false;
+              } else {
+                endDateInput.setCustomValidity('');
+                return true;
+              }
+            }
+
+            // Real-time date validation
+            startDateInput.addEventListener('change', function() {
+              if (!validateDates()) {
+                endDateInput.reportValidity();
+              }
+            });
+
+            endDateInput.addEventListener('change', function() {
+              validateDates();
+            });
+
+            // Save changes when the save button is clicked
+            saveBtn.addEventListener('click', function () {
+              const docId = saveBtn.getAttribute('data-id');
+              const title = document.getElementById('editTitle').value.trim();
+              const description = document.getElementById('editDescription').value.trim();
+              const abc = document.getElementById('editABC').value.trim();
+              const region = document.getElementById('editRegion').value.trim();
+              const startDate = startDateInput.value;
+              const endDate = endDateInput.value;
+
+              // Basic validation
+              if (!title || !description || !abc || !region || !startDate || !endDate) {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Missing Information',
+                  text: 'Please fill out all required fields.',
+                  confirmButtonColor: '#d33',
+                  customClass: {
+                    confirmButton: 'btn btn-danger',
                   },
-                  body: formData
-                })
-                .then(response => {
-                  if (response.ok) {
-                    Swal.fire({
-                      title: 'Updated!',
-                      text: 'Document has been updated.',
-                      icon: 'success',
-                      showConfirmButton: false,
-                      timer: 2000,
-                      timerProgressBar: true
-                    }).then(() => {
-                      window.location.reload();
-                    });
-                  } else {
-                    Swal.fire({
-                      title: 'Error!',
-                      text: 'Something went wrong.',
-                      icon: 'error',
-                      showConfirmButton: false,
-                      timer: 2000
-                    });
-                  }
+                  buttonsStyling: false
                 });
+                return;
+              }
+
+              // Date validation
+              if (!validateDates()) {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Invalid Dates',
+                  text: 'Bidding end date must be after the start date.',
+                  confirmButtonColor: '#d33',
+                  customClass: {
+                    confirmButton: 'btn btn-danger',
+                  },
+                  buttonsStyling: false
+                });
+                return;
+              }
+
+              const formData = new FormData();
+              formData.append('title', title);
+              formData.append('description', description);
+              formData.append('abc', abc);
+              formData.append('region', region);
+              formData.append('bidding_start_date', startDate);
+              formData.append('bidding_end_date', endDate);
+
+              // Append image if a new one is selected
+              if (imageInput.files.length > 0) {
+                formData.append('image', imageInput.files[0]);
+              }
+
+              // Send the data to the backend
+              fetch(`/bac-edit/${docId}/update/`, {
+                method: 'POST',
+                headers: {
+                  'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: formData
+              })
+              .then(response => {
+                if (response.ok) {
+                  Swal.fire({
+                    title: 'Updated!',
+                    text: 'Document has been updated.',
+                    icon: 'success',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true
+                  }).then(() => {
+                    window.location.reload();
+                  });
+                } else {
+                  Swal.fire({
+                    title: 'Error!',
+                    text: 'Something went wrong.',
+                    icon: 'error',
+                    showConfirmButton: false,
+                    timer: 2000
+                  });
+                }
               });
             });
-            
+          });
           </script>
           
           
