@@ -17,7 +17,6 @@ urlpatterns = [
     path('check-equipment-availability/<int:rental_id>/', views.check_equipment_availability, name='check_equipment_availability'),
     path('equipment/profile/', views.equipmentprofile, name='equipmentprofile'),
 
-
 ]
 
 
