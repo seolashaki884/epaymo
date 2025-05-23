@@ -290,18 +290,6 @@
             });
           </script>
           <script>
-            const notyf = new Notyf({
-              duration: 3000,
-              position: { x: 'right', y: 'top' }
-            });
-          
-            {% if messages %}
-              {% for message in messages %}
-                notyf.success("{{ message|escapejs }}");
-              {% endfor %}
-            {% endif %}
-          </script>
-          <script>
             const abcInput = document.getElementById('abcInput');
             const priceDisplay = document.getElementById('documentPrice');
           
@@ -333,23 +321,22 @@
               priceDisplay.textContent = `₱ ${price.toLocaleString('en-PH', { minimumFractionDigits: 2 })}`;
             });
           </script>
-          <!-- SweetAlert2 CDN -->
-          <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
           <script>
             document.addEventListener('DOMContentLoaded', function () {
               const form = document.getElementById('documentForm');
-          
+              
               form.addEventListener('submit', function (e) {
                 e.preventDefault(); // Stop normal form submission
-          
+
                 // Get values from form fields
                 const title = form.querySelector('input[name="title"]').value.trim();
                 const description = form.querySelector('input[name="description"]').value.trim();
                 const abc = form.querySelector('input[name="abc"]').value.trim();
                 const region = form.querySelector('input[name="region"]').value.trim();
                 const image = form.querySelector('input[name="image"]').files.length;
-          
+                const biddingStartDate = form.querySelector('input[name="bidding_start_date"]').value;
+                const biddingEndDate = form.querySelector('input[name="bidding_end_date"]').value;
+
                 // Basic validation
                 if (!title || !description || !abc || !region || !image) {
                   Swal.fire({
@@ -364,7 +351,37 @@
                   });
                   return;
                 }
-          
+
+                // Date validation
+                if (!biddingStartDate || !biddingEndDate) {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Missing Dates',
+                    text: 'Please select both the bidding start and end dates.',
+                    confirmButtonColor: '#d33',
+                    customClass: {
+                      confirmButton: 'btn btn-danger',
+                    },
+                    buttonsStyling: false
+                  });
+                  return;
+                }
+
+                // Check if the end date is later than the start date
+                if (new Date(biddingStartDate) >= new Date(biddingEndDate)) {
+                  Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Date Range',
+                    text: 'The bidding end date must be later than the start date.',
+                    confirmButtonColor: '#d33',
+                    customClass: {
+                      confirmButton: 'btn btn-danger',
+                    },
+                    buttonsStyling: false
+                  });
+                  return;
+                }
+
                 // Show confirmation
                 Swal.fire({
                   title: 'Are you sure?',
@@ -389,6 +406,7 @@
               });
             });
           </script>
+
           <script>
             document.addEventListener('DOMContentLoaded', function () {
               const abcInput = document.getElementById('abcInput');
@@ -397,6 +415,18 @@
                 this.value = this.value.replace(/[^\d,]/g, ''); // Allow only numbers and commas
               });
             });
+          </script>
+            <script>
+            const notyf = new Notyf({
+              duration: 3000,
+              position: { x: 'right', y: 'top' }
+            });
+          
+            {% if messages %}
+              {% for message in messages %}
+                notyf.success("{{ message|escapejs }}");
+              {% endfor %}
+            {% endif %}
           </script>
           
           

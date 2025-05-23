@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -26,7 +27,7 @@ SECRET_KEY = 'django-insecure-hc(=^0w&*0th4!^a^8_-l&86wuvdy0n3)yrta8(77px112vgqs
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -52,21 +53,9 @@ INTERNAL_IPS = [
 ]
 
 JAZZMIN_SETTINGS = {
-    "navbar_small_text": False,
-    "footer_small_text": False,
-    "body_small_text": False,
-    "brand_small_text": False,
-    "brand_colour": False,
-    "accent": "accent-primary",
-    "navbar": "navbar-white navbar-light",
-    "no_navbar_border": False,
-    "navbar_fixed": False,
-    "layout_boxed": False,
-    "footer_fixed": False,
     "sidebar_fixed": True,
     "sidebar_nav_legacy_style": True,
     "theme": "default",
-    "dark_mode_theme": None,
     "button_classes": {
         "primary": "btn-primary",
         "secondary": "btn-secondary",
@@ -91,8 +80,6 @@ JAZZMIN_SETTINGS = {
     # Logo to use for login form in dark themes (defaults to login_logo)
     "login_logo_dark": None,
 
-    # CSS classes that are applied to the logo above
-    "site_logo_classes": "img-circle",
 
     # Relative path to a favicon for your site, will default to site_logo if absent (ideally 32x32 px)
     "site_icon": None,
@@ -200,15 +187,16 @@ JAZZMIN_SETTINGS = {
     # - vertical_tabs
     # - collapsible
     # - carousel
-    "changeform_format": "horizontal_tabs",
     # override change forms on a per modeladmin basis
-    "changeform_format_overrides": {"auth.user": "collapsible", "auth.group": "vertical_tabs"},
     # Add a language dropdown into the admin
     "language_chooser": False,
     "show_ui_builder": True,  # Enables the UI customization panel in the admin
-    "navigation_expanded": True,  # Expands the sidebar to show filters
-
 }   
+
+PAYMAYA_SECRET_KEY = config('PAYMAYA_SECRET_KEY')
+PAYMAYA_PUBLIC_KEY = config('PAYMAYA_PUBLIC_KEY')
+
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

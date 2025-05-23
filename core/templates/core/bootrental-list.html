@@ -129,6 +129,7 @@
                               <span class="badge
                                 {% if request.status == 'pending' %} bg-label-warning
                                 {% elif request.status == 'approved' %} bg-label-success
+                                {% elif request.status == 'paid' %} bg-label-success
                                 {% elif request.status == 'returned' %} bg-label-secondary
                                 {% elif request.status == 'rejected' %} bg-label-danger
                                 {% endif %}">
@@ -150,8 +151,9 @@
                                 data-payment_status="{{ request.payment_status }}">
                                 View
                               </button>
-                                {%if request.status == "approved"  %}
-                                <button class="btn btn-sm btn-success"
+                              {%if request.status == "approved"  %}
+                              <button class="btn btn-sm btn-success"
+                                onclick="openBillingFormModal(this)"
                                 data-id="{{ request.id }}"
                                 data-requested_by="{{ request.requested_by.get_full_name|default:request.requested_by.username }}"
                                 data-equipment="{{ request.equipment.name }}"
@@ -164,6 +166,7 @@
                                 data-payment_status="{{ request.payment_status }}">
                                 Billing
                               </button>
+
                               {%endif%}
 
                             </td>                            
@@ -185,7 +188,7 @@
           
             <!-- / Content -->
             <div class="content-backdrop fade"></div>
-            <div class="modal fade" id="billingFormModal" tabindex="-1" aria-hidden="true">
+            <div class="modal fade" id="openRentalModal" tabindex="-1" aria-hidden="true">
               <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
                 <div class="modal-content">
             
@@ -195,8 +198,8 @@
                   </div>
             
                   <div class="modal-body">
-                    <form id="billingForm" method="POST">
-                      {% csrf_token %}
+                    <form id="" method="POST">
+                   
                       <input type="hidden" name="bid_id" id="billingBidId" />
             
                       <div class="row mb-3">
@@ -261,6 +264,48 @@
                 </div>
               </div>
             </div>
+
+
+            <div class="modal fade" id="rentalBilling" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title">Billing Information</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <form id="rentalBillingForm" method="POST" action="{% url 'create_rental_payment' %}">
+                      {% csrf_token %}
+                      <input type="hidden" name="rental_id" value="" />
+
+                      <div class="mb-3">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" name="full_name" value="{{ request.user.get_full_name }}" class="form-control" required>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea name="address" class="form-control" rows="2" required>{{ request.user.userprofile.address }}</textarea>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" value="{{ request.user.email }}" name="email_add" class="form-control" required>
+                      </div>
+
+                      <div class="mb-3">
+                        <label class="form-label">Phone Number</label>
+                        <input type="number" value="{{ request.user.userprofile.phone }}" name="number" class="form-control">
+                      </div>
+
+                      <button type="submit" class="btn btn-primary">Proceed to Payment</button>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
             
 
             
@@ -268,9 +313,36 @@
           <!-- Content wrapper -->
         </div>
         <script>
+          function openBillingFormModal(button) {
+            // Get data from the button
+            const rentalId = button.getAttribute('data-id');
+            const fullName = button.getAttribute('data-requested_by');
+            const equipment = button.getAttribute('data-equipment');
+            const cost = button.getAttribute('data-cost');
+            const rentalStartDate = button.getAttribute('data-rental_start_date');
+            const rentalEndDate = button.getAttribute('data-rental_end_date');
+
+            // Fill modal form
+            const modal = document.getElementById('rentalBilling');
+            modal.querySelector('input[name="rental_id"]').value = rentalId;
+
+            // These values are already filled from server-side using `request.user`
+            // So if you want to override them dynamically, uncomment below:
+            // modal.querySelector('input[name="full_name"]').value = fullName;
+
+            // Show the modal using Bootstrap's method
+            const bootstrapModal = new bootstrap.Modal(modal);
+            bootstrapModal.show();
+          }
+        </script>
+
+        
+
+
+        <script>
           function openRentalModal(button) {
             // Open modal via Bootstrap Modal API
-            const modal = new bootstrap.Modal(document.getElementById('billingFormModal'));
+            const modal = new bootstrap.Modal(document.getElementById('openRentalModal'));
         
             // Fetch data attributes from the clicked button
             const id = button.getAttribute('data-id');
@@ -302,59 +374,8 @@
             modal.show();
           }
         </script>
+
         
-        
-          <script>
-            function getCSRFToken() {
-              return document.querySelector('[name=csrfmiddlewaretoken]').value;
-            }
-          
-            function openBillingFormModal(bidId) {
-              document.getElementById('billingBidId').value = bidId;
-              const modal = new bootstrap.Modal(document.getElementById('billingFormModal'));
-              modal.show();
-            }
-          
-            document.getElementById('billingForm').addEventListener('submit', function (e) {
-              e.preventDefault();
-              const form = e.target;
-              const formData = new FormData(form);
-              const bidId = formData.get('bid_id');
-          
-              // Step 1: Save billing info
-              fetch(`/bids/${bidId}/billing/form/`, {
-                method: 'POST',
-                body: formData,
-                headers: {
-                  'X-Requested-With': 'XMLHttpRequest',
-                  'X-CSRFToken': getCSRFToken(),
-                },
-              })
-              .then(res => res.json())
-              .then(data => {
-                if (data.success) {
-                  // Step 2: Create PayMaya payment
-                  fetch(`/bids/${bidId}/create-paymaya-payment/`, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                      'X-CSRFToken': getCSRFToken(),
-                    },
-                  })
-                  .then(res => res.json())
-                  .then(paymaya => {
-                    if (paymaya.success) {
-                      window.location.href = paymaya.redirectUrl;
-                    } else {
-                      alert('Payment setup failed.');
-                    }
-                  });
-                } else {
-                  alert('Failed to submit billing info.');
-                }
-              });
-            });
-          </script>
           <script>
             const notyf = new Notyf({
               duration: 3000,

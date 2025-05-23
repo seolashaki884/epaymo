@@ -16,12 +16,26 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.utils import timezone
 from django.contrib.auth import update_session_auth_hash
 from datetime import datetime
+import base64, uuid, logging
+from decimal import Decimal
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, redirect
+from django.http import JsonResponse
+from django.utils import timezone
+import requests
+from .models import RentalRequest
 from django.db.models import Sum, Count
 from decimal import Decimal
 from pathlib import Path
 import os
 from django.core.files.storage import default_storage
 from django.db.models import Sum, Count, Case, When, Value, IntegerField
+
+
+
+logger = logging.getLogger(__name__)
 
 @login_required(login_url='login')
 def equipment(request):
@@ -218,6 +232,11 @@ def update_rental_status(request, rental_id):
 
         rental = get_object_or_404(RentalRequest, pk=rental_id)
         rental.status = status
+
+        # If status is 'approved', update payment_status to 'billed'
+        if status == 'approved':
+            rental.payment_status = 'billed'
+
         rental.save()
         return JsonResponse({'success': True})
     except Exception as e:
@@ -240,17 +259,16 @@ def check_equipment_availability(request, rental_id):
 
 @login_required(login_url='login')
 def rental_requests_list(request):
-
-    # Check if the user has a profile and the correct category
     try:
         profile = request.user.userprofile
         if not profile.category or profile.category != 'equipment_rental':
             return redirect('error')
     except UserProfile.DoesNotExist:
-        return redirect('error')  # Handle users without a profile
+        return redirect('error')
     
-    rental_requests = RentalRequest.objects.all()
+    rental_requests = RentalRequest.objects.all().order_by('-created_at')  # newest first
     return render(request, 'equipment-admin/equipment-rentals.html', {'rental_requests': rental_requests})
+
 
 @login_required(login_url='login')
 def dashboard(request):
@@ -309,7 +327,7 @@ def rental_statistics_view(request):
     return render(request, 'equipment-admin/dashboard.html', context)
 
 
-login_required(login_url='login')
+@login_required(login_url='login')
 def equipmentprofile(request):
     user = request.user
     profile, created = UserProfile.objects.get_or_create(

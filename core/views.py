@@ -10,7 +10,9 @@ from django.views.decorators.http import require_POST
 from django.db import transaction
 from decimal import Decimal
 from reportlab.lib.pagesizes import A4, landscape
+from django.conf import settings
 from .models import UserProfile
+from django.urls import reverse
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
@@ -311,8 +313,6 @@ def adminhome(request):
 @login_required(login_url='login')
 def BAC(request):
 
-
-    # Check if the user has a profile and the correct category
     try:
         profile = request.user.userprofile
         if not profile.category or profile.category != 'bidding_documents':
@@ -384,8 +384,6 @@ def BAC(request):
 @login_required(login_url='login')
 def bac_edit(request):
 
-
-    # Check if the user has a profile and the correct category
     try:
         profile = request.user.userprofile
         if not profile.category or profile.category != 'bidding_documents':
@@ -677,6 +675,7 @@ def place_bid(request):
             return JsonResponse({'error': 'Document not found.'}, status=404)
 
     return JsonResponse({'error': 'Invalid request method.'}, status=405)
+
 @login_required(login_url='login')
 @csrf_exempt
 def create_paymaya_payment(request, bid_id):
@@ -688,7 +687,7 @@ def create_paymaya_payment(request, bid_id):
 
         full_name = request.POST.get('full_name')
         address = request.POST.get('address')
-        email = request.user.email
+        email = request.POST.get('email_add') or request.user.email
         phone = request.POST.get('number')
 
         invoice_number = f"INV-{uuid.uuid4().hex[:8].upper()}"
@@ -732,7 +731,7 @@ def create_paymaya_payment(request, bid_id):
             "requestReferenceNumber": invoice_number
         }
 
-        secret_key = "pk-Z0OSzLvIcOI2UIvDhdTGVVfRSSeiGStnceqwUE7n0Ah"
+        secret_key = settings.PAYMAYA_SECRET_KEY
         basic_auth = base64.b64encode(f"{secret_key}:".encode()).decode()
 
         headers = {
@@ -746,12 +745,15 @@ def create_paymaya_payment(request, bid_id):
             headers=headers
         )
 
+
         logger.info(f"PayMaya response: {response.status_code} - {response.text}")
 
         if response.status_code == 200:
             data = response.json()
             return JsonResponse({"success": True, "redirectUrl": data['redirectUrl']})
         else:
+            logger.info(f"PayMaya Response Code: {response.status_code}")
+            logger.info(f"PayMaya Response Text: {response.text}")
             logger.error(f"PayMaya Error: {response.text}")  # Log the error message for better troubleshooting
             return JsonResponse({"success": False, "error": response.text})
 
@@ -917,6 +919,7 @@ def rental_request_list(request):
         'rental_requests': rental_requests
     })
 
+
 @login_required(login_url='login')
 def profile(request):
     user = request.user
@@ -1060,6 +1063,8 @@ def validate_old_password(request):
             return JsonResponse({'is_old_password_correct': False})
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
+@login_required(login_url='login')
 def financedashboard(request):
 
     try:
@@ -1334,3 +1339,85 @@ def financeprofile(request):
         'user': user,
         'profile': profile
     })
+
+@login_required(login_url='login')
+@csrf_exempt
+def create_rental_payment(request):
+    if request.method == 'POST':
+        rental_id = request.POST.get('rental_id')
+        rental = get_object_or_404(RentalRequest, id=rental_id, status='approved')
+
+        full_name = request.POST.get('full_name')
+        address = request.POST.get('address')
+        email = request.POST.get('email_add') or request.user.email
+        phone = request.POST.get('number')
+
+        invoice_number = f"INV-{uuid.uuid4().hex[:8].upper()}"
+        rental.invoice_number = invoice_number
+        rental.save()  # Don't set payment_status yet
+
+        payload = {
+            "totalAmount": {
+                "value": float(rental.total_rent_cost),
+                "currency": "PHP"
+            },
+            "buyer": {
+                "firstName": full_name.split()[0],
+                "lastName": ' '.join(full_name.split()[1:]) or 'N/A',
+                "contact": {
+                    "email": email,
+                    "phone": phone or "0000000000"
+                },
+                "billingAddress": {
+                    "line1": address,
+                    "countryCode": "PH"
+                }
+            },
+            "redirectUrl": {
+                "success": request.build_absolute_uri(reverse('rental_payment_success', args=[rental.id])),
+                "failure": request.build_absolute_uri(reverse('rental_payment_failure', args=[rental.id])),
+                "cancel": request.build_absolute_uri(reverse('rental_payment_cancel', args=[rental.id])),
+            },
+            "requestReferenceNumber": invoice_number
+        }
+
+        secret_key = settings.PAYMAYA_SECRET_KEY
+        basic_auth = base64.b64encode(f"{secret_key}:".encode()).decode()
+
+        headers = {
+            "Authorization": f"Basic {basic_auth}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.post(
+            'https://pg-sandbox.paymaya.com/checkout/v1/checkouts',
+            json=payload,
+            headers=headers
+        )
+
+        if response.status_code == 200:
+            data = response.json()
+            return redirect(data['redirectUrl'])
+        else:
+            logger.error(f"PayMaya Error: {response.text}")
+            return JsonResponse({"success": False, "error": "Failed to initiate payment."}) 
+        
+
+def rental_payment_success(request, rental_id):
+    rental = get_object_or_404(RentalRequest, id=rental_id)
+    rental.payment_status = 'paid'  # Set here, only after confirmation
+    rental.payment_date = timezone.now()
+    rental.status = 'paid'  # Optional
+    rental.save()
+
+    messages.success(request, "Payment successful!")
+    return redirect('rental_request_list')
+
+def rental_payment_failure(request, rental_id):
+    messages.error(request, "Payment failed. Please try again.")
+    return redirect('rental_request_list')
+
+
+def rental_payment_cancel(request, rental_id):
+    messages.warning(request, "Payment was cancelled.")
+    return redirect('rental_request_list')
