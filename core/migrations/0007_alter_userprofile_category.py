@@ -14,5 +14,5 @@ class Migration(migrations.Migration):
             model_name='userprofile',
             name='category',
             field=models.CharField(blank=True, choices=[('equipment_rental', 'Equipment Rental'), ('bidding_documents', 'Bidding Documents'), ('finance', 'Finance')], max_length=50),
-        ),
+        ), 
     ]
